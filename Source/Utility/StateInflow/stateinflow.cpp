@@ -353,7 +353,7 @@ StateInflow::fill_state_plane(
   amrex::Real* xd = x_dev.data();
   amrex::Real* yd = y_dev.data();
 
-  amrex::Real velScale = (a_sp.side == amrex::Orientation::high) ? -1 : 1;//-a_sp.turb_scale_vel
+  amrex::Real velScale = (a_sp.side == amrex::Orientation::high) ? -a_sp.turb_scale_vel : a_sp.turb_scale_vel;
   const auto& npboxcells = a_sp.npboxcells;
   const auto& pboxlo = a_sp.pboxlo;
   const auto& szlo = a_sp.szlo;

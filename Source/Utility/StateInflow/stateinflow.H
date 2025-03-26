@@ -15,8 +15,11 @@ namespace stateinflow {
 struct StateParm
 {
   // state data file
-  std::string m_state_file = "";
+  std::string m_state_file;
 
+  // Verbosity
+  int verbose = 1;
+  
   // Geometry of the state data
   amrex::GpuArray<int, AMREX_SPACEDIM> npboxcells = {{0}};
   amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> pboxlo = {{0.0}};
@@ -36,7 +39,7 @@ struct StateParm
   bool isswirltype = false; // Unused: enable rotating velocity
   amrex::Real state_scale_loc =
     1.; // Spatial scale relating turbfile geom -> actual case scale
-  //amrex::Real turb_scale_vel = 1.; // Velocity scaling
+  amrex::Real turb_scale_vel = 1.; // Velocity scaling
   amrex::Real state_conv_vel =
     1.; // Mean inlet velocity, used to move through data planes
 
