@@ -1,0 +1,3 @@
+CEXE_headers += stateinflow.H
+CEXE_sources += stateinflow.cpp
+
