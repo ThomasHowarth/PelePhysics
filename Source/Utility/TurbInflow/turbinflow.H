@@ -13,6 +13,7 @@
 // Relative to this header so that a build which lists TurbInflow but not
 // Source/Utility/MeshMap among its include directories still compiles.
 #include "../MeshMap/MeshMapEvaluator.H"
+#include "stateinflow.H"
 
 // Feature macro: this PelePhysics provides the TurbInflow::add_turb()
 // overload that takes the physical positions of the inflow-face cell
@@ -97,6 +98,13 @@ struct TurbParm
 
   amrex::Vector<long> offset;
   int kmax; // Number of plane in Turbfile
+
+  // Optional scalar fields (SCALARS_V1 trailer of HDR), stored in sdata
+  // after the AMREX_SPACEDIM velocity components.  scal_offset holds the
+  // binary offset of each plane, scalar-major like the velocity offsets.
+  int nscal = 0;
+  amrex::Vector<std::string> scal_names;
+  amrex::Vector<long> scal_offset;
 
   // Optional coordinate-mapping descriptor of the turbulence file, read
   // from the MESHMAP trailer of HDR (see the file-format notes in
@@ -259,6 +267,35 @@ public:
 
   bool is_initialized() const { return turbinflow_initialized; }
 
+  /**
+   * \brief Names of the scalar fields carried by the turbulence file feeding
+   *        the (\p dir, \p side) face, in sampler order.
+   *
+   * Empty when no file acts on that face or its file has no SCALARS_V1
+   * trailer.  At most one file per face may carry scalars (checked in
+   * init()).
+   */
+  amrex::Vector<std::string>
+  scalar_names(const int dir, const amrex::Orientation::Side& side) const;
+
+  //! Whether any turbulence file carries scalar fields.
+  bool has_scalars() const;
+
+  /**
+   * \brief Sampler for the scalar fields of the (\p dir, \p side) face at
+   *        \p time.
+   *
+   * Loads the planes needed at \p time if they are not in memory already,
+   * exactly as add_turb() does for the velocity (the two share the plane
+   * chunk and the through-plane position), and computes the through-plane
+   * weights.  Host only; the returned object is used on the device.  Its
+   * nscal is 0 when the face has no scalar data.
+   */
+  StateInflowSampler scalar_sampler(
+    const int dir,
+    const amrex::Orientation::Side& side,
+    const amrex::Real time);
+
   // Override the through-plane sampling position with a supplied physical
   // convected distance (e.g. the time-integrated inlet velocity). Applies to
   // all loaded turb planes. Pass a negative value to revert to the default
@@ -273,6 +310,18 @@ public:
   static void read_turb_planes(TurbParm& a_tp, amrex::Real z);
 
   static void read_one_turb_plane(TurbParm& a_tp, int iplane, int k);
+
+  //! Through-plane sampling position of \p a_tp at \p time: the plane time
+  //! for time-plane files, else the convected distance (file units).
+  static amrex::Real sampling_position(const TurbParm& a_tp, amrex::Real time);
+
+  //! Make sure the planes around \p z are loaded and return the
+  //! through-plane stencil (planes k0..k0+2 of sdata, weights cz).
+  static void prepare_planes(
+    TurbParm& a_tp,
+    amrex::Real z,
+    amrex::GpuArray<amrex::Real, 3>& cz,
+    int& k0);
 
   static void fill_turb_plane(
     TurbParm& a_tp,

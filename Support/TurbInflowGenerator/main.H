@@ -26,13 +26,27 @@ void turbinflow_from_turb_box(std::ofstream& ifsd, std::ofstream& ifsh);
  * the file is tagged as uniform in the precursor's computational (Xi)
  * coordinate.  \p probDomain is the plotfile's (Xi-space) problem domain and
  * \p dim_map the plotfile axes that become the file's transverse directions
- * 0 and 1 and its normal 2.  Writes nothing without a mapping.  Must be the
- * last thing written to HDR.
+ * 0 and 1 and its normal 2.  Writes nothing without a mapping.  Must come
+ * after the plane offsets and times.
  */
 void write_meshmap_trailer(
   std::ofstream& ifsh,
   const amrex::RealBox& probDomain,
   const amrex::IntVect& dim_map);
+
+/**
+ * Plotfile components of the scalar fields requested with the input
+ * scalars = <name> ... (e.g. temp Y(N2)), in that order.  Aborts if one is
+ * missing from \p varlist.
+ */
+amrex::Vector<int> find_scalar_vars(const amrex::Vector<std::string>& varlist);
+
+/**
+ * Write the first two lines of the SCALARS_V1 trailer (count and names) to
+ * HDR; the caller then writes one plane offset per line, scalar-major.
+ * Writes nothing when no scalars are requested.
+ */
+void write_scalars_header(std::ofstream& ifsh);
 
 amrex::IntVect index_mapper(
   const amrex::IntVect& idx_in,

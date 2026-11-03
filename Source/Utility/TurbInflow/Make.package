@@ -1,4 +1,5 @@
 CEXE_headers += turbinflow.H
+CEXE_headers += stateinflow.H
 CEXE_sources += turbinflow.cpp
 
 VPATH_LOCATIONS += $(PELE_PHYSICS_HOME)/Source/Utility/TurbInflow

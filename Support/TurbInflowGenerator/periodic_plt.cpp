@@ -102,16 +102,16 @@ turbinflow_from_periodic_plt(std::ofstream& ifsd, std::ofstream& ifsh)
   ifsh << perio[dim_map[0]] << ' ' << perio[dim_map[1]] << ' ' << 1 << '\n';
 
   IntVect periodicity{perio[0], perio[1], perio[2]};
-  // Output FABS
-  for (int d = 0; d < varidx.size(); ++d) {
-    std::cout << "Loading component " << d << " ... " << std::flush;
 
+  // Dump plotfile component comp as planes normal to dim_map[2], appending
+  // the data to DAT and the offsets to HDR
+  auto write_component = [&](const int comp) {
     // Construct a FAB on the level we want from the plt file data
     BoxArray bxs{domain};
     DistributionMapping dm{bxs, 1};
     MultiFab mf{bxs, dm, 1, 0};
     Geometry geom{domain, probDomain, coord_sys, perio};
-    pltfile.fillPatchFromPlt(save_level, geom, varidx[d], 0, 1, mf);
+    pltfile.fillPatchFromPlt(save_level, geom, comp, 0, 1, mf);
     const auto& pltarr = mf[0].const_array();
 
     // Loop over normal direction dumping slices
@@ -130,14 +130,29 @@ turbinflow_from_periodic_plt(std::ofstream& ifsd, std::ofstream& ifsh)
       TMP.shift({0, 0, -k});
       ifsh << ifsd.tellp() << std::endl;
       TMP.writeOn(ifsd);
-      amrex::Print() << "for d = " << d << " and k = " << k
+      amrex::Print() << "for comp = " << comp << " and k = " << k
                      << ": minval = " << TMP.min(0)
                      << ", maxval = " << TMP.max(0) << std::endl;
     }
+  };
+
+  // Output FABS
+  for (int d = 0; d < varidx.size(); ++d) {
+    std::cout << "Loading component " << d << " ... " << std::flush;
+    write_component(varidx[d]);
     std::cout << "done" << std::endl;
   }
 
   // Optional mesh-mapping trailer; must come after the plane offsets (this
   // mode writes no plane times).
   write_meshmap_trailer(ifsh, probDomain, dim_map);
+
+  // Optional scalar fields (SCALARS_V1 trailer), after the other trailers
+  const auto scalidx = find_scalar_vars(varlist);
+  write_scalars_header(ifsh);
+  for (int s = 0; s < scalidx.size(); ++s) {
+    std::cout << "Loading scalar " << s << " ... " << std::flush;
+    write_component(scalidx[s]);
+    std::cout << "done" << std::endl;
+  }
 }
