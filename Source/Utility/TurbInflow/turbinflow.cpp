@@ -27,6 +27,17 @@ namespace {
 // the file as uniform in the precursor's Xi coordinate rather than in
 // physical position; add_turb() inverts the map before indexing the file.
 //
+// Scalar fields, stored in DAT like the velocity components (one FAB per
+// plane, same box), with their offsets continuing the velocity ones:
+//
+//   SCALARS_V1 <nscal>
+//   <name_1> ... <name_nscal>
+//   <offset>   (nscal * kmax of them, scalar-major: all the planes of the
+//               first scalar, then of the second, ...)
+//
+// Names are free-form tokens (no white space); their meaning is up to the
+// solver, e.g. PeleLMeX plotfile names such as temp or Y(N2).
+//
 // Content this reader does not recognise (a trailer from a newer generator,
 // or stray tokens) is skipped up to the next keyword it knows, so a known
 // trailer is found whatever precedes it.  One warning is printed per
@@ -109,6 +120,65 @@ read_meshmap_trailer(
   }
 }
 
+// Keywords that start an HDR trailer
+bool
+is_trailer_keyword(const std::string& token)
+{
+  return token == "MESHMAP_V1" || token == "MESHMAP_V2" ||
+         token == "SCALARS_V1";
+}
+
+// Read the body of the SCALARS_V1 trailer
+void
+read_scalars_trailer(
+  std::istream& is,
+  const std::string& turb_header,
+  const std::string& name,
+  TurbParm& a_tp)
+{
+  AMREX_ALWAYS_ASSERT_WITH_MESSAGE(
+    a_tp.nscal == 0,
+    "TurbInflow::init(): duplicate SCALARS_V1 trailer in " + turb_header);
+  is >> a_tp.nscal;
+  AMREX_ALWAYS_ASSERT_WITH_MESSAGE(
+    !is.fail() && a_tp.nscal > 0,
+    "TurbInflow::init(): malformed SCALARS_V1 trailer in " + turb_header);
+  a_tp.scal_names.resize(a_tp.nscal);
+  for (int s = 0; s < a_tp.nscal; ++s) {
+    std::string& sname = a_tp.scal_names[s];
+    is >> sname;
+    // A keyword here means a short name list running into the next trailer
+    AMREX_ALWAYS_ASSERT_WITH_MESSAGE(
+      !is_trailer_keyword(sname),
+      "TurbInflow::init(): SCALARS_V1 trailer of " + turb_header +
+        " has a scalar named " + sname +
+        ", a trailer keyword (fewer names than nscal?)");
+    AMREX_ALWAYS_ASSERT_WITH_MESSAGE(
+      std::find(a_tp.scal_names.begin(), a_tp.scal_names.begin() + s, sname) ==
+        a_tp.scal_names.begin() + s,
+      "TurbInflow::init(): SCALARS_V1 trailer of " + turb_header +
+        " names scalar " + sname + " twice");
+  }
+  // The scalars' offsets follow the velocity ones in a_tp.offset
+  const auto nvel = static_cast<long>(a_tp.offset.size());
+  a_tp.offset.resize(nvel + static_cast<long>(a_tp.nscal) * a_tp.kmax);
+  for (long i = nvel; i < static_cast<long>(a_tp.offset.size()); ++i) {
+    is >> a_tp.offset[i];
+  }
+  AMREX_ALWAYS_ASSERT_WITH_MESSAGE(
+    !is.fail(), "TurbInflow::init(): SCALARS_V1 trailer of " + turb_header +
+                  " is truncated (expected nscal names and nscal*kmax "
+                  "offsets)");
+  if (a_tp.verbose > 0) {
+    amrex::Print() << "   " << name << " carries " << a_tp.nscal
+                   << " scalar field(s):";
+    for (const auto& sname : a_tp.scal_names) {
+      amrex::Print() << " " << sname;
+    }
+    amrex::Print() << "\n";
+  }
+}
+
 // Read the HDR of a_tp's file: its geometry, the plane offsets and times,
 // and the optional trailers
 void
@@ -171,7 +241,12 @@ read_header(TurbParm& a_tp, const std::string& name)
   std::string token;
   bool skipping = false;
   while (is >> token) {
-    if (token != "MESHMAP_V1" && token != "MESHMAP_V2") {
+    if (token == "SCALARS_V1") {
+      skipping = false;
+      read_scalars_trailer(is, turb_header, name, a_tp);
+      continue;
+    }
+    if (!is_trailer_keyword(token)) {
       if (!skipping) {
         amrex::Print() << "TurbInflow: WARNING skipping unrecognised "
                           "trailing content in "
@@ -262,7 +337,7 @@ int last_chunk_generation = 0;
 } // namespace
 
 void
-TurbInflow::init(amrex::Geometry const& /*geom*/)
+TurbInflow::init(amrex::Geometry const& /*geom*/, const bool load_scalars)
 {
   amrex::ParmParse ppr;
 
@@ -274,8 +349,9 @@ TurbInflow::init(amrex::Geometry const& /*geom*/)
     tp.resize(n_tp);
   }
 
+  amrex::Vector<std::string> names(n_tp);
   for (int n = 0; n < n_tp; n++) {
-    std::string name;
+    std::string& name = names[n];
     ppr.get("turbinflows", name, n);
     amrex::ParmParse pp("turbinflow." + name);
     if (pp.countval("turb_file") == 0) {
@@ -339,9 +415,13 @@ TurbInflow::init(amrex::Geometry const& /*geom*/)
                     "interpolation stencil + 1 extra");
     pp.query("turb_conv_vel", t.turb_conv_vel);
 
-    // The file holds the three velocity components
+    // The chunk holds the velocity components, then the scalars if asked
+    // for
     t.ncomp = AMREX_SPACEDIM;
     read_header(t, name);
+    if (load_scalars) {
+      t.ncomp += t.nscal;
+    }
 
     const amrex::Box sbx(
       amrex::IntVect(AMREX_D_DECL(0, 0, 0)),
@@ -371,6 +451,20 @@ TurbInflow::init(amrex::Geometry const& /*geom*/)
       }
     }
   }
+
+  // The scalars of a face come from one file: scalar_sampler() returns a
+  // single view, and summing scalars like velocity fluctuations would be
+  // meaningless.
+  for (int a = 0; a < n_tp; ++a) {
+    for (int b = a + 1; b < n_tp; ++b) {
+      AMREX_ALWAYS_ASSERT_WITH_MESSAGE(
+        tp[a].nscal <= 0 || tp[b].nscal <= 0 || tp[a].dir != tp[b].dir ||
+          tp[a].side != tp[b].side,
+        "TurbInflow::init(): turbinflows " + names[a] + " and " + names[b] +
+          " both carry scalar fields on the same face");
+    }
+  }
+
   if (n_tp > 0) {
     turbinflow_initialized = true;
   }
@@ -399,6 +493,7 @@ TurbInflow::file_sampler(TurbParm& a_tp, const amrex::Real z)
   static_cast<TurbFileGeom&>(s) = a_tp.geom;
   prepare_planes(a_tp, z, s.cz, s.k0);
   s.sd = a_tp.sdata->const_array();
+  s.nscal = a_tp.ncomp - AMREX_SPACEDIM;
   s.generation = a_tp.chunk_generation;
   return s;
 }
@@ -446,6 +541,65 @@ TurbInflow::find_turbparm(
     }
   }
   return nullptr;
+}
+
+bool
+TurbInflow::has_scalars() const
+{
+  return std::any_of(
+    tp.begin(), tp.end(), [](const TurbParm& tpn) { return tpn.nscal > 0; });
+}
+
+int
+TurbInflow::scalar_file(
+  const int dir, const amrex::Orientation::Side& side) const
+{
+  int i = 0;
+  for (const auto& tpn : tp) {
+    if (on_face(tpn, dir, side)) {
+      if (tpn.nscal > 0) {
+        return i;
+      }
+      ++i;
+    }
+  }
+  return -1;
+}
+
+const TurbParm*
+TurbInflow::scalar_turbparm(
+  const int dir, const amrex::Orientation::Side& side) const
+{
+  for (const auto& tpn : tp) {
+    if (on_face(tpn, dir, side) && tpn.nscal > 0) {
+      return &tpn;
+    }
+  }
+  return nullptr;
+}
+
+amrex::Vector<std::string>
+TurbInflow::scalar_names(
+  const int dir, const amrex::Orientation::Side& side) const
+{
+  const TurbParm* tpn = scalar_turbparm(dir, side);
+  return (tpn != nullptr) ? tpn->scal_names : amrex::Vector<std::string>{};
+}
+
+TurbFileSampler
+TurbInflow::scalar_sampler(
+  const int dir, const amrex::Orientation::Side& side, const amrex::Real time)
+{
+  AMREX_ALWAYS_ASSERT(turbinflow_initialized);
+  TurbParm* tpn = scalar_turbparm(dir, side);
+  if (tpn == nullptr) {
+    return TurbFileSampler{};
+  }
+  AMREX_ALWAYS_ASSERT_WITH_MESSAGE(
+    tpn->ncomp == AMREX_SPACEDIM + tpn->nscal,
+    "TurbInflow::scalar_sampler(): the scalar fields of " + tpn->m_turb_file +
+      " were not loaded; pass load_scalars = true to TurbInflow::init()");
+  return file_sampler(*tpn, sampling_position(*tpn, time));
 }
 
 bool
@@ -572,16 +726,15 @@ sample_plane(
   const int ncomp,
   const amrex::Real scale)
 {
-  // File coordinates of the positions: scaled to file units and, for a
-  // mesh-mapped file, inverted through the file's map into the precursor's
-  // Xi coordinate, which is what indexes the file.
+  // File coordinates of the positions (TurbFileSampler::case_to_file(), as
+  // for locate()), computed once per row and column rather than per cell
   amrex::Vector<amrex::Real> x(x_phys.size());
   amrex::Vector<amrex::Real> y(y_phys.size());
   for (int i = 0; i < static_cast<int>(x.size()); ++i) {
-    x[i] = s.file_coordinate(0, x_phys[i] * s.scale_loc);
+    x[i] = s.case_to_file(0, x_phys[i]);
   }
   for (int j = 0; j < static_cast<int>(y.size()); ++j) {
-    y[j] = s.file_coordinate(1, y_phys[j] * s.scale_loc);
+    y[j] = s.case_to_file(1, y_phys[j]);
   }
 
   // Freed by a stream callback once the kernel below is done with them, so

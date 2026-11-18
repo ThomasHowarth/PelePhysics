@@ -9,7 +9,9 @@
 #include <AMReX_ParmParse.H>
 
 #include <cmath>
+#include <limits>
 #include <memory>
+#include <utility>
 
 // Relative to this header so that a build which lists TurbInflow but not
 // Source/Utility/MeshMap among its include directories still compiles.
@@ -44,6 +46,14 @@
 // file_transverse_dx_range() and file_map() take the index of the file to
 // describe (default 0, the first).
 #define PELEPHYSICS_TURBINFLOW_PER_FILE_ACCESSORS 1
+
+// Feature macro: a turbulence file may carry named scalar fields (SCALARS_V1
+// trailer, e.g. temp, Y(N2)) next to the velocity; TurbInflow::has_scalars(),
+// scalar_names(), scalar_file() and scalar_sampler() exist, init() takes a
+// load_scalars flag (pass true to use the scalars), and
+// TurbFileSampler::locate() / scalar() read the fields on the device.  The
+// solver decides what the scalars mean.
+#define PELEPHYSICS_TURBINFLOW_HAS_SCALARS 1
 
 namespace pele::physics::turbinflow {
 
@@ -113,23 +123,29 @@ struct TurbFileGeom
 
 /**
  * \brief Device-callable view of the plane chunk of one turbulence file at
- *        one through-plane position: the interpolation of the file.
+ *        one through-plane position: the interpolation of the file, for the
+ *        velocity and the scalar fields alike.
  *
- * Obtained from TurbInflow::file_sampler() right before use: it points at the
- * plane chunk currently loaded in memory and holds the through-plane weights
- * for the requested position.  Trivially copyable, so it can be captured by
- * value in a kernel or a boundary-fill functor.
+ * Obtained from TurbInflow::file_sampler() or TurbInflow::scalar_sampler()
+ * right before use: it points at the plane chunk currently loaded in memory
+ * and holds the through-plane weights for the requested position.  Trivially
+ * copyable, so it can be captured by value in a kernel or a boundary-fill
+ * functor.  A default-constructed sampler locates no position.
  *
  * It is only valid until that file's planes are next loaded: any later
- * file_sampler() call on the same TurbParm may reload them, and a sampler
- * kept across it then reads the new planes with its old weights, which
- * gives wrong values without any error.  Get the sampler, launch the
- * kernels that use it, and get a new one for the next position; on the
+ * file_sampler() or scalar_sampler() call on the same TurbParm may reload
+ * them, and a sampler kept across it then reads the new planes with its old
+ * weights, which gives wrong values without any error.  Get the sampler, launch
+ * the kernels that use it, and get a new one for the next position; on the
  * host, TurbInflow::sampler_is_current() tells whether one is still valid.
  */
 struct TurbFileSampler : TurbFileGeom
 {
   amrex::Array4<const amrex::Real> sd;
+
+  //! Number of scalar fields in the chunk, after its AMREX_SPACEDIM velocity
+  //! components: those of the file if TurbInflow::init() loaded them, else 0
+  int nscal = 0;
 
   // Through-plane stencil: planes k0, k0+1, k0+2 with weights cz
   int k0 = 0;
@@ -231,9 +247,67 @@ struct TurbFileSampler : TurbFileGeom
     return xi;
   }
 
-  //! Value of chunk component \p n at a located position
+  //! Coordinate in the file along transverse direction \p d of a position
+  //! \p x in case units: scaled to file units by scale_loc, then
+  //! file_coordinate().  The single transform from a solver's physical
+  //! position to the file, used by add_turb() and locate() alike.
+  [[nodiscard]] AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE amrex::Real
+  case_to_file(const int d, const amrex::Real x) const noexcept
+  {
+    return file_coordinate(d, x * scale_loc);
+  }
+
+  /**
+   * \brief Locate the physical transverse position (\p x1, \p x2), in case
+   *        units along the face's transverse directions
+   *        TurbInflow::transverseDirs(dir, ...).  See locate_file().
+   *
+   * Locate once, then read each field: the coordinate inversion and the
+   * weights are the expensive part on a mesh-mapped file.
+   */
+  AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE bool
+  locate(const amrex::Real x1, const amrex::Real x2, Stencil& st) const noexcept
+  {
+    return locate_file(case_to_file(0, x1), case_to_file(1, x2), st);
+  }
+
+  //! Value of chunk component \p n at a located position: the velocity
+  //! components come first, then the scalars (if loaded)
   [[nodiscard]] AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE amrex::Real
   component(const Stencil& st, const int n) const noexcept
+  {
+    amrex::Real lo = 0.0;
+    amrex::Real hi = 0.0;
+    return interpolate<false>(st, n, lo, hi);
+  }
+
+  /**
+   * \brief Value of scalar \p s (0 <= \p s < nscal) at a located position.
+   *
+   * Interpolated like the velocity, then limited to the range of the stencil
+   * values that enter it with a non-zero weight: the quadratic transverse
+   * weights and the three-point Lagrange weights in time can overshoot, and
+   * a scalar such as a temperature or a mass fraction must not leave the
+   * bounds of the data around it.
+   */
+  [[nodiscard]] AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE amrex::Real
+  scalar(const Stencil& st, const int s) const noexcept
+  {
+    AMREX_ASSERT(s >= 0 && s < nscal);
+    amrex::Real lo = std::numeric_limits<amrex::Real>::max();
+    amrex::Real hi = std::numeric_limits<amrex::Real>::lowest();
+    const amrex::Real v = interpolate<true>(st, AMREX_SPACEDIM + s, lo, hi);
+    return amrex::Clamp(v, lo, hi);
+  }
+
+private:
+  //! Interpolated chunk component \p n at a located position.  With
+  //! \p Bounds, also widen [\p lo, \p hi] to the stencil values read with
+  //! a non-zero weight, in the same pass.
+  template <bool Bounds>
+  [[nodiscard]] AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE amrex::Real
+  interpolate(const Stencil& st, const int n, amrex::Real& lo, amrex::Real& hi)
+    const noexcept
   {
     amrex::GpuArray<amrex::Real, 3> ydata{};
     for (int ii = 0; ii <= 2; ++ii) {
@@ -241,8 +315,21 @@ struct TurbFileSampler : TurbFileGeom
       for (int jj = 0; jj <= 2; ++jj) {
         const int i = st.i0[0] + ii;
         const int j = st.i0[1] + jj;
-        zdata[jj] = cz[0] * sd(i, j, k0, n) + cz[1] * sd(i, j, k0 + 1, n) +
-                    cz[2] * sd(i, j, k0 + 2, n);
+        const amrex::Real v0 = sd(i, j, k0, n);
+        const amrex::Real v1 = sd(i, j, k0 + 1, n);
+        const amrex::Real v2 = sd(i, j, k0 + 2, n);
+        zdata[jj] = cz[0] * v0 + cz[1] * v1 + cz[2] * v2;
+        if constexpr (Bounds) {
+          if (st.c[0][ii] != 0.0 && st.c[1][jj] != 0.0) {
+            const amrex::GpuArray<amrex::Real, 3> v = {v0, v1, v2};
+            for (int kk = 0; kk <= 2; ++kk) {
+              if (cz[kk] != 0.0) {
+                lo = amrex::min(lo, v[kk]);
+                hi = amrex::max(hi, v[kk]);
+              }
+            }
+          }
+        }
       }
       ydata[ii] =
         st.c[1][0] * zdata[0] + st.c[1][1] * zdata[1] + st.c[1][2] * zdata[2];
@@ -283,7 +370,10 @@ struct TurbParm
   amrex::Real time_shift =
     0.0; // Enable to offset the location in the turb file
 
-  int ncomp = 0;   // Number of components in the file
+  // Number of components held in the plane chunk: the AMREX_SPACEDIM
+  // velocity components, followed by the nscal scalars if init() was asked
+  // to load them
+  int ncomp = 0;
   int nplane = 32; // Number of turb planes stored at once in memory
   // Currently loaded chunk of turb data; shared only for make_plane_chunk()
   std::shared_ptr<amrex::FArrayBox> sdata;
@@ -308,8 +398,13 @@ struct TurbParm
 
   amrex::Vector<amrex::Real> planeTimes;
 
-  // Offset in DAT of plane k of component n, at index k + n * kmax
+  // Offset in DAT of plane k of component n, at index k + n * kmax; the
+  // components are the velocity ones and then the scalars
   amrex::Vector<long> offset;
+
+  // Optional scalar fields of the file (SCALARS_V1 trailer of HDR)
+  int nscal = 0;
+  amrex::Vector<std::string> scal_names;
 };
 
 struct TurbInflow
@@ -322,7 +417,15 @@ public:
   TurbInflow(TurbInflow&&) = default;
   TurbInflow& operator=(TurbInflow&&) = default;
 
-  void init(amrex::Geometry const& geom);
+  /**
+   * \brief Read the turbinflows inputs and the files' headers.
+   *
+   * With \p load_scalars, the plane chunk of a file carrying scalar fields
+   * (SCALARS_V1) holds them next to the velocity, so that scalar_sampler()
+   * can be used; otherwise only the velocity is read and stored.  The
+   * velocity is the same either way.
+   */
+  void init(amrex::Geometry const& geom, bool load_scalars = false);
 
   //! Uniform-grid entry point: the physical position of a cell centre is
   //! ProbLo + (i+0.5)*CellSize.  Builds those coordinates and forwards to
@@ -456,6 +559,50 @@ public:
 
   bool is_initialized() const { return turbinflow_initialized; }
 
+  //! Whether any turbulence file carries scalar fields.
+  bool has_scalars() const;
+
+  /**
+   * \brief Index, in [0, n_files()), of the turbulence file of the
+   *        (\p dir, \p side) face that carries scalar fields, or -1 if none.
+   *
+   * At most one file per face may carry scalars (checked in init()).  Pass
+   * it as the \p ifile argument of file_map(), file_transverse_dx() and
+   * file_transverse_dx_range() to describe the file the scalars come from:
+   * scalar_sampler() samples it alone, and it need not be the face's first
+   * file.
+   */
+  int scalar_file(const int dir, const amrex::Orientation::Side& side) const;
+
+  /**
+   * \brief Names of the scalar fields of the (\p dir, \p side) face, in
+   *        sampler order (TurbFileSampler::scalar() index).
+   *
+   * Empty when the face has no file carrying scalars.
+   */
+  amrex::Vector<std::string>
+  scalar_names(const int dir, const amrex::Orientation::Side& side) const;
+
+  /**
+   * \brief Sampler of the scalar fields of the (\p dir, \p side) face at
+   *        \p time.
+   *
+   * Samples the face's scalar file (scalar_file()) alone: scalars are not
+   * scaled by turb_scale_vel nor summed over files.  Loads the planes needed
+   * at \p time if they are not in memory already, exactly as add_turb()
+   * does for the velocity (the two share the plane chunk and the
+   * through-plane position), and computes the through-plane weights.
+   * Aborts if the face has scalars but init() was not asked to load them.
+   *
+   * Host only; the returned object is used on the device.  It is a default
+   * TurbFileSampler, which locates nothing and has nscal 0, when the face
+   * has no scalar data.
+   */
+  TurbFileSampler scalar_sampler(
+    const int dir,
+    const amrex::Orientation::Side& side,
+    const amrex::Real time);
+
   // Override the through-plane sampling position with a supplied physical
   // convected distance (e.g. the time-integrated inlet velocity). Applies to
   // all loaded turb planes. Pass a negative value to revert to the default
@@ -519,6 +666,16 @@ private:
   //! File \p ifile of the (\p dir, \p side) face (see n_files()), or nullptr.
   const TurbParm* find_turbparm(
     const int dir, const amrex::Orientation::Side& side, const int ifile) const;
+
+  //! The file of the (\p dir, \p side) face that carries scalar fields, or
+  //! nullptr (see scalar_file()).
+  const TurbParm*
+  scalar_turbparm(const int dir, const amrex::Orientation::Side& side) const;
+  TurbParm* scalar_turbparm(const int dir, const amrex::Orientation::Side& side)
+  {
+    return const_cast<TurbParm*>(
+      std::as_const(*this).scalar_turbparm(dir, side));
+  }
 
   amrex::Vector<TurbParm> tp;
   bool turbinflow_initialized = false;

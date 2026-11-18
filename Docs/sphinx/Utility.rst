@@ -151,6 +151,46 @@ inflow plane data and interpolation approaches for periodic and nonperiodic tang
 .. note:: The TurbInflow capability was not designed with embedded boundaries in mind. It can be applied for simulations using EB, but care should
           be take. Inflows should not be generated from simulations where EBs intersect the inflow plane.
 
+.. _sec_turbinflow_scalars:
+
+Scalar fields
+~~~~~~~~~~~~~
+
+A turbulence file may carry named scalar fields (for instance temperature and species mass fractions from a precursor run) next to
+the three velocity components. They share the planes, the through-plane position and the transverse interpolation of the velocity,
+but are neither scaled by ``turb_scale_vel`` nor summed over overlapping patches: at most one file per face may carry scalars
+(checked at initialization). They are declared by a trailer after the plane times in ``HDR`` (before or after the optional
+``MESHMAP`` trailer):
+
+::
+
+  SCALARS_V1 <nscal>
+  <name_1> ... <name_nscal>
+  <offset>     # nscal * kmax lines: all the planes of the first scalar, then of the second, ...
+
+where each offset locates one plane FAB in ``DAT`` (same box as the velocity planes). The names are free-form and their meaning is
+left to the solver; readers that predate the trailer skip it.
+
+A solver uses the scalars through the following ``TurbInflow`` members:
+
+* ``has_scalars()``: whether any file carries scalars.
+* ``scalar_file(dir, side)``: the index of the file of a face that carries the scalars (-1 if none). A face may also have
+  velocity-only files, so pass this index as the ``ifile`` argument of ``file_map()``, ``file_transverse_dx()`` and
+  ``file_transverse_dx_range()`` to describe the file the scalars come from.
+* ``scalar_names(dir, side)``: the names of the scalars of a face, in sampler order.
+* ``scalar_sampler(dir, side, time)``: a device-callable ``TurbFileSampler`` for a face and time. On the device,
+  ``locate(x1, x2, st)`` finds a physical transverse position in case units (false outside the file) and ``scalar(st, s)``
+  reads scalar ``s`` there. The sampler is valid until the file's planes are next loaded, so get a new one for each fill.
+
+The interpolated scalar is limited to the range of the stencil values that enter it with a non-zero weight, since the quadratic
+transverse weights and the three-point weights in time can otherwise overshoot (a temperature or a mass fraction would leave its
+physical bounds at a sharp front). The velocity is not limited.
+
+The scalars are read only when the solver asks for them with ``TurbInflow::init(geom, /*load_scalars=*/true)``; with the
+default (``false``) a file's plane chunk holds only the velocity, and ``scalar_sampler()`` on a face with scalars aborts with a
+message saying so. The velocity is the same either way. Solvers detect the capability, including the ``load_scalars`` argument,
+with the ``PELEPHYSICS_TURBINFLOW_HAS_SCALARS`` macro. PeleLMeX uses it to impose ``temp`` and ``Y(<species>)`` on its inflow faces.
+
 Non-uniform and mapped grids
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
