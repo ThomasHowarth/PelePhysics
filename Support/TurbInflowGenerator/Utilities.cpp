@@ -1,5 +1,7 @@
 #include "main.H"
 
+#include <algorithm>
+
 using namespace amrex;
 
 AMREX_FORCE_INLINE
@@ -54,6 +56,54 @@ write_meshmap_trailer(
                  << static_cast<int>(e.m_kind)
                  << "): the file is uniform in the precursor's Xi "
                     "coordinate\n";
+}
+
+Vector<int>
+find_plt_vars(
+  const Vector<std::string>& names, const Vector<std::string>& varlist)
+{
+  Vector<int> idx(names.size());
+  for (int i = 0; i < names.size(); ++i) {
+    const auto it = std::find(varlist.begin(), varlist.end(), names[i]);
+    if (it == varlist.end()) {
+      amrex::Abort("Requested variable " + names[i] + " not found in plt file");
+    }
+    idx[i] = static_cast<int>(it - varlist.begin());
+  }
+  return idx;
+}
+
+Vector<std::string>
+requested_scalars()
+{
+  ParmParse pp;
+  Vector<std::string> names;
+  pp.queryarr("scalars", names);
+  for (int s = 0; s < names.size(); ++s) {
+    if (
+      std::find(names.begin(), names.begin() + s, names[s]) !=
+      names.begin() + s) {
+      amrex::Abort("scalars: " + names[s] + " is requested twice");
+    }
+    if (
+      names[s] == "MESHMAP_V1" || names[s] == "MESHMAP_V2" ||
+      names[s] == "SCALARS_V1") {
+      amrex::Abort("scalars: " + names[s] + " is an HDR trailer keyword");
+    }
+  }
+  return names;
+}
+
+void
+write_scalars_header(std::ofstream& ifsh, const Vector<std::string>& names)
+{
+  ifsh << "SCALARS_V1 " << names.size() << '\n';
+  for (int s = 0; s < names.size(); ++s) {
+    ifsh << (s > 0 ? " " : "") << names[s];
+  }
+  ifsh << '\n';
+  amrex::Print() << "Writing SCALARS_V1 trailer with " << names.size()
+                 << " scalar field(s)\n";
 }
 
 // -----------------------------------------------------------

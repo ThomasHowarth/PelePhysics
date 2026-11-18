@@ -168,7 +168,8 @@ but are neither scaled by ``turb_scale_vel`` nor summed over overlapping patches
   <name_1> ... <name_nscal>
   <offset>     # nscal * kmax lines: all the planes of the first scalar, then of the second, ...
 
-where each offset locates one plane FAB in ``DAT`` (same box as the velocity planes). The names are free-form and their meaning is
+where each offset locates one plane FAB in ``DAT`` (same box as the velocity planes). The ``TurbInflowGenerator`` writes it with its
+``scalars`` input (see :ref:`TurbInflowGenerator <sec_turbinflowgenerator_scalars>`). The names are free-form and their meaning is
 left to the solver; readers that predate the trailer skip it.
 
 A solver uses the scalars through the following ``TurbInflow`` members:

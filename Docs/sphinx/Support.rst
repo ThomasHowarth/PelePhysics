@@ -115,6 +115,19 @@ input file. The currently supported data types are :
 For all of the above data types, an ``ofile`` keyword must be specified, which is the name of the directory where the
 output files will be saved. After successful execution, the output directory should contain two files: ``HDR`` and ``DAT``.
 
+.. _sec_turbinflowgenerator_scalars:
+
+For ``periodic_plt`` and ``diag_frame_planes``, scalar fields of the input plt files can be stored next to the velocity with the
+``scalars`` keyword, which lists plt variable names. In an input file, give the names unquoted::
+
+  scalars = temp Y(O2) Y(N2)
+
+(a quoted list, ``scalars = "temp Y(O2) Y(N2)"``, is read as a single name). On the command line the shell quotes are needed to pass
+the list as one argument: ``scalars="temp Y(O2) Y(N2)"``. All the names are checked against the plt variables before anything is
+written. The scalars are stored after the velocity data and declared by a ``SCALARS_V1`` trailer in ``HDR`` (see
+:ref:`Scalar fields <sec_turbinflow_scalars>`); readers that predate it ignore them, and the velocity data are the same as without
+``scalars``.
+
 MechanismPAH
 ============
 

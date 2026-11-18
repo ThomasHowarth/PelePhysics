@@ -18,6 +18,16 @@ The generator then appends a `MESHMAP_V2` trailer to `HDR` recording the map
 and the precursor's computational-domain bounds, and TurbInflow samples the
 file in that coordinate.  Without the trailer a file is taken to be uniform
 in physical position, which is wrong for planes from a mapped run.
+
+For `periodic_plt` and `diag_frame_planes`, plt variables can be stored next
+to the velocity as scalar fields (a `SCALARS_V1` trailer in `HDR`), e.g. in
+the input file
+
+    scalars = temp Y(O2) Y(N2)
+
+or `scalars="temp Y(O2) Y(N2)"` on the command line.  Do not quote the list
+in an input file: there the quoted string is read as one name.
+
 The example below described how to use it for synthetic turbulence data.
 
 First generate the data using the python script:

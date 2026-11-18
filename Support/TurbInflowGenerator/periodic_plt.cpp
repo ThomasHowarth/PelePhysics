@@ -94,8 +94,9 @@ turbinflow_from_periodic_plt(std::ofstream& ifsd, std::ofstream& ifsh)
   } else {
     amrex::Abort("invalid normal");
   }
-  amrex::Vector<int> varidx;
-  varidx.resize(varnames.size());
+  // Optional scalar fields, stored after the velocity
+  const auto scalars = requested_scalars();
+  varnames.insert(varnames.end(), scalars.begin(), scalars.end());
 
   pele::physics::pltfilemanager::PltFileManager pltfile(ifile);
   int Nlevels = pltfile.getNlev();
@@ -105,20 +106,8 @@ turbinflow_from_periodic_plt(std::ofstream& ifsd, std::ofstream& ifsh)
   const auto& coord_sys = pltfile.getGeom(save_level).CoordInt();
   const auto& varlist = pltfile.getVariableList();
 
-  // Find the variables we need in the plt file
-  for (int i = 0; i < varidx.size(); ++i) {
-    int j;
-    for (j = 0; j < varlist.size(); ++j) {
-      if (varnames[i] == varlist[j]) {
-        varidx[i] = j;
-        break;
-      }
-    }
-    if (j >= varlist.size()) {
-      amrex::Abort(
-        "Requested variable " + varnames[i] + " not found in plt file");
-    }
-  }
+  // Find the variables we need in the plt file, before writing anything
+  const auto varidx = find_plt_vars(varnames, varlist);
 
   // Construct dim_map from turbinflow plane dims to plt file dims
   IntVect dim_map;
@@ -153,16 +142,25 @@ turbinflow_from_periodic_plt(std::ofstream& ifsd, std::ofstream& ifsh)
 
   IntVect periodicity{perio[0], perio[1], perio[2]};
 
-  // Output FABS
-  for (int d = 0; d < varidx.size(); ++d) {
-    std::cout << "Loading component " << d << " ... " << std::flush;
-    write_component(
-      pltfile, save_level, varidx[d], domain, probDomain, coord_sys, perio, bg,
-      dim_map, periodicity, ifsd, ifsh);
-    std::cout << "done" << std::endl;
-  }
+  // Output FABS: plotfile components [d0, d1) of varidx
+  const auto write_components = [&](const int d0, const int d1) {
+    for (int d = d0; d < d1; ++d) {
+      std::cout << "Loading component " << d << " ... " << std::flush;
+      write_component(
+        pltfile, save_level, varidx[d], domain, probDomain, coord_sys, perio,
+        bg, dim_map, periodicity, ifsd, ifsh);
+      std::cout << "done" << std::endl;
+    }
+  };
+  write_components(0, AMREX_SPACEDIM);
 
   // Optional mesh-mapping trailer; must come after the plane offsets (this
   // mode writes no plane times).
   write_meshmap_trailer(ifsh, probDomain, dim_map);
+
+  // Optional scalar fields, whose plane offsets end the SCALARS_V1 trailer
+  if (!scalars.empty()) {
+    write_scalars_header(ifsh, scalars);
+    write_components(AMREX_SPACEDIM, static_cast<int>(varidx.size()));
+  }
 }

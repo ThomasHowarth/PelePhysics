@@ -36,6 +36,30 @@ void write_meshmap_trailer(
   const amrex::IntVect& dim_map);
 
 /**
+ * Plotfile components of the variables \p names, in that order.  Aborts,
+ * naming the first one missing from \p varlist, so that a bad input stops
+ * the generator before it writes anything.
+ */
+amrex::Vector<int> find_plt_vars(
+  const amrex::Vector<std::string>& names,
+  const amrex::Vector<std::string>& varlist);
+
+/**
+ * Names of the scalar fields to store next to the velocity, from the input
+ * scalars = <plt variable> ... (e.g. temp Y(N2)); empty when not given.
+ * Aborts on a name given twice or equal to an HDR trailer keyword.
+ */
+amrex::Vector<std::string> requested_scalars();
+
+/**
+ * Write the first two lines of the SCALARS_V1 trailer (count and \p names)
+ * to HDR; the caller then writes one plane offset per line, scalar-major.
+ * Must come after the plane offsets and times of the velocity.
+ */
+void write_scalars_header(
+  std::ofstream& ifsh, const amrex::Vector<std::string>& names);
+
+/**
  * Index in the plotfile of turbinflow plane cell \p idx_in: the plane's
  * x and y are shifted up/right by one cell and mapped onto plotfile axes
  * dim_map[0] and dim_map[1], periodically or by first-order extrapolation

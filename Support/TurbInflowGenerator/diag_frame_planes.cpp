@@ -1,38 +1,59 @@
 #include <main.H>
 
+#include <sstream>
+
 using namespace amrex;
 
 namespace {
-// Extract plotfile component comp of frame k as one plane, appending the
-// data to DAT and its offset to HDR.  A plain function rather than a lambda
-// so that the device lambda inside it is not nested in another lambda.
-void
-write_frame_plane(
+// Plotfile components varidx of one frame, filled into one MultiFab
+// (component d holds plotfile component varidx[d]): one fillPatchFromPlt()
+// per run of consecutive plotfile components.
+MultiFab
+fill_frame(
   pele::physics::pltfilemanager::PltFileManager& pltfile,
   const int save_level,
-  const int comp,
-  const int k,
+  const Vector<int>& varidx,
   const Box& domain,
   const RealBox& probDomain,
   const int coord_sys,
-  const Array<int, AMREX_SPACEDIM>& perio,
-  const IntVect& bg,
-  const IntVect& dim_map,
-  const IntVect& periodicity,
-  std::ofstream& ifsd,
-  std::ofstream& ifsh)
+  const Array<int, AMREX_SPACEDIM>& perio)
 {
-  // Dummy MultiFab with 1 Fab and 2 ghost cells
+  // One Fab, no ghost cells
   BoxArray bxs{domain};
   DistributionMapping dm{bxs, 1};
-  MultiFab mf{bxs, dm, 1, {0, 0, 0}};
+  const int nvar = static_cast<int>(varidx.size());
+  MultiFab mf{bxs, dm, nvar, {0, 0, 0}};
   Geometry geom{domain, probDomain, coord_sys, perio};
-  pltfile.fillPatchFromPlt(save_level, geom, comp, 0, 1, mf);
+  for (int d = 0; d < nvar;) {
+    int n = 1;
+    while (d + n < nvar && varidx[d + n] == varidx[d] + n) {
+      ++n;
+    }
+    pltfile.fillPatchFromPlt(save_level, geom, varidx[d], d, n, mf);
+    d += n;
+  }
+  return mf;
+}
+
+// Component d of frame k (plotfile component comp) as one plane, serialized
+// as a FAB.  A plain function rather than a lambda so that the device lambda
+// inside it is not nested in another lambda.
+std::string
+frame_plane(
+  const MultiFab& frame,
+  const int d,
+  const int comp,
+  const int k,
+  const Box& domain,
+  const IntVect& bg,
+  const IntVect& dim_map,
+  const IntVect& periodicity)
+{
   Box tbx{{0, 0, 0}, {bg[0] + 2, bg[1] + 2, 0}};
   FArrayBox TMP(tbx, 1);
   TMP.setVal<RunOn::Device>(1.2e34);
 
-  const auto& pltarr = mf[0].const_array();
+  const auto& pltarr = frame[0].const_array(d);
   const auto& planearr = TMP.array();
 
   ParallelFor(tbx, [=] AMREX_GPU_DEVICE(int i, int j, int kp) noexcept {
@@ -41,11 +62,12 @@ write_frame_plane(
       index_mapper(idx_plane, dim_map, domain, periodicity);
     planearr(idx_plane) = pltarr(idx_plt);
   });
-  ifsh << ifsd.tellp() << std::endl;
-  TMP.writeOn(ifsd);
+  std::ostringstream os;
+  TMP.writeOn(os);
   amrex::Print() << "for comp = " << comp << " and k = " << k
                  << ": minval = " << TMP.min<RunOn::Device>(0)
                  << ", maxval = " << TMP.max<RunOn::Device>(0) << std::endl;
+  return os.str();
 }
 } // namespace
 
@@ -91,8 +113,9 @@ turbinflow_from_diag_frame_planes(std::ofstream& ifsd, std::ofstream& ifsh)
   } else {
     amrex::Abort("invalid normal");
   }
-  amrex::Vector<int> varidx;
-  varidx.resize(varnames.size());
+  // Optional scalar fields, stored after the velocity
+  const auto scalars = requested_scalars();
+  varnames.insert(varnames.end(), scalars.begin(), scalars.end());
 
   Box domain;
   RealBox probDomain;
@@ -108,20 +131,9 @@ turbinflow_from_diag_frame_planes(std::ofstream& ifsd, std::ofstream& ifsh)
     varlist = firstfile.getVariableList();
   }
 
-  // Find the variables we need in the plt file
-  for (int i = 0; i < varidx.size(); ++i) {
-    int j;
-    for (j = 0; j < varlist.size(); ++j) {
-      if (varnames[i] == varlist[j]) {
-        varidx[i] = j;
-        break;
-      }
-    }
-    if (j >= varlist.size()) {
-      amrex::Abort(
-        "Requested variable " + varnames[i] + " not found in plt file");
-    }
-  }
+  // Find the variables we need in the plt file, before writing anything
+  const auto varidx = find_plt_vars(varnames, varlist);
+  const int nvar = static_cast<int>(varidx.size());
 
   //
   // Write the first part of the header.
@@ -149,26 +161,58 @@ turbinflow_from_diag_frame_planes(std::ofstream& ifsd, std::ofstream& ifsh)
   IntVect periodicity{perio[0], perio[1], 0};
   IntVect dim_map{0, 1, 2};
 
-  for (int d = 0; d < varidx.size(); ++d) {
-    std::cout << "Loading component " << d << " ... " << std::endl;
-    for (int k = 0; k < nf; ++k) {
-      pele::physics::pltfilemanager::PltFileManager pltfile(ifiles[k]);
-      if (d == 0) {
-        fileTimes[k] = pltfile.getTime();
-        int Nlevels = pltfile.getNlev();
-        AMREX_ALWAYS_ASSERT(save_level >= 0 && save_level < Nlevels);
+  // DAT holds the nf planes of component 0, then those of component 1, and
+  // so on.  Each plotfile is read once, all its components filled into one
+  // MultiFab, and each plane written straight to its place: all planes have the
+  // same box, so the same size in DAT, and plane k of component d is at dat0 +
+  // (d * nf + k) * plane_bytes.
+  const std::streamoff dat0 = ifsd.tellp();
+  std::streamoff plane_bytes = -1;
+  Vector<std::streamoff> offsets(static_cast<long>(nvar) * nf);
+  for (int k = 0; k < nf; ++k) {
+    std::cout << "Loading frame " << k << " ... " << std::endl;
+    pele::physics::pltfilemanager::PltFileManager pltfile(ifiles[k]);
+    fileTimes[k] = pltfile.getTime();
+    int Nlevels = pltfile.getNlev();
+    AMREX_ALWAYS_ASSERT(save_level >= 0 && save_level < Nlevels);
+    const MultiFab frame = fill_frame(
+      pltfile, save_level, varidx, domain, probDomain, coord_sys, perio);
+    for (int d = 0; d < nvar; ++d) {
+      const std::string plane =
+        frame_plane(frame, d, varidx[d], k, domain, bg, dim_map, periodicity);
+      if (plane_bytes < 0) {
+        plane_bytes = static_cast<std::streamoff>(plane.size());
       }
-      write_frame_plane(
-        pltfile, save_level, varidx[d], k, domain, probDomain, coord_sys, perio,
-        bg, dim_map, periodicity, ifsd, ifsh);
+      AMREX_ALWAYS_ASSERT(
+        static_cast<std::streamoff>(plane.size()) == plane_bytes);
+      const long i = static_cast<long>(d) * nf + k;
+      offsets[i] = dat0 + i * plane_bytes;
+      ifsd.seekp(offsets[i]);
+      ifsd.write(plane.data(), static_cast<std::streamsize>(plane.size()));
     }
     std::cout << "done" << std::endl;
   }
-  // Write plane times
+  if (!ifsd.good()) {
+    amrex::Abort("Failed to write the planes to DAT");
+  }
+
+  // Plane offsets of the velocity, then the plane times
+  for (int i = 0; i < AMREX_SPACEDIM * nf; ++i) {
+    ifsh << offsets[i] << '\n';
+  }
   for (int k = 0; k < nf; ++k) {
     ifsh << std::setprecision(17) << fileTimes[k] << std::endl;
   }
 
   // Optional mesh-mapping trailer; must come after the plane times.
   write_meshmap_trailer(ifsh, probDomain, dim_map);
+
+  // Optional scalar fields, whose plane offsets end the SCALARS_V1 trailer
+  if (!scalars.empty()) {
+    write_scalars_header(ifsh, scalars);
+    for (long i = static_cast<long>(AMREX_SPACEDIM) * nf; i < offsets.size();
+         ++i) {
+      ifsh << offsets[i] << '\n';
+    }
+  }
 }
