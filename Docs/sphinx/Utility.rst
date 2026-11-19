@@ -404,8 +404,9 @@ I/O rank:
   of the surface elements around it (the minimum of their summed quadric error, kept within the block), and it
   carries the average of the interpolated variables over the block. Elements collapsing onto fewer vertices are
   dropped, and pairs of elements collapsing onto the same vertices with opposite orientations cancel out.
-* The open boundaries of the surface (non-periodic domain boundaries, filter cuts, coarse-fine gaps) are kept in
-  place by additional quadrics, weighted by ``decimate.boundary_weight``.
+* The open boundaries of the surface (domain boundaries, filter cuts, coarse-fine gaps) are kept in place by
+  additional quadrics, weighted by ``decimate.boundary_weight``. This includes periodic boundaries: the surface is
+  not stitched across them (see above), and keeping its edges there in place keeps the two sides meeting.
 * The result does not depend on the number of MPI ranks or on the domain decomposition, beyond round-off.
 * The area/length written by ``write_measure`` is always that of the full-resolution surface.
 * ``cluster_size = 2`` typically reduces the surface by about 5x in 3D, with vertices within a fraction of a

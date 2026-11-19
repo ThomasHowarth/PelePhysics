@@ -29,13 +29,16 @@
 //
 // Open boundaries of the surface (domain boundaries, filter cuts, coarse-fine
 // gaps) would otherwise retreat into the surface, since nothing constrains
-// the vertices along it. As in Garland & Heckbert (SIGGRAPH 1997), each
-// boundary facet (an edge in 3D, an end point in 2D) adds the quadric of the
-// plane through it perpendicular to its element, weighted by boundaryWeight
-// times the element measure. A facet used by a single element of a rank may
-// still be interior to the global surface, its neighbour lying on another
-// rank: such candidates are carried along with the clusters, and only those
-// left unpaired once all ranks are merged contribute their quadric.
+// the vertices along it. Periodic boundaries count as open: the surface
+// extracted by DiagIsosurface is not stitched across them, its facets there
+// carry keys a period apart and never pair up, so both sides keep meeting. As
+// in Garland & Heckbert (SIGGRAPH 1997), each boundary facet (an edge in 3D, an
+// end point in 2D) adds the quadric of the plane through it perpendicular to
+// its element, weighted by boundaryWeight times the element measure. A facet
+// used by a single element of a rank may still be interior to the global
+// surface, its neighbour lying on another rank: such candidates are carried
+// along with the clusters, and only those left unpaired once all ranks are
+// merged contribute their quadric.
 
 namespace pele::physics::diagnostics {
 

@@ -524,6 +524,12 @@ DiagIsosurface::init(const std::string& a_prefix, std::string_view a_diagName)
       "DiagIsosurface " + std::string(a_diagName) +
       ": decimate.cluster_size must be >= 0 (0 disables decimation)");
   }
+  if (m_boundaryWeight < 0.0) {
+    amrex::Abort(
+      "DiagIsosurface " + std::string(a_diagName) +
+      ": decimate.boundary_weight must be >= 0 (0 disables boundary "
+      "preservation)");
+  }
 }
 
 void
