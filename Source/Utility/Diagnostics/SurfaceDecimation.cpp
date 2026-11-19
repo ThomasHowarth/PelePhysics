@@ -1,33 +1,35 @@
 #include "SurfaceDecimation.H"
 
+#include <AMReX_IntVect.H>
+#include <AMReX_RealVect.H>
+
 #include <algorithm>
 #include <cmath>
-#include <unordered_map>
 
 namespace pele::physics::diagnostics {
 
 namespace {
 
 constexpr int nodesPerElt = surfaceNodesPerElt;
+constexpr int nodesPerFacet = nodesPerElt - 1;
 constexpr int keySize = surfaceKeySize;
+constexpr int facetKeySize = surfaceFacetKeySize;
+using EltKey = std::array<int, nodesPerElt>;
+using FacetKey = std::array<int, facetKeySize>;
 
-// Accumulator layout: quadric (packed symmetric A, then b, then c, with
-// error(x) = x.A.x + 2 b.x + c), node count, sums of the node values.
+// Cluster record layout: quadric (packed symmetric A, then b, then c, with
+// error(x) = x.A.x + 2 b.x + c), incidence count, sums of the node values.
 constexpr int nSym = AMREX_SPACEDIM * (AMREX_SPACEDIM + 1) / 2;
 constexpr int accB = nSym;
 constexpr int accC = nSym + AMREX_SPACEDIM;
-constexpr int accCount = accC + 1;
+constexpr int nQuad = accC + 1;
+constexpr int accCount = nQuad;
 constexpr int accSums = accCount + 1;
 
 // Eigenvalues below this fraction of the largest are treated as zero when
 // minimizing a cluster quadric: along those directions, which the planes of
 // the cluster do not constrain, the vertex stays at the cluster mean.
 constexpr amrex::Real quadricRelTol = 1.0e-3;
-
-using KeyMap = std::unordered_map<SurfaceKey, int, IntArrayHash>;
-constexpr int facetKeySize = surfaceFacetKeySize;
-constexpr int nodesPerFacet = nodesPerElt - 1;
-using FacetKey = std::array<int, facetKeySize>;
 
 constexpr int
 symIdx(int a_i, int a_j)
@@ -37,12 +39,6 @@ symIdx(int a_i, int a_j)
   return r * AMREX_SPACEDIM - r * (r - 1) / 2 + (c - r);
 }
 
-int
-floorDiv(int a_num, int a_den)
-{
-  return (a_num >= 0) ? a_num / a_den : -((-a_num + a_den - 1) / a_den);
-}
-
 // Key of the cluster holding the node with dual-edge key a_nodeKey
 SurfaceKey
 clusterKeyOf(const int* a_nodeKey, int a_clusterSize)
@@ -50,7 +46,7 @@ clusterKeyOf(const int* a_nodeKey, int a_clusterSize)
   SurfaceKey ckey;
   ckey[0] = a_nodeKey[0];
   for (int d = 0; d < AMREX_SPACEDIM; ++d) {
-    ckey[1 + d] = floorDiv(a_nodeKey[1 + d], a_clusterSize);
+    ckey[1 + d] = amrex::coarsen(a_nodeKey[1 + d], a_clusterSize);
   }
   ckey[keySize - 1] = -1;
   return ckey;
@@ -60,7 +56,7 @@ clusterKeyOf(const int* a_nodeKey, int a_clusterSize)
 void
 addPlaneQuadric(
   amrex::Real* a_quad,
-  const amrex::Real a_normal[AMREX_SPACEDIM],
+  const amrex::RealVect& a_normal,
   amrex::Real a_dist,
   amrex::Real a_weight)
 {
@@ -138,59 +134,177 @@ symEigen(
   }
 }
 
-// Unit normal of an element and its measure. Returns false for a zero-measure
-// element, whose plane is undefined.
-bool
+amrex::RealVect
+nodePos(const std::vector<amrex::Real>& a_nodes, int a_id, int a_nNodeComp)
+{
+  return amrex::RealVect(
+    &a_nodes[static_cast<std::size_t>(a_id) * a_nNodeComp]);
+}
+
+// Unit normal of an element and its measure. The normal is zero for a
+// zero-measure element, whose plane is undefined.
+amrex::Real
 elementPlane(
   const std::vector<amrex::Real>& a_nodes,
   const int* a_ids,
   int a_nNodeComp,
-  amrex::Real a_normal[AMREX_SPACEDIM],
-  amrex::Real& a_measure)
+  amrex::RealVect& a_normal)
 {
-  const amrex::Real* p0 =
-    &a_nodes[static_cast<std::size_t>(a_ids[0]) * a_nNodeComp];
-  const amrex::Real* p1 =
-    &a_nodes[static_cast<std::size_t>(a_ids[1]) * a_nNodeComp];
+  const amrex::RealVect p0 = nodePos(a_nodes, a_ids[0], a_nNodeComp);
+  const amrex::RealVect t = nodePos(a_nodes, a_ids[1], a_nNodeComp) - p0;
 #if AMREX_SPACEDIM == 2
-  a_normal[0] = -(p1[1] - p0[1]);
-  a_normal[1] = p1[0] - p0[0];
-  const amrex::Real len =
-    std::sqrt(a_normal[0] * a_normal[0] + a_normal[1] * a_normal[1]);
-  a_measure = len;
+  a_normal = amrex::RealVect(-t[1], t[0]);
+  const amrex::Real len = a_normal.vectorLength();
+  const amrex::Real measure = len;
 #else
-  const amrex::Real* p2 =
-    &a_nodes[static_cast<std::size_t>(a_ids[2]) * a_nNodeComp];
-  const amrex::Real ax = p1[0] - p0[0];
-  const amrex::Real ay = p1[1] - p0[1];
-  const amrex::Real az = p1[2] - p0[2];
-  const amrex::Real bx = p2[0] - p0[0];
-  const amrex::Real by = p2[1] - p0[1];
-  const amrex::Real bz = p2[2] - p0[2];
-  a_normal[0] = ay * bz - az * by;
-  a_normal[1] = az * bx - ax * bz;
-  a_normal[2] = ax * by - ay * bx;
-  const amrex::Real len = std::sqrt(
-    a_normal[0] * a_normal[0] + a_normal[1] * a_normal[1] +
-    a_normal[2] * a_normal[2]);
-  a_measure = 0.5 * len;
+  a_normal = t.crossProduct(nodePos(a_nodes, a_ids[2], a_nNodeComp) - p0);
+  const amrex::Real len = a_normal.vectorLength();
+  const amrex::Real measure = 0.5 * len;
 #endif
-  if (len <= 0.0) {
-    return false;
+  if (len > 0.0) {
+    a_normal /= len;
   }
-  for (int d = 0; d < AMREX_SPACEDIM; ++d) {
-    a_normal[d] /= len;
+  return measure;
+}
+
+// Combine the elements spanning the same records: each element's record ids
+// are sorted, its weight (1 if a_weights is empty) multiplied by the parity of
+// that permutation, and the weights of identical elements summed. Opposite
+// orientations thus cancel out, e.g. the two sides of a fold pinched by the
+// clustering. Elements with repeated records or a zero net weight are
+// dropped; the others are kept in order of first occurrence.
+void
+combineElements(std::vector<int>& a_elts, std::vector<int>& a_weights)
+{
+  struct Item
+  {
+    EltKey ids;
+    int weight;
+    int first;
+  };
+  const int nElts = static_cast<int>(a_elts.size()) / nodesPerElt;
+  std::vector<Item> items;
+  items.reserve(nElts);
+  for (int e = 0; e < nElts; ++e) {
+    Item it{{}, a_weights.empty() ? 1 : a_weights[e], e};
+    std::copy_n(
+      &a_elts[static_cast<std::size_t>(e) * nodesPerElt], nodesPerElt,
+      it.ids.begin());
+    for (int a = 0; a < nodesPerElt; ++a) {
+      for (int b = 0; b + 1 < nodesPerElt - a; ++b) {
+        if (it.ids[b] > it.ids[b + 1]) {
+          std::swap(it.ids[b], it.ids[b + 1]);
+          it.weight = -it.weight;
+        }
+      }
+    }
+    if (std::adjacent_find(it.ids.begin(), it.ids.end()) == it.ids.end()) {
+      items.push_back(it);
+    }
   }
-  return true;
+
+  std::sort(items.begin(), items.end(), [](const Item& a, const Item& b) {
+    return (a.ids != b.ids) ? a.ids < b.ids : a.first < b.first;
+  });
+  std::size_t nRuns = 0;
+  for (std::size_t i = 0; i < items.size(); ++i) {
+    if (nRuns > 0 && items[nRuns - 1].ids == items[i].ids) {
+      items[nRuns - 1].weight += items[i].weight;
+    } else {
+      items[nRuns++] = items[i];
+    }
+  }
+  items.resize(nRuns);
+  std::erase_if(items, [](const Item& a) { return a.weight == 0; });
+  std::sort(items.begin(), items.end(), [](const Item& a, const Item& b) {
+    return a.first < b.first;
+  });
+
+  a_elts.resize(items.size() * nodesPerElt);
+  a_weights.resize(items.size());
+  for (std::size_t i = 0; i < items.size(); ++i) {
+    std::copy_n(items[i].ids.begin(), nodesPerElt, &a_elts[i * nodesPerElt]);
+    a_weights[i] = items[i].weight;
+  }
+}
+
+// Boundary facet candidates of a node-keyed surface: the facets (edges in 3D,
+// end points in 2D) used by a single element, with the quadric of the plane
+// through them perpendicular to their element. Facets are first counted on
+// the rank-local node ids, which are unique within the rank, and only the
+// candidates get their global key and quadric.
+void
+addBoundaryCandidates(
+  const KeyedSurface& a_surf,
+  int a_nNodeComp,
+  amrex::Real a_boundaryWeight,
+  KeyedSurface& a_out)
+{
+  const int nElts = static_cast<int>(a_surf.elts.size()) / nodesPerElt;
+  // Facet starting at local node f of element e: nodes f, ...,
+  // f + nodesPerFacet - 1, packed into one integer
+  auto facetId = [&](int a_e, int a_f) {
+    const int* ids = &a_surf.elts[static_cast<std::size_t>(a_e) * nodesPerElt];
+#if AMREX_SPACEDIM == 2
+    return static_cast<std::uint64_t>(ids[a_f]);
+#else
+    const auto a = static_cast<std::uint64_t>(ids[a_f]);
+    const auto b = static_cast<std::uint64_t>(ids[(a_f + 1) % nodesPerElt]);
+    return (std::min(a, b) << 32) | std::max(a, b);
+#endif
+  };
+
+  std::unordered_map<std::uint64_t, int> uses;
+  uses.reserve(static_cast<std::size_t>(nElts) * nodesPerElt);
+  for (int e = 0; e < nElts; ++e) {
+    for (int f = 0; f < nodesPerElt; ++f) {
+      ++uses[facetId(e, f)];
+    }
+  }
+
+  for (int e = 0; e < nElts; ++e) {
+    const int* ids = &a_surf.elts[static_cast<std::size_t>(e) * nodesPerElt];
+    for (int f = 0; f < nodesPerElt; ++f) {
+      if (uses[facetId(e, f)] != 1) {
+        continue;
+      }
+      std::array<SurfaceKey, nodesPerFacet> nodeKeys;
+      for (int k = 0; k < nodesPerFacet; ++k) {
+        std::copy_n(
+          &a_surf.keys
+             [static_cast<std::size_t>(ids[(f + k) % nodesPerElt]) * keySize],
+          keySize, nodeKeys[k].begin());
+      }
+      std::sort(nodeKeys.begin(), nodeKeys.end());
+      for (const auto& key : nodeKeys) {
+        a_out.bkeys.insert(a_out.bkeys.end(), key.begin(), key.end());
+      }
+
+      // Plane through the facet, perpendicular to the element: normal to
+      // the segment through its end point in 2D, containing the edge and the
+      // element normal in 3D
+      amrex::RealVect normal;
+      const amrex::Real w = elementPlane(a_surf.vals, ids, a_nNodeComp, normal);
+      const amrex::RealVect pa = nodePos(a_surf.vals, ids[f], a_nNodeComp);
+#if AMREX_SPACEDIM == 2
+      amrex::RealVect bn(normal[1], -normal[0]);
+#else
+      amrex::RealVect bn =
+        (nodePos(a_surf.vals, ids[(f + 1) % nodesPerElt], a_nNodeComp) - pa)
+          .crossProduct(normal);
+      if (const amrex::Real bl = bn.vectorLength(); bl > 0.0) {
+        bn /= bl;
+      }
+#endif
+      a_out.bquad.resize(a_out.bquad.size() + nQuad, 0.0);
+      addPlaneQuadric(
+        &a_out.bquad[a_out.bquad.size() - nQuad], bn, -bn.dotProduct(pa),
+        a_boundaryWeight * w);
+    }
+  }
 }
 
 } // namespace
-
-int
-clusterQuadricSize()
-{
-  return accCount;
-}
 
 int
 clusterAccSize(int a_nNodeComp)
@@ -202,247 +316,174 @@ amrex::Real
 elementMeasure(
   const std::vector<amrex::Real>& a_nodes, const int* a_ids, int a_nNodeComp)
 {
-  amrex::Real normal[AMREX_SPACEDIM];
+  amrex::RealVect normal;
+  return elementPlane(a_nodes, a_ids, a_nNodeComp, normal);
+}
+
+amrex::Real
+surfaceMeasure(
+  const std::vector<amrex::Real>& a_nodes,
+  const std::vector<int>& a_elts,
+  int a_nNodeComp)
+{
   amrex::Real measure = 0.0;
-  elementPlane(a_nodes, a_ids, a_nNodeComp, normal, measure);
+  for (std::size_t e = 0; e < a_elts.size(); e += nodesPerElt) {
+    measure += elementMeasure(a_nodes, &a_elts[e], a_nNodeComp);
+  }
   return measure;
 }
 
-ClusteredSurface
+SurfaceKeyMap
+mergeByKey(KeyedSurface& a_surf, int a_recSize, bool a_sum)
+{
+  const int nRec = static_cast<int>(a_surf.keys.size()) / keySize;
+  SurfaceKeyMap keyMap;
+  keyMap.reserve(nRec);
+  std::vector<int> remap(nRec);
+  // Compact in place: the record merged into slot n is never before slot n
+  int nUnique = 0;
+  for (int r = 0; r < nRec; ++r) {
+    SurfaceKey key;
+    std::copy_n(
+      &a_surf.keys[static_cast<std::size_t>(r) * keySize], keySize,
+      key.begin());
+    const auto [it, inserted] = keyMap.try_emplace(key, nUnique);
+    amrex::Real* src = &a_surf.vals[static_cast<std::size_t>(r) * a_recSize];
+    amrex::Real* dst =
+      &a_surf.vals[static_cast<std::size_t>(it->second) * a_recSize];
+    if (inserted) {
+      if (nUnique != r) {
+        std::copy_n(
+          key.begin(), keySize,
+          &a_surf.keys[static_cast<std::size_t>(nUnique) * keySize]);
+        std::copy_n(src, a_recSize, dst);
+      }
+      ++nUnique;
+    } else if (a_sum) {
+      for (int n = 0; n < a_recSize; ++n) {
+        dst[n] += src[n];
+      }
+    }
+    remap[r] = it->second;
+  }
+  a_surf.keys.resize(static_cast<std::size_t>(nUnique) * keySize);
+  a_surf.vals.resize(static_cast<std::size_t>(nUnique) * a_recSize);
+  for (auto& id : a_surf.elts) {
+    id = remap[id];
+  }
+  return keyMap;
+}
+
+KeyedSurface
 clusterSurface(
-  const std::vector<amrex::Real>& a_nodes,
-  const std::vector<int>& a_keys,
-  const std::vector<int>& a_elts,
+  const KeyedSurface& a_surf,
   int a_nNodeComp,
   int a_clusterSize,
   amrex::Real a_boundaryWeight)
 {
   AMREX_ALWAYS_ASSERT(a_clusterSize >= 1);
-  const bool doBoundary = a_boundaryWeight > 0.0;
   const int nAcc = clusterAccSize(a_nNodeComp);
-  const int nNodes = static_cast<int>(a_keys.size()) / keySize;
+  const int nNodes = static_cast<int>(a_surf.keys.size()) / keySize;
+  const int nElts = static_cast<int>(a_surf.elts.size()) / nodesPerElt;
 
-  ClusteredSurface out;
-  KeyMap clusterMap;
-  std::vector<int> nodeCluster(nNodes);
-  for (int g = 0; g < nNodes; ++g) {
-    const SurfaceKey ckey = clusterKeyOf(
-      &a_keys[static_cast<std::size_t>(g) * keySize], a_clusterSize);
-    const auto res =
-      clusterMap.emplace(ckey, static_cast<int>(clusterMap.size()));
-    if (res.second) {
-      out.keys.insert(out.keys.end(), ckey.begin(), ckey.end());
-      out.acc.resize(out.acc.size() + nAcc, 0.0);
+  KeyedSurface out;
+  SurfaceKeyMap clusterMap;
+  clusterMap.reserve(nNodes / a_clusterSize + 1);
+  std::vector<int> nodeCluster(nNodes, -1);
+  auto clusterOf = [&](int a_node) {
+    if (nodeCluster[a_node] < 0) {
+      const SurfaceKey ckey = clusterKeyOf(
+        &a_surf.keys[static_cast<std::size_t>(a_node) * keySize],
+        a_clusterSize);
+      const auto [it, inserted] =
+        clusterMap.try_emplace(ckey, static_cast<int>(clusterMap.size()));
+      if (inserted) {
+        out.keys.insert(out.keys.end(), ckey.begin(), ckey.end());
+        out.vals.resize(out.vals.size() + nAcc, 0.0);
+      }
+      nodeCluster[a_node] = it->second;
     }
-    const int cl = res.first->second;
-    nodeCluster[g] = cl;
-    amrex::Real* acc = &out.acc[static_cast<std::size_t>(cl) * nAcc];
-    const amrex::Real* node =
-      &a_nodes[static_cast<std::size_t>(g) * a_nNodeComp];
-    acc[accCount] += 1.0;
-    for (int n = 0; n < a_nNodeComp; ++n) {
-      acc[accSums + n] += node[n];
-    }
-  }
+    return nodeCluster[a_node];
+  };
 
-  // Boundary facet candidates: facet -> (index in out.bquad, use count)
-  std::unordered_map<FacetKey, std::pair<int, int>, IntArrayHash> facets;
-  constexpr int nQ = accCount;
-
-  const std::size_t nElts = a_elts.size() / nodesPerElt;
-  for (std::size_t e = 0; e < nElts; ++e) {
-    const int* ids = &a_elts[e * nodesPerElt];
-    std::array<int, nodesPerElt> cls{};
+  // Accumulate over the element incidences rather than over the nodes: nodes
+  // on box boundaries exist on every rank touching them, while every element
+  // exists once, so the result does not depend on the decomposition.
+  out.elts.reserve(a_surf.elts.size());
+  for (int e = 0; e < nElts; ++e) {
+    const int* ids = &a_surf.elts[static_cast<std::size_t>(e) * nodesPerElt];
+    amrex::RealVect normal;
+    const amrex::Real w = elementPlane(a_surf.vals, ids, a_nNodeComp, normal);
+    const amrex::Real dist =
+      -normal.dotProduct(nodePos(a_surf.vals, ids[0], a_nNodeComp));
     for (int k = 0; k < nodesPerElt; ++k) {
-      cls[k] = nodeCluster[ids[k]];
-    }
-
-    // Area-weighted (length-weighted in 2D) plane quadric, added to the
-    // cluster of each node of the element
-    amrex::Real normal[AMREX_SPACEDIM];
-    amrex::Real w = 0.0;
-    if (elementPlane(a_nodes, ids, a_nNodeComp, normal, w)) {
-      const amrex::Real* p0 =
-        &a_nodes[static_cast<std::size_t>(ids[0]) * a_nNodeComp];
-      amrex::Real dpl = 0.0;
-      for (int d = 0; d < AMREX_SPACEDIM; ++d) {
-        dpl -= normal[d] * p0[d];
+      const int cl = clusterOf(ids[k]);
+      amrex::Real* acc = &out.vals[static_cast<std::size_t>(cl) * nAcc];
+      addPlaneQuadric(acc, normal, dist, w);
+      acc[accCount] += 1.0;
+      const amrex::Real* node =
+        &a_surf.vals[static_cast<std::size_t>(ids[k]) * a_nNodeComp];
+      for (int n = 0; n < a_nNodeComp; ++n) {
+        acc[accSums + n] += node[n];
       }
-      for (const int cl : cls) {
-        addPlaneQuadric(
-          &out.acc[static_cast<std::size_t>(cl) * nAcc], normal, dpl, w);
-      }
-    }
-
-    // Facets of the element: edges (3D) or end points (2D). The facet
-    // starting at local node f holds nodes f, ..., f + nodesPerFacet - 1.
-    for (int f = 0; doBoundary && f < nodesPerElt; ++f) {
-      std::array<int, nodesPerFacet> fn{};
-      for (int k = 0; k < nodesPerFacet; ++k) {
-        fn[k] = ids[(f + k) % nodesPerElt];
-      }
-      std::array<const int*, nodesPerFacet> fk{};
-      for (int k = 0; k < nodesPerFacet; ++k) {
-        fk[k] = &a_keys[static_cast<std::size_t>(fn[k]) * keySize];
-      }
-      std::sort(fk.begin(), fk.end(), [](const int* a, const int* b) {
-        return std::lexicographical_compare(a, a + keySize, b, b + keySize);
-      });
-      FacetKey fkey;
-      for (int k = 0; k < nodesPerFacet; ++k) {
-        std::copy_n(fk[k], keySize, fkey.begin() + k * keySize);
-      }
-      const auto res = facets.emplace(
-        fkey, std::make_pair(static_cast<int>(facets.size()), 0));
-      ++res.first->second.second;
-      if (!res.second) {
-        continue;
-      }
-
-      // Plane through the facet, perpendicular to the element
-      amrex::Real bn[AMREX_SPACEDIM] = {0.0};
-      const amrex::Real* pa =
-        &a_nodes[static_cast<std::size_t>(fn[0]) * a_nNodeComp];
-#if AMREX_SPACEDIM == 2
-      // In 2D the facet is an end point and the plane is normal to the
-      // segment
-      if (w > 0.0) {
-        bn[0] = normal[1];
-        bn[1] = -normal[0];
-      }
-#else
-      const amrex::Real* pb =
-        &a_nodes[static_cast<std::size_t>(fn[1]) * a_nNodeComp];
-      const amrex::Real tx = pb[0] - pa[0];
-      const amrex::Real ty = pb[1] - pa[1];
-      const amrex::Real tz = pb[2] - pa[2];
-      if (w > 0.0) {
-        bn[0] = ty * normal[2] - tz * normal[1];
-        bn[1] = tz * normal[0] - tx * normal[2];
-        bn[2] = tx * normal[1] - ty * normal[0];
-        const amrex::Real bl =
-          std::sqrt(bn[0] * bn[0] + bn[1] * bn[1] + bn[2] * bn[2]);
-        for (auto& v : bn) {
-          v = (bl > 0.0) ? v / bl : 0.0;
-        }
-      }
-#endif
-      amrex::Real bd = 0.0;
-      for (int d = 0; d < AMREX_SPACEDIM; ++d) {
-        bd -= bn[d] * pa[d];
-      }
-      out.bkeys.insert(out.bkeys.end(), fkey.begin(), fkey.end());
-      out.bquad.resize(out.bquad.size() + nQ, 0.0);
-      addPlaneQuadric(
-        &out.bquad[out.bquad.size() - nQ], bn, bd, a_boundaryWeight * w);
-    }
-
-    // Cluster keys are global, so an element collapsing here collapses in
-    // the merged surface too
-    bool degenerate = false;
-    for (int a = 0; a < nodesPerElt; ++a) {
-      for (int b = a + 1; b < nodesPerElt; ++b) {
-        degenerate = degenerate || (cls[a] == cls[b]);
-      }
-    }
-    if (!degenerate) {
-      out.elts.insert(out.elts.end(), cls.begin(), cls.end());
+      out.elts.push_back(cl);
     }
   }
+  combineElements(out.elts, out.eltWeights);
 
-  // Keep the facets used once on this rank: the global boundary, plus the
-  // facets shared with another rank, paired up in mergeClusters
-  std::vector<int> bkeys;
-  std::vector<amrex::Real> bquad;
-  for (const auto& [fkey, info] : facets) {
-    if (info.second == 1) {
-      const auto k0 = static_cast<std::ptrdiff_t>(info.first);
-      bkeys.insert(
-        bkeys.end(), out.bkeys.begin() + k0 * facetKeySize,
-        out.bkeys.begin() + (k0 + 1) * facetKeySize);
-      bquad.insert(
-        bquad.end(), out.bquad.begin() + k0 * nQ,
-        out.bquad.begin() + (k0 + 1) * nQ);
-    }
+  if (a_boundaryWeight > 0.0) {
+    addBoundaryCandidates(a_surf, a_nNodeComp, a_boundaryWeight, out);
   }
-  out.bkeys = std::move(bkeys);
-  out.bquad = std::move(bquad);
   return out;
 }
 
-ClusteredSurface
-mergeClusters(
-  const ClusteredSurface& a_surf, int a_nNodeComp, int a_clusterSize)
+void
+mergeClusters(KeyedSurface& a_surf, int a_nNodeComp, int a_clusterSize)
 {
   const int nAcc = clusterAccSize(a_nNodeComp);
-  const int nClusters = static_cast<int>(a_surf.keys.size()) / keySize;
+  const SurfaceKeyMap keyMap = mergeByKey(a_surf, nAcc, true);
+  combineElements(a_surf.elts, a_surf.eltWeights);
 
-  ClusteredSurface out;
-  KeyMap keyMap;
-  keyMap.reserve(nClusters);
-  std::vector<int> remap(nClusters);
-  for (int cl = 0; cl < nClusters; ++cl) {
-    SurfaceKey key;
-    std::copy_n(
-      &a_surf.keys[static_cast<std::size_t>(cl) * keySize], keySize,
-      key.begin());
-    const auto res = keyMap.emplace(key, static_cast<int>(keyMap.size()));
-    const amrex::Real* src = &a_surf.acc[static_cast<std::size_t>(cl) * nAcc];
-    if (res.second) {
-      out.keys.insert(out.keys.end(), key.begin(), key.end());
-      out.acc.insert(out.acc.end(), src, src + nAcc);
-    } else {
-      amrex::Real* dst =
-        &out.acc[static_cast<std::size_t>(res.first->second) * nAcc];
-      for (int n = 0; n < nAcc; ++n) {
-        dst[n] += src[n];
-      }
-    }
-    remap[cl] = res.first->second;
-  }
-
-  out.elts.resize(a_surf.elts.size());
-  for (std::size_t n = 0; n < a_surf.elts.size(); ++n) {
-    out.elts[n] = remap[a_surf.elts[n]];
-  }
-
-  // Pair up the boundary candidates: a facet found twice is shared by two
-  // ranks and interior to the surface. The others are on the boundary and
-  // constrain the clusters of their nodes.
-  constexpr int nQ = accCount;
+  // A candidate found twice is a facet shared by two ranks, interior to the
+  // surface. The others are on the boundary and constrain the clusters of
+  // their nodes.
   const int nCand = static_cast<int>(a_surf.bkeys.size()) / facetKeySize;
-  std::unordered_map<FacetKey, std::pair<int, int>, IntArrayHash> facets;
-  facets.reserve(nCand);
-  for (int c = 0; c < nCand; ++c) {
+  auto facetKey = [&](int a_c) {
     FacetKey fkey;
     std::copy_n(
-      &a_surf.bkeys[static_cast<std::size_t>(c) * facetKeySize], facetKeySize,
+      &a_surf.bkeys[static_cast<std::size_t>(a_c) * facetKeySize], facetKeySize,
       fkey.begin());
-    ++facets.emplace(fkey, std::make_pair(c, 0)).first->second.second;
+    return fkey;
+  };
+  std::unordered_map<FacetKey, int, IntArrayHash> uses;
+  uses.reserve(nCand);
+  for (int c = 0; c < nCand; ++c) {
+    ++uses[facetKey(c)];
   }
-  for (const auto& [fkey, info] : facets) {
-    if (info.second != 1) {
+  for (int c = 0; c < nCand; ++c) {
+    const FacetKey fkey = facetKey(c);
+    if (uses[fkey] != 1) {
       continue;
     }
-    const amrex::Real* q =
-      &a_surf.bquad[static_cast<std::size_t>(info.first) * nQ];
+    const amrex::Real* q = &a_surf.bquad[static_cast<std::size_t>(c) * nQuad];
     for (int k = 0; k < nodesPerFacet; ++k) {
       const auto found =
         keyMap.find(clusterKeyOf(&fkey[k * keySize], a_clusterSize));
       AMREX_ALWAYS_ASSERT(found != keyMap.end());
-      amrex::Real* dst =
-        &out.acc[static_cast<std::size_t>(found->second) * nAcc];
-      for (int n = 0; n < nQ; ++n) {
-        dst[n] += q[n];
+      amrex::Real* acc =
+        &a_surf.vals[static_cast<std::size_t>(found->second) * nAcc];
+      for (int n = 0; n < nQuad; ++n) {
+        acc[n] += q[n];
       }
     }
   }
-  return out;
+  a_surf.bkeys = {};
+  a_surf.bquad = {};
 }
 
-amrex::Real
+void
 finalizeClusters(
-  const ClusteredSurface& a_surf,
+  const KeyedSurface& a_surf,
   const amrex::Vector<amrex::Geometry>& a_geoms,
   int a_clusterSize,
   int a_nNodeComp,
@@ -451,62 +492,25 @@ finalizeClusters(
 {
   const int nAcc = clusterAccSize(a_nNodeComp);
   const int nClusters = static_cast<int>(a_surf.keys.size()) / keySize;
+  const std::size_t nElts = a_surf.eltWeights.size();
+  AMREX_ALWAYS_ASSERT(a_surf.elts.size() == nElts * nodesPerElt);
 
-  // Elements mapping onto the same clusters are merged, summing their
-  // orientations: a pair with opposite orientations is a fold pinched by the
-  // clustering and cancels out, and the net orientation of the others is
-  // kept. Elements are emitted in order of first occurrence and clusters
-  // numbered in order of first use, so the output only depends on the input
-  // order.
-  using EltKey = std::array<int, nodesPerElt>;
-  std::unordered_map<EltKey, int, IntArrayHash> eltIndex;
-  std::vector<EltKey> uniqueElts;
-  std::vector<int> netOrient;
-  const std::size_t nElts = a_surf.elts.size() / nodesPerElt;
+  // Elements with their net orientation, clusters numbered in order of
+  // first use
+  std::vector<int> newID(nClusters, -1);
+  int nUsed = 0;
+  a_elts.resize(a_surf.elts.size());
   for (std::size_t e = 0; e < nElts; ++e) {
     EltKey ids;
     std::copy_n(&a_surf.elts[e * nodesPerElt], nodesPerElt, ids.begin());
-    // Sort, tracking the parity of the permutation
-    int parity = 1;
-    for (int a = 0; a < nodesPerElt; ++a) {
-      for (int b = 0; b + 1 < nodesPerElt - a; ++b) {
-        if (ids[b] > ids[b + 1]) {
-          std::swap(ids[b], ids[b + 1]);
-          parity = -parity;
-        }
-      }
-    }
-    bool degenerate = false;
-    for (int k = 1; k < nodesPerElt; ++k) {
-      degenerate = degenerate || (ids[k] == ids[k - 1]);
-    }
-    if (degenerate) {
-      continue;
-    }
-    const auto res = eltIndex.emplace(ids, static_cast<int>(uniqueElts.size()));
-    if (res.second) {
-      uniqueElts.push_back(ids);
-      netOrient.push_back(0);
-    }
-    netOrient[res.first->second] += parity;
-  }
-
-  std::vector<int> newID(nClusters, -1);
-  int nUsed = 0;
-  a_elts.clear();
-  for (std::size_t u = 0; u < uniqueElts.size(); ++u) {
-    if (netOrient[u] == 0) {
-      continue;
-    }
-    EltKey ids = uniqueElts[u];
-    if (netOrient[u] < 0) {
+    if (a_surf.eltWeights[e] < 0) {
       std::swap(ids[0], ids[1]);
     }
-    for (const int id : ids) {
-      if (newID[id] < 0) {
-        newID[id] = nUsed++;
+    for (int k = 0; k < nodesPerElt; ++k) {
+      if (newID[ids[k]] < 0) {
+        newID[ids[k]] = nUsed++;
       }
-      a_elts.push_back(newID[id]);
+      a_elts[e * nodesPerElt + k] = newID[ids[k]];
     }
   }
 
@@ -515,7 +519,7 @@ finalizeClusters(
     if (newID[cl] < 0) {
       continue;
     }
-    const amrex::Real* acc = &a_surf.acc[static_cast<std::size_t>(cl) * nAcc];
+    const amrex::Real* acc = &a_surf.vals[static_cast<std::size_t>(cl) * nAcc];
     amrex::Real* node =
       &a_nodes[static_cast<std::size_t>(newID[cl]) * a_nNodeComp];
     const amrex::Real count = acc[accCount];
@@ -537,10 +541,7 @@ finalizeClusters(
     amrex::Real eval[AMREX_SPACEDIM];
     amrex::Real evec[AMREX_SPACEDIM][AMREX_SPACEDIM];
     symEigen(mat, eval, evec);
-    amrex::Real lmax = 0.0;
-    for (const amrex::Real l : eval) {
-      lmax = std::max(lmax, l);
-    }
+    const amrex::Real lmax = *std::max_element(eval, eval + AMREX_SPACEDIM);
     for (int k = 0; k < AMREX_SPACEDIM; ++k) {
       if (lmax <= 0.0 || eval[k] <= quadricRelTol * lmax) {
         continue;
@@ -566,12 +567,6 @@ finalizeClusters(
       node[d] = std::clamp(node[d], lo, lo + a_clusterSize * dx);
     }
   }
-
-  amrex::Real measure = 0.0;
-  for (std::size_t e = 0; e < a_elts.size(); e += nodesPerElt) {
-    measure += elementMeasure(a_nodes, &a_elts[e], a_nNodeComp);
-  }
-  return measure;
 }
 
 } // namespace pele::physics::diagnostics

@@ -16,32 +16,26 @@ namespace {
 
 namespace sd = pele::physics::diagnostics;
 
-// Polyline carrying, per node, its coordinates and a constant field, keyed by
-// the dual cell holding it (as DiagIsosurface keys its iso-line nodes)
+// Polylines carry, per node, coordinates and a constant field, keyed by the
+// dual cell holding them (as DiagIsosurface keys its iso-line nodes)
 constexpr int nNC = 3;
 constexpr amrex::Real fieldVal = 7.0;
 
-struct Polyline
-{
-  std::vector<amrex::Real> nodes;
-  std::vector<int> keys;
-  std::vector<int> elts;
-};
-
 void
-addNode(Polyline& a_p, amrex::Real a_x, amrex::Real a_y, amrex::Real a_dx)
+addNode(
+  sd::KeyedSurface& a_p, amrex::Real a_x, amrex::Real a_y, amrex::Real a_dx)
 {
-  a_p.nodes.insert(a_p.nodes.end(), {a_x, a_y, fieldVal});
+  a_p.vals.insert(a_p.vals.end(), {a_x, a_y, fieldVal});
   a_p.keys.insert(
     a_p.keys.end(), {0, static_cast<int>(std::floor(a_x / a_dx - 0.5)),
                      static_cast<int>(std::floor(a_y / a_dx - 0.5)), 0});
 }
 
 // Nodes are spaced by more than sqrt(2) dx, so that no two share a dual cell
-Polyline
+sd::KeyedSurface
 makeCircle(amrex::Real a_r, amrex::Real a_dx)
 {
-  Polyline p;
+  sd::KeyedSurface p;
   const int n = static_cast<int>(2.0 * M_PI * a_r / (1.6 * a_dx));
   for (int i = 0; i < n; ++i) {
     const amrex::Real t = 2.0 * M_PI * i / n;
@@ -51,7 +45,7 @@ makeCircle(amrex::Real a_r, amrex::Real a_dx)
   return p;
 }
 
-Polyline
+sd::KeyedSurface
 makeLine(
   amrex::Real a_x0,
   amrex::Real a_y0,
@@ -59,7 +53,7 @@ makeLine(
   amrex::Real a_y1,
   amrex::Real a_dx)
 {
-  Polyline p;
+  sd::KeyedSurface p;
   const amrex::Real len = std::hypot(a_x1 - a_x0, a_y1 - a_y0);
   const int n = static_cast<int>(len / (1.6 * a_dx));
   for (int i = 0; i <= n; ++i) {
@@ -73,19 +67,19 @@ makeLine(
 }
 
 // Elements [a_eBegin, a_eEnd) of a_p with the nodes they use, renumbered
-Polyline
-subPolyline(const Polyline& a_p, int a_eBegin, int a_eEnd)
+sd::KeyedSurface
+subPolyline(const sd::KeyedSurface& a_p, int a_eBegin, int a_eEnd)
 {
-  Polyline sub;
+  sd::KeyedSurface sub;
   std::vector<int> local(a_p.keys.size() / sd::surfaceKeySize, -1);
   for (int e = a_eBegin; e < a_eEnd; ++e) {
     for (int k = 0; k < 2; ++k) {
       const int g = a_p.elts[2 * e + k];
       if (local[g] < 0) {
         local[g] = static_cast<int>(sub.keys.size()) / sd::surfaceKeySize;
-        sub.nodes.insert(
-          sub.nodes.end(), a_p.nodes.begin() + g * nNC,
-          a_p.nodes.begin() + (g + 1) * nNC);
+        sub.vals.insert(
+          sub.vals.end(), a_p.vals.begin() + g * nNC,
+          a_p.vals.begin() + (g + 1) * nNC);
         sub.keys.insert(
           sub.keys.end(), a_p.keys.begin() + g * sd::surfaceKeySize,
           a_p.keys.begin() + (g + 1) * sd::surfaceKeySize);
@@ -98,27 +92,26 @@ subPolyline(const Polyline& a_p, int a_eBegin, int a_eEnd)
 
 // Append a_b to a_a, as the IO rank does with the clusters of several ranks
 void
-appendClusters(sd::ClusteredSurface& a_a, const sd::ClusteredSurface& a_b)
+appendClusters(sd::KeyedSurface& a_a, const sd::KeyedSurface& a_b)
 {
   const int offset = static_cast<int>(a_a.keys.size()) / sd::surfaceKeySize;
   a_a.keys.insert(a_a.keys.end(), a_b.keys.begin(), a_b.keys.end());
-  a_a.acc.insert(a_a.acc.end(), a_b.acc.begin(), a_b.acc.end());
+  a_a.vals.insert(a_a.vals.end(), a_b.vals.begin(), a_b.vals.end());
   for (const int id : a_b.elts) {
     a_a.elts.push_back(id + offset);
   }
+  a_a.eltWeights.insert(
+    a_a.eltWeights.end(), a_b.eltWeights.begin(), a_b.eltWeights.end());
   a_a.bkeys.insert(a_a.bkeys.end(), a_b.bkeys.begin(), a_b.bkeys.end());
   a_a.bquad.insert(a_a.bquad.end(), a_b.bquad.begin(), a_b.bquad.end());
 }
 
-amrex::Real
-polylineLength(const Polyline& a_p)
+struct Decimated
 {
-  amrex::Real len = 0.0;
-  for (std::size_t e = 0; e < a_p.elts.size(); e += 2) {
-    len += sd::elementMeasure(a_p.nodes, &a_p.elts[e], nNC);
-  }
-  return len;
-}
+  std::vector<amrex::Real> nodes;
+  std::vector<int> elts;
+  amrex::Real length{0.0};
+};
 
 void
 testSurfaceDecimation()
@@ -131,26 +124,32 @@ testSurfaceDecimation()
     amrex::Box(amrex::IntVect(0), amrex::IntVect(nCell - 1)),
     amrex::RealBox({0.0, 0.0}, {1.0, 1.0}), 0, {0, 0})};
 
+  // Merge and finalize clusters, as on the IO rank
+  auto finalize = [&](sd::KeyedSurface a_clusters, int a_clusterSize) {
+    Decimated out;
+    sd::mergeClusters(a_clusters, nNC, a_clusterSize);
+    sd::finalizeClusters(
+      a_clusters, geoms, a_clusterSize, nNC, out.nodes, out.elts);
+    out.length = sd::surfaceMeasure(out.nodes, out.elts, nNC);
+    return out;
+  };
   auto decimate = [&](
-                    const sd::ClusteredSurface& a_clusters, Polyline& a_out,
-                    int a_clusterSize) {
-    return sd::finalizeClusters(
-      sd::mergeClusters(a_clusters, nNC, a_clusterSize), geoms, a_clusterSize,
-      nNC, a_out.nodes, a_out.elts);
+                    const sd::KeyedSurface& a_p, int a_clusterSize,
+                    amrex::Real a_boundaryWeight) {
+    return finalize(
+      sd::clusterSurface(a_p, nNC, a_clusterSize, a_boundaryWeight),
+      a_clusterSize);
   };
 
   // Closed circle: fewer segments, length and radius kept, still a closed
   // manifold curve, fields averaged
   const amrex::Real r = 0.3;
-  const Polyline circle = makeCircle(r, dx);
-  Polyline dec;
-  const amrex::Real len = decimate(
-    sd::clusterSurface(
-      circle.nodes, circle.keys, circle.elts, nNC, clusterSize, boundaryWeight),
-    dec, clusterSize);
+  const sd::KeyedSurface circle = makeCircle(r, dx);
+  const Decimated dec = decimate(circle, clusterSize, boundaryWeight);
   const int nDecNodes = static_cast<int>(dec.nodes.size()) / nNC;
   AMREX_ALWAYS_ASSERT(dec.elts.size() < circle.elts.size());
-  AMREX_ALWAYS_ASSERT(std::abs(len - 2.0 * M_PI * r) < 1.0e-2 * 2.0 * M_PI * r);
+  AMREX_ALWAYS_ASSERT(
+    std::abs(dec.length - 2.0 * M_PI * r) < 1.0e-2 * 2.0 * M_PI * r);
   std::vector<int> valence(nDecNodes, 0);
   for (const int id : dec.elts) {
     ++valence[id];
@@ -163,20 +162,17 @@ testSurfaceDecimation()
     AMREX_ALWAYS_ASSERT(std::abs(node[2] - fieldVal) < 1.0e-12);
   }
 
-  // Same circle split in two pieces clustered separately, as on two ranks:
-  // the merged result must match the single piece
-  const int half = static_cast<int>(circle.elts.size()) / 4;
-  const Polyline pieceA = subPolyline(circle, 0, half);
-  const Polyline pieceB =
-    subPolyline(circle, half, static_cast<int>(circle.elts.size()) / 2);
-  sd::ClusteredSurface split = sd::clusterSurface(
-    pieceA.nodes, pieceA.keys, pieceA.elts, nNC, clusterSize, boundaryWeight);
+  // Same circle split in two pieces clustered separately, as on two ranks,
+  // the node at each cut existing in both: the merged result must match the
+  // single piece
+  const int nSeg = static_cast<int>(circle.elts.size()) / 2;
+  const sd::KeyedSurface pieceA = subPolyline(circle, 0, nSeg / 2);
+  const sd::KeyedSurface pieceB = subPolyline(circle, nSeg / 2, nSeg);
+  sd::KeyedSurface split =
+    sd::clusterSurface(pieceA, nNC, clusterSize, boundaryWeight);
   appendClusters(
-    split, sd::clusterSurface(
-             pieceB.nodes, pieceB.keys, pieceB.elts, nNC, clusterSize,
-             boundaryWeight));
-  Polyline decSplit;
-  decimate(split, decSplit, clusterSize);
+    split, sd::clusterSurface(pieceB, nNC, clusterSize, boundaryWeight));
+  const Decimated decSplit = finalize(split, clusterSize);
   AMREX_ALWAYS_ASSERT(decSplit.elts == dec.elts);
   AMREX_ALWAYS_ASSERT(decSplit.nodes.size() == dec.nodes.size());
   for (std::size_t n = 0; n < dec.nodes.size(); ++n) {
@@ -186,14 +182,12 @@ testSurfaceDecimation()
   // Open straight line: vertices stay on the line, and the boundary quadrics
   // keep the end points, hence the length
   const amrex::Real x0 = 0.1, y0 = 0.2, x1 = 0.9, y1 = 0.6;
-  const Polyline line = makeLine(x0, y0, x1, y1, dx);
-  Polyline decLine;
-  const amrex::Real lineLen = decimate(
-    sd::clusterSurface(
-      line.nodes, line.keys, line.elts, nNC, clusterSize, boundaryWeight),
-    decLine, clusterSize);
+  const sd::KeyedSurface line = makeLine(x0, y0, x1, y1, dx);
+  const Decimated decLine = decimate(line, clusterSize, boundaryWeight);
   AMREX_ALWAYS_ASSERT(decLine.elts.size() < line.elts.size());
-  AMREX_ALWAYS_ASSERT(std::abs(lineLen - polylineLength(line)) < 1.0e-12);
+  AMREX_ALWAYS_ASSERT(
+    std::abs(decLine.length - sd::surfaceMeasure(line.vals, line.elts, nNC)) <
+    1.0e-12);
   for (std::size_t i = 0; i < decLine.nodes.size(); i += nNC) {
     const amrex::Real dist = (y1 - y0) * (decLine.nodes[i] - x0) -
                              (x1 - x0) * (decLine.nodes[i + 1] - y0);
@@ -204,18 +198,12 @@ testSurfaceDecimation()
   // cells: its first two nodes share that cluster. Without boundary
   // quadrics, the cluster vertex is their mean and the line end retreats; with
   // them, the end point is kept.
-  const amrex::Real xs = 8.6 * dx;
-  const amrex::Real ys = 8.6 * dx;
-  const Polyline line4 = makeLine(xs, ys, x1, y1, dx);
-  Polyline decKept, decFree;
-  const amrex::Real lenKept = decimate(
-    sd::clusterSurface(
-      line4.nodes, line4.keys, line4.elts, nNC, 4, boundaryWeight),
-    decKept, 4);
-  const amrex::Real lenFree = decimate(
-    sd::clusterSurface(line4.nodes, line4.keys, line4.elts, nNC, 4, 0.0),
-    decFree, 4);
-  AMREX_ALWAYS_ASSERT(std::abs(lenKept - polylineLength(line4)) < 1.0e-12);
+  const sd::KeyedSurface line4 = makeLine(8.6 * dx, 8.6 * dx, x1, y1, dx);
+  const amrex::Real lenKept = decimate(line4, 4, boundaryWeight).length;
+  const amrex::Real lenFree = decimate(line4, 4, 0.0).length;
+  AMREX_ALWAYS_ASSERT(
+    std::abs(lenKept - sd::surfaceMeasure(line4.vals, line4.elts, nNC)) <
+    1.0e-12);
   AMREX_ALWAYS_ASSERT(lenFree < lenKept - 0.5 * dx);
 }
 

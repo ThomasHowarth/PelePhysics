@@ -47,14 +47,11 @@ private:
     return AMREX_SPACEDIM + static_cast<int>(m_fieldNames.size());
   }
 
-  // Gather the rank-local surfaces on the IO rank, merge shared nodes and
-  // write the result in the requested format. Without a_clustered, a_surf
-  // holds the surface itself (acc: node values, keys: dual-edge keys). With
-  // a_clustered, it holds clusters from clusterSurface, merged and turned
-  // into the decimated surface before writing.
+  // Gather the rank-local surfaces (nodes keyed by their dual edge, or
+  // clusters when decimating) on the IO rank, merge the records shared
+  // between ranks, and write the result in the requested format.
   void collateAndWrite(
-    const pele::physics::diagnostics::ClusteredSurface& a_surf,
-    bool a_clustered,
+    const pele::physics::diagnostics::KeyedSurface& a_surf,
     int a_nstep,
     const amrex::Real& a_time) const;
 

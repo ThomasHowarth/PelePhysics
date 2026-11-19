@@ -25,7 +25,7 @@ constexpr int nodesPerElt = sdec::surfaceNodesPerElt;
 constexpr int keySize = sdec::surfaceKeySize;
 using EdgeKey = sdec::SurfaceKey;
 
-using EdgeMap = std::unordered_map<EdgeKey, int, sdec::IntArrayHash>;
+using EdgeMap = sdec::SurfaceKeyMap;
 
 // Rank-local surface under construction
 struct LocalSurface
@@ -729,27 +729,22 @@ DiagIsosurface::processDiag(
   }
 
   if (m_format != IsoSurfFormat::None) {
+    sdec::KeyedSurface mesh;
+    mesh.keys = std::move(surf.keys);
+    mesh.vals = std::move(surf.nodes);
+    mesh.elts = std::move(surf.elts);
+    surf = LocalSurface{};
     if (m_clusterSize > 0) {
       // Cluster before gathering: only the clusters travel to the IO rank
-      const sdec::ClusteredSurface clustered = sdec::clusterSurface(
-        surf.nodes, surf.keys, surf.elts, nNC, m_clusterSize, m_boundaryWeight);
-      surf = LocalSurface{};
-      collateAndWrite(clustered, true, a_nstep, a_time);
-    } else {
-      // Same container, holding the node values in place of accumulators
-      sdec::ClusteredSurface plain;
-      plain.keys = std::move(surf.keys);
-      plain.acc = std::move(surf.nodes);
-      plain.elts = std::move(surf.elts);
-      collateAndWrite(plain, false, a_nstep, a_time);
+      mesh = sdec::clusterSurface(mesh, nNC, m_clusterSize, m_boundaryWeight);
     }
+    collateAndWrite(mesh, a_nstep, a_time);
   }
 }
 
 void
 DiagIsosurface::collateAndWrite(
-  const pele::physics::diagnostics::ClusteredSurface& a_surf,
-  bool a_clustered,
+  const pele::physics::diagnostics::KeyedSurface& a_surf,
   int a_nstep,
   const amrex::Real& a_time) const
 {
@@ -760,7 +755,7 @@ DiagIsosurface::collateAndWrite(
   // MPI_Gatherv takes int counts and displacements: check that the gathered
   // arrays fit before narrowing anything to int.
   amrex::Long totSize = static_cast<amrex::Long>(std::max(
-    {a_surf.acc.size(), a_surf.keys.size(), a_surf.elts.size(),
+    {a_surf.vals.size(), a_surf.keys.size(), a_surf.elts.size(),
      a_surf.bkeys.size(), a_surf.bquad.size()}));
   PD::ReduceLongSum(totSize);
   if (totSize > static_cast<amrex::Long>(std::numeric_limits<int>::max())) {
@@ -770,16 +765,15 @@ DiagIsosurface::collateAndWrite(
       "None to only compute the measure");
   }
 
-  std::vector<int> dispNode, dispKey, dispElt, dispBKey, dispBQuad;
-  std::vector<amrex::Real> nodesAll = gatherToIO(a_surf.acc, dispNode);
-  std::vector<int> keysAll = gatherToIO(a_surf.keys, dispKey);
-  std::vector<int> eltsAll = gatherToIO(a_surf.elts, dispElt);
-  std::vector<int> bkeysAll;
-  std::vector<amrex::Real> bquadAll;
-  if (a_clustered) {
-    bkeysAll = gatherToIO(a_surf.bkeys, dispBKey);
-    bquadAll = gatherToIO(a_surf.bquad, dispBQuad);
-  }
+  // The fields only used by clustered surfaces are empty otherwise
+  std::vector<int> dispKey, dispElt, unused;
+  sdec::KeyedSurface all;
+  all.keys = gatherToIO(a_surf.keys, dispKey);
+  all.vals = gatherToIO(a_surf.vals, unused);
+  all.elts = gatherToIO(a_surf.elts, dispElt);
+  all.eltWeights = gatherToIO(a_surf.eltWeights, unused);
+  all.bkeys = gatherToIO(a_surf.bkeys, unused);
+  all.bquad = gatherToIO(a_surf.bquad, unused);
 
   if (!PD::IOProcessor()) {
     return;
@@ -789,55 +783,32 @@ DiagIsosurface::collateAndWrite(
   for (int r = 0; r < PD::NProcs(); ++r) {
     const int recOffset = dispKey[r] / keySize;
     for (int n = dispElt[r]; n < dispElt[r + 1]; ++n) {
-      eltsAll[n] += recOffset;
+      all.elts[n] += recOffset;
     }
   }
 
+  // Merge the records shared between ranks: nodes on the same level and edge,
+  // or clusters, which are then turned into one vertex each
   const int nNC = nNodeComp();
   std::vector<amrex::Real> nodes;
-  if (a_clustered) {
-    // Sum the accumulators of clusters split between ranks, then build one
-    // vertex per cluster
-    const sdec::ClusteredSurface merged = sdec::mergeClusters(
-      sdec::ClusteredSurface{
-        std::move(keysAll), std::move(nodesAll), std::move(eltsAll),
-        std::move(bkeysAll), std::move(bquadAll)},
-      nNC, m_clusterSize);
-    const amrex::Real decMeasure = sdec::finalizeClusters(
-      merged, m_geoms, m_clusterSize, nNC, nodes, eltsAll);
+  std::vector<int> elts;
+  if (m_clusterSize > 0) {
+    sdec::mergeClusters(all, nNC, m_clusterSize);
+    sdec::finalizeClusters(all, m_geoms, m_clusterSize, nNC, nodes, elts);
     if (m_verbose > 0) {
       amrex::Print() << "  DiagIsosurface " << m_diagfile << ": decimated to "
-                     << eltsAll.size() / nodesPerElt << " elements, "
+                     << elts.size() / nodesPerElt << " elements, "
                      << nodes.size() / nNC << " nodes, "
                      << (AMREX_SPACEDIM == 2 ? "length = " : "area = ")
-                     << decMeasure << "\n";
+                     << sdec::surfaceMeasure(nodes, elts, nNC) << "\n";
     }
   } else {
-    // Merge the nodes shared between ranks (same level and same edge) and
-    // renumber the elements accordingly.
-    const int nNodesTot = static_cast<int>(keysAll.size()) / keySize;
-    EdgeMap keyToNode;
-    keyToNode.reserve(nNodesTot);
-    std::vector<int> remap(nNodesTot);
-    nodes.reserve(nodesAll.size());
-    for (int g = 0; g < nNodesTot; ++g) {
-      EdgeKey key;
-      std::copy_n(&keysAll[g * keySize], keySize, key.begin());
-      const int next = static_cast<int>(keyToNode.size());
-      const auto res = keyToNode.emplace(key, next);
-      if (res.second) {
-        nodes.insert(
-          nodes.end(), nodesAll.begin() + g * nNC,
-          nodesAll.begin() + (g + 1) * nNC);
-      }
-      remap[g] = res.first->second;
-    }
-    for (auto& id : eltsAll) {
-      id = remap[id];
-    }
+    sdec::mergeByKey(all, nNC, false);
+    nodes = std::move(all.vals);
+    elts = std::move(all.elts);
   }
 
-  if (eltsAll.empty()) {
+  if (elts.empty()) {
     amrex::Print() << "  DiagIsosurface " << m_diagfile
                    << ": empty iso-surface, nothing written\n";
     return;
@@ -845,9 +816,9 @@ DiagIsosurface::collateAndWrite(
 
   const std::string base = outputName(a_nstep, a_time);
   if (m_format == IsoSurfFormat::XDMF) {
-    writeXDMF(base, a_time, nodes, eltsAll);
+    writeXDMF(base, a_time, nodes, elts);
   } else if (m_format == IsoSurfFormat::MEF) {
-    writeMEF(base, a_time, nodes, eltsAll);
+    writeMEF(base, a_time, nodes, elts);
   }
 }
 
