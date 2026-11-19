@@ -2,6 +2,7 @@
 #define DIAGISOSURFACE_H
 
 #include "DiagBase.H"
+#include "SurfaceDecimation.H"
 #include <AMReX_Enum.H>
 
 #include <vector>
@@ -47,11 +48,13 @@ private:
   }
 
   // Gather the rank-local surfaces on the IO rank, merge shared nodes and
-  // write the result in the requested format.
+  // write the result in the requested format. Without a_clustered, a_surf
+  // holds the surface itself (acc: node values, keys: dual-edge keys). With
+  // a_clustered, it holds clusters from clusterSurface, merged and turned
+  // into the decimated surface before writing.
   void collateAndWrite(
-    const std::vector<amrex::Real>& a_nodes,
-    const std::vector<int>& a_keys,
-    const std::vector<int>& a_elts,
+    const pele::physics::diagnostics::ClusteredSurface& a_surf,
+    bool a_clustered,
     int a_nstep,
     const amrex::Real& a_time) const;
 
@@ -82,6 +85,12 @@ private:
 
   IsoSurfFormat m_format{IsoSurfFormat::XDMF};
   bool m_writeMeasure{true};
+
+  // Decimation of the written surface by vertex clustering on blocks of
+  // m_clusterSize^D cells (0: no decimation)
+  int m_clusterSize{0};
+  // Weight of the quadrics preserving the open boundaries of the surface
+  amrex::Real m_boundaryWeight{10.0};
   bool m_measureHeaderDone{false};
 };
 

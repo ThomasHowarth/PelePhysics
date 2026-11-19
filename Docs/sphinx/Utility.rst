@@ -370,6 +370,8 @@ The following provide examples for each diagnostic in PeleLMeX (in PeleC, all di
     peleLM.isoT.filters = lowZ                                      # [OPT, DEF=None] List of filters
     peleLM.isoT.lowZ.field_name = z                                 # Filter field
     peleLM.isoT.lowZ.value_less = 0.01                              # Filter definition : value_greater, value_less, value_inrange
+    peleLM.isoT.decimate.cluster_size = 2                           # [OPT, DEF=0] Decimate the written surface by clustering its vertices on blocks of cluster_size^dim cells (0: no decimation)
+    peleLM.isoT.decimate.boundary_weight = 10.0                     # [OPT, DEF=10] Weight preserving the open boundaries of the surface during decimation (0: not preserved)
 
 ``DiagIsosurface`` uses marching cubes (3D) or marching squares (2D) on the dual grid, i.e. the cubes have
 cell centers as corners, with nodes placed by linear interpolation along the cube edges. A few details are worth
@@ -392,6 +394,23 @@ knowing when using the output:
 * With ``format = XDMF``, each call writes a ``<file><step>.xmf`` descriptor and a ``<file><step>.bin`` binary
   file holding the connectivity, node coordinates and interpolated variables. With ``format = MEF``, a single
   ``<file><step>.mef`` file is written, in the format used by the PeleAnalysis MEF utilities.
+
+Iso-surfaces of large simulations can be expensive to gather and write. Setting ``decimate.cluster_size`` reduces
+the written surface by vertex clustering with quadrics (Lindstrom, SIGGRAPH 2000), before it is gathered on the
+I/O rank:
+
+* Each level's index space is split into blocks of ``cluster_size`` cells per direction, and all the surface nodes
+  whose dual edge starts in a block are replaced by one vertex. That vertex is placed where it best fits the planes
+  of the surface elements around it (the minimum of their summed quadric error, kept within the block), and it
+  carries the average of the interpolated variables over the block. Elements collapsing onto fewer vertices are
+  dropped, and pairs of elements collapsing onto the same vertices with opposite orientations cancel out.
+* The open boundaries of the surface (non-periodic domain boundaries, filter cuts, coarse-fine gaps) are kept in
+  place by additional quadrics, weighted by ``decimate.boundary_weight``.
+* The result does not depend on the number of MPI ranks or on the domain decomposition, beyond round-off.
+* The area/length written by ``write_measure`` is always that of the full-resolution surface.
+* ``cluster_size = 2`` typically reduces the surface by about 5x in 3D, with vertices within a fraction of a
+  fine cell of the full surface. Larger clusters reduce it further but start folding the surface where it is
+  curved on the scale of a block.
 
 
 Filter

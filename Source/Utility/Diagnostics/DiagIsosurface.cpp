@@ -1,4 +1,5 @@
 #include "DiagIsosurface.H"
+#include "SurfaceDecimation.H"
 
 #include <AMReX_MultiFabUtil.H>
 #include <AMReX_iMultiFab.H>
@@ -9,33 +10,22 @@
 #include <array>
 #include <cmath>
 #include <fstream>
-#include <functional>
 #include <iomanip>
 #include <limits>
 #include <unordered_map>
 
 namespace {
 
-constexpr int nodesPerElt = AMREX_SPACEDIM;
+namespace sdec = pele::physics::diagnostics;
+
+constexpr int nodesPerElt = sdec::surfaceNodesPerElt;
 
 // A dual-grid edge joins two cells differing by one along a single axis: it
 // is identified by its level, its low cell and that axis.
-constexpr int keySize = AMREX_SPACEDIM + 2;
-using EdgeKey = std::array<int, keySize>;
+constexpr int keySize = sdec::surfaceKeySize;
+using EdgeKey = sdec::SurfaceKey;
 
-struct EdgeKeyHash
-{
-  std::size_t operator()(const EdgeKey& a_key) const noexcept
-  {
-    std::size_t h = 0;
-    for (const int v : a_key) {
-      h ^= std::hash<int>{}(v) + 0x9e3779b9 + (h << 6) + (h >> 2);
-    }
-    return h;
-  }
-};
-
-using EdgeMap = std::unordered_map<EdgeKey, int, EdgeKeyHash>;
+using EdgeMap = std::unordered_map<EdgeKey, int, sdec::IntArrayHash>;
 
 // Rank-local surface under construction
 struct LocalSurface
@@ -456,25 +446,8 @@ addElement(
     }
   }
   a_surf.elts.insert(a_surf.elts.end(), a_ids.begin(), a_ids.end());
-
-  const amrex::Real* p0 = &a_surf.nodes[a_ids[0] * a_nNodeComp];
-  const amrex::Real* p1 = &a_surf.nodes[a_ids[1] * a_nNodeComp];
-#if AMREX_SPACEDIM == 2
-  a_surf.measure += std::sqrt(
-    (p1[0] - p0[0]) * (p1[0] - p0[0]) + (p1[1] - p0[1]) * (p1[1] - p0[1]));
-#else
-  const amrex::Real* p2 = &a_surf.nodes[a_ids[2] * a_nNodeComp];
-  const amrex::Real ax = p1[0] - p0[0];
-  const amrex::Real ay = p1[1] - p0[1];
-  const amrex::Real az = p1[2] - p0[2];
-  const amrex::Real bx = p2[0] - p0[0];
-  const amrex::Real by = p2[1] - p0[1];
-  const amrex::Real bz = p2[2] - p0[2];
-  const amrex::Real cx = ay * bz - az * by;
-  const amrex::Real cy = az * bx - ax * bz;
-  const amrex::Real cz = ax * by - ay * bx;
-  a_surf.measure += 0.5 * std::sqrt(cx * cx + cy * cy + cz * cz);
-#endif
+  a_surf.measure +=
+    sdec::elementMeasure(a_surf.nodes, a_ids.data(), a_nNodeComp);
 }
 
 #ifdef AMREX_USE_GPU
@@ -542,6 +515,15 @@ DiagIsosurface::init(const std::string& a_prefix, std::string_view a_diagName)
   pp.query_enum_case_insensitive("format", m_format);
   pp.query("write_measure", m_writeMeasure);
   pp.query("verbose", m_verbose);
+
+  amrex::ParmParse ppd(a_prefix + ".decimate");
+  ppd.query("cluster_size", m_clusterSize);
+  ppd.query("boundary_weight", m_boundaryWeight);
+  if (m_clusterSize < 0) {
+    amrex::Abort(
+      "DiagIsosurface " + std::string(a_diagName) +
+      ": decimate.cluster_size must be >= 0 (0 disables decimation)");
+  }
 }
 
 void
@@ -741,15 +723,27 @@ DiagIsosurface::processDiag(
   }
 
   if (m_format != IsoSurfFormat::None) {
-    collateAndWrite(surf.nodes, surf.keys, surf.elts, a_nstep, a_time);
+    if (m_clusterSize > 0) {
+      // Cluster before gathering: only the clusters travel to the IO rank
+      const sdec::ClusteredSurface clustered = sdec::clusterSurface(
+        surf.nodes, surf.keys, surf.elts, nNC, m_clusterSize, m_boundaryWeight);
+      surf = LocalSurface{};
+      collateAndWrite(clustered, true, a_nstep, a_time);
+    } else {
+      // Same container, holding the node values in place of accumulators
+      sdec::ClusteredSurface plain;
+      plain.keys = std::move(surf.keys);
+      plain.acc = std::move(surf.nodes);
+      plain.elts = std::move(surf.elts);
+      collateAndWrite(plain, false, a_nstep, a_time);
+    }
   }
 }
 
 void
 DiagIsosurface::collateAndWrite(
-  const std::vector<amrex::Real>& a_nodes,
-  const std::vector<int>& a_keys,
-  const std::vector<int>& a_elts,
+  const pele::physics::diagnostics::ClusteredSurface& a_surf,
+  bool a_clustered,
   int a_nstep,
   const amrex::Real& a_time) const
 {
@@ -759,8 +753,9 @@ DiagIsosurface::collateAndWrite(
 
   // MPI_Gatherv takes int counts and displacements: check that the gathered
   // arrays fit before narrowing anything to int.
-  amrex::Long totSize = static_cast<amrex::Long>(
-    std::max({a_nodes.size(), a_keys.size(), a_elts.size()}));
+  amrex::Long totSize = static_cast<amrex::Long>(std::max(
+    {a_surf.acc.size(), a_surf.keys.size(), a_surf.elts.size(),
+     a_surf.bkeys.size(), a_surf.bquad.size()}));
   PD::ReduceLongSum(totSize);
   if (totSize > static_cast<amrex::Long>(std::numeric_limits<int>::max())) {
     amrex::Abort(
@@ -769,41 +764,70 @@ DiagIsosurface::collateAndWrite(
       "None to only compute the measure");
   }
 
-  std::vector<int> dispNode, dispKey, dispElt;
-  const std::vector<amrex::Real> nodesAll = gatherToIO(a_nodes, dispNode);
-  const std::vector<int> keysAll = gatherToIO(a_keys, dispKey);
-  std::vector<int> eltsAll = gatherToIO(a_elts, dispElt);
+  std::vector<int> dispNode, dispKey, dispElt, dispBKey, dispBQuad;
+  std::vector<amrex::Real> nodesAll = gatherToIO(a_surf.acc, dispNode);
+  std::vector<int> keysAll = gatherToIO(a_surf.keys, dispKey);
+  std::vector<int> eltsAll = gatherToIO(a_surf.elts, dispElt);
+  std::vector<int> bkeysAll;
+  std::vector<amrex::Real> bquadAll;
+  if (a_clustered) {
+    bkeysAll = gatherToIO(a_surf.bkeys, dispBKey);
+    bquadAll = gatherToIO(a_surf.bquad, dispBQuad);
+  }
 
   if (!PD::IOProcessor()) {
     return;
   }
 
-  // Merge the nodes shared between ranks (same level and same edge) and
-  // renumber the elements accordingly.
-  const int nNC = nNodeComp();
-  const int nNodesTot = static_cast<int>(keysAll.size()) / keySize;
-  EdgeMap keyToNode;
-  keyToNode.reserve(nNodesTot);
-  std::vector<int> remap(nNodesTot);
-  std::vector<amrex::Real> nodes;
-  nodes.reserve(nodesAll.size());
-  for (int g = 0; g < nNodesTot; ++g) {
-    EdgeKey key;
-    std::copy_n(&keysAll[g * keySize], keySize, key.begin());
-    const int next = static_cast<int>(keyToNode.size());
-    const auto res = keyToNode.emplace(key, next);
-    if (res.second) {
-      nodes.insert(
-        nodes.end(), nodesAll.begin() + g * nNC,
-        nodesAll.begin() + (g + 1) * nNC);
+  // Element indices are rank-local: shift them to index the gathered records
+  for (int r = 0; r < PD::NProcs(); ++r) {
+    const int recOffset = dispKey[r] / keySize;
+    for (int n = dispElt[r]; n < dispElt[r + 1]; ++n) {
+      eltsAll[n] += recOffset;
     }
-    remap[g] = res.first->second;
   }
 
-  for (int r = 0; r < PD::NProcs(); ++r) {
-    const int nodeOffset = dispKey[r] / keySize;
-    for (int n = dispElt[r]; n < dispElt[r + 1]; ++n) {
-      eltsAll[n] = remap[nodeOffset + eltsAll[n]];
+  const int nNC = nNodeComp();
+  std::vector<amrex::Real> nodes;
+  if (a_clustered) {
+    // Sum the accumulators of clusters split between ranks, then build one
+    // vertex per cluster
+    const sdec::ClusteredSurface merged = sdec::mergeClusters(
+      sdec::ClusteredSurface{
+        std::move(keysAll), std::move(nodesAll), std::move(eltsAll),
+        std::move(bkeysAll), std::move(bquadAll)},
+      nNC, m_clusterSize);
+    const amrex::Real decMeasure = sdec::finalizeClusters(
+      merged, m_geoms, m_clusterSize, nNC, nodes, eltsAll);
+    if (m_verbose > 0) {
+      amrex::Print() << "  DiagIsosurface " << m_diagfile << ": decimated to "
+                     << eltsAll.size() / nodesPerElt << " elements, "
+                     << nodes.size() / nNC << " nodes, "
+                     << (AMREX_SPACEDIM == 2 ? "length = " : "area = ")
+                     << decMeasure << "\n";
+    }
+  } else {
+    // Merge the nodes shared between ranks (same level and same edge) and
+    // renumber the elements accordingly.
+    const int nNodesTot = static_cast<int>(keysAll.size()) / keySize;
+    EdgeMap keyToNode;
+    keyToNode.reserve(nNodesTot);
+    std::vector<int> remap(nNodesTot);
+    nodes.reserve(nodesAll.size());
+    for (int g = 0; g < nNodesTot; ++g) {
+      EdgeKey key;
+      std::copy_n(&keysAll[g * keySize], keySize, key.begin());
+      const int next = static_cast<int>(keyToNode.size());
+      const auto res = keyToNode.emplace(key, next);
+      if (res.second) {
+        nodes.insert(
+          nodes.end(), nodesAll.begin() + g * nNC,
+          nodesAll.begin() + (g + 1) * nNC);
+      }
+      remap[g] = res.first->second;
+    }
+    for (auto& id : eltsAll) {
+      id = remap[id];
     }
   }
 

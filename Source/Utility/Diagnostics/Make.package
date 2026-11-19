@@ -4,6 +4,7 @@ CEXE_headers += DiagFramePlane.H
 CEXE_headers += DiagPDF.H
 CEXE_headers += DiagConditional.H
 CEXE_headers += DiagIsosurface.H
+CEXE_headers += SurfaceDecimation.H
 
 CEXE_sources += DiagFilter.cpp
 CEXE_sources += DiagBase.cpp
@@ -11,6 +12,7 @@ CEXE_sources += DiagFramePlane.cpp
 CEXE_sources += DiagPDF.cpp
 CEXE_sources += DiagConditional.cpp
 CEXE_sources += DiagIsosurface.cpp
+CEXE_sources += SurfaceDecimation.cpp
 
 VPATH_LOCATIONS += $(PELE_PHYSICS_HOME)/Source/Utility/Diagnostics
 INCLUDE_LOCATIONS += $(PELE_PHYSICS_HOME)/Source/Utility/Diagnostics
