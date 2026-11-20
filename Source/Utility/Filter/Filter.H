@@ -5,10 +5,6 @@
 #include <AMReX_Array.H>
 #include <AMReX_MultiFab.H>
 
-#ifdef AMREX_USE_OMP
-#include <omp.h>
-#endif
-
 // Filter types
 enum filter_types {
   no_filter = 0,
@@ -57,110 +53,52 @@ run_filter(
   }
 }
 
-// One 1D pass of the filter along the direction (di, dj, dk)
-AMREX_GPU_DEVICE
-AMREX_FORCE_INLINE
-amrex::Real
-run_filter_1d(
-  const int i,
-  const int j,
-  const int k,
-  const int n,
-  const int di,
-  const int dj,
-  const int dk,
-  const int ng,
-  const amrex::Real* w,
-  amrex::Array4<const amrex::Real> const& q)
-{
-  amrex::Real sum = 0.0;
-  for (int m = -ng; m <= ng; m++) {
-    sum += w[m + ng] * q(i + m * di, j + m * dj, k + m * dk, n);
-  }
-  return sum;
-}
-
-// Applies the filter with 1D weights w (2 * ng + 1 of them, in device
-// memory) to components [nstart, nstart + ncnt) of q on box, writing qh, as
-// one 1D pass per direction. q needs ng ghost cells around box in every
-// direction. Each pass covers box grown by ng in the directions not yet
-// filtered, so the last pass only needs box itself and the same input cells
-// are read as by run_filter. A free function rather than a private member so
-// that it can contain GPU lambdas under CUDA.
-void run_filter_separable(
-  const amrex::Box& box,
-  amrex::Array4<const amrex::Real> const& q,
-  amrex::Array4<amrex::Real> const& qh,
-  const int nstart,
-  const int ncnt,
-  const int ng,
-  const amrex::Real* w);
-
+// Every filter type is a tensor product of the same 1D weights in each
+// direction, so the filter is applied as one 1D pass per direction: the cost
+// per cell is AMREX_SPACEDIM * (2 * ngrow + 1) rather than
+// (2 * ngrow + 1)^AMREX_SPACEDIM.
 class Filter
 {
 
 public:
-  // Every filter type is a tensor product of the same 1D weights in each
-  // direction, so the filter is applied as one 1D pass per direction: the
-  // cost per cell is AMREX_SPACEDIM * (2 * ngrow + 1) rather than
-  // (2 * ngrow + 1)^AMREX_SPACEDIM.
-  explicit Filter(const int type = box, const int fgr = 2)
-    : _type(type), _fgr(fgr)
+  explicit Filter(const int type = box, const int fgr = 2) : _fgr(fgr)
   {
-
-    switch (_type) {
-
+    switch (type) {
     case box:
       set_box_weights();
       break;
-
     case gaussian:
       set_gaussian_weights();
       break;
-
     case box_3pt_approx:
     case gaussian_3pt_approx: // same as box_3pt_approx
       set_box_3pt_approx_weights();
       break;
-
     case box_5pt_approx:
       set_box_5pt_approx_weights();
       break;
-
     case box_3pt_optimized_approx:
       set_box_3pt_optimized_approx_weights();
       break;
-
     case box_5pt_optimized_approx:
       set_box_5pt_optimized_approx_weights();
       break;
-
     case gaussian_5pt_approx:
       set_gaussian_5pt_approx_weights();
       break;
-
     case gaussian_3pt_optimized_approx:
       set_gaussian_3pt_optimized_approx_weights();
       break;
-
     case gaussian_5pt_optimized_approx:
       set_gaussian_5pt_optimized_approx_weights();
       break;
-
     case no_filter:
     default:
-      _fgr = 1;
-      _ngrow = 0;
-      _nweights = 2 * _ngrow + 1;
-      _weights.resize(_nweights);
+      resize_weights(0);
       _weights[0] = 1.;
       break;
-
-    } // end switch
+    }
   }
-
-  // Default destructor
-  ~Filter() = default;
 
   int get_filter_ngrow() const { return _ngrow; }
 
@@ -181,6 +119,8 @@ public:
     const amrex::FArrayBox& in,
     amrex::FArrayBox& out) const;
 
+  // Filters components [nstart, nstart + ncnt) of in into out on cbox; in
+  // needs get_filter_ngrow() ghost cells around cbox in every direction.
   void apply_filter(
     const amrex::Box& cbox,
     const amrex::FArrayBox& in,
@@ -188,6 +128,7 @@ public:
     const int nstart,
     const int ncnt) const;
 
+  // ncomp is unused, kept for compatibility
   void apply_filter(
     const amrex::Box& box,
     const amrex::FArrayBox& in,
@@ -197,11 +138,22 @@ public:
     const int ncomp) const;
 
 private:
-  int _type;
   int _fgr;
-  int _ngrow;
-  int _nweights;
+  int _ngrow{0};
   amrex::Vector<amrex::Real> _weights;
+
+  void resize_weights(const int ngrow)
+  {
+    _ngrow = ngrow;
+    _weights.resize(2 * ngrow + 1);
+  }
+
+  // Symmetric 3 and 5 point weights from the ratios of Sagaut & Grohens
+  // (1999), Table I
+  void set_3pt_weights_from_ratio(const amrex::Real ratio);
+
+  void set_5pt_weights_from_ratios(
+    const amrex::Real ratio1, const amrex::Real ratio2);
 
   void set_box_weights();
 

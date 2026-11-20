@@ -1,25 +1,122 @@
+#include <cmath>
+#include <numeric>
+
 #include <AMReX_GpuAsyncArray.H>
 #include "Filter.H"
+
+namespace {
+
+// Ratios of the optimized 3 and 5 point approximations for fgr = 1..10,
+// Table I in Sagaut & Grohens (1999) Int. J. Num. Meth. Fluids
+constexpr int n_optimized = 10;
+constexpr amrex::Real box_3pt_ratio[n_optimized] = {
+  0.079, 0.274, 1.377, -2.375, -1.000, -0.779, -0.680, -0.627, -0.596, -0.575};
+constexpr amrex::Real box_5pt_ratios[n_optimized][2] = {
+  {0.0886, -0.0169}, {0.3178, -0.0130}, {1.0237, 0.0368},  {2.4414, 0.5559},
+  {0.2949, 0.7096},  {-0.5276, 0.4437}, {-0.6708, 0.3302}, {-0.7003, 0.2767},
+  {-0.7077, 0.2532}, {-0.6996, 0.2222}};
+constexpr amrex::Real gaussian_3pt_ratio[n_optimized] = {
+  0.0763, 0.2527, 1.1160, -3.144, -1.102,
+  -0.809, -0.696, -0.638, -0.604, -0.581};
+constexpr amrex::Real gaussian_5pt_ratios[n_optimized][2] = {
+  {0.0871, -0.0175}, {0.2596, -0.0021}, {0.4740, 0.0785},  {0.1036, 0.2611},
+  {-0.4252, 0.3007}, {-0.6134, 0.2696}, {-0.6679, 0.2419}, {-0.6836, 0.2231},
+  {-0.6873, 0.2103}, {-0.6870, 0.2014}};
+
+bool
+has_optimized_ratios(const int fgr)
+{
+  return fgr >= 1 && fgr <= n_optimized;
+}
+
+// One 1D pass of the filter along the unit vector e
+AMREX_GPU_DEVICE
+AMREX_FORCE_INLINE
+amrex::Real
+run_filter_1d(
+  const amrex::IntVect& iv,
+  const int n,
+  const amrex::IntVect& e,
+  const int ng,
+  const amrex::Real* w,
+  amrex::Array4<const amrex::Real> const& q)
+{
+  amrex::Real sum = 0.0;
+  for (int m = -ng; m <= ng; m++) {
+    sum += w[m + ng] * q(iv + e * m, n);
+  }
+  return sum;
+}
+
+// Applies the filter with 1D weights w (2 * ng + 1 of them, in device memory)
+// to components [nstart, nstart + ncnt) of q on box, writing qh, as one 1D
+// pass per direction. Each pass covers box grown by ng in the directions not
+// yet filtered, so the last pass only needs box itself and the same input
+// cells are read as by run_filter. A free function rather than a private
+// member so that it can contain GPU lambdas under CUDA.
+void
+run_filter_separable(
+  const amrex::Box& box,
+  amrex::Array4<const amrex::Real> const& q,
+  amrex::Array4<amrex::Real> const& qh,
+  const int nstart,
+  const int ncnt,
+  const int ng,
+  const amrex::Real* w)
+{
+  AMREX_ALWAYS_ASSERT(
+    nstart >= 0 && ncnt >= 0 && nstart + ncnt <= q.nComp() &&
+    nstart + ncnt <= qh.nComp());
+
+  // Intermediate results; the async arena frees them once the kernels are done
+  amrex::Array<amrex::FArrayBox, 2> tmp;
+  amrex::Array4<const amrex::Real> src = q;
+  int src_comp = nstart;
+
+  for (int dir = 0; dir < AMREX_SPACEDIM; ++dir) {
+    amrex::Box pbox = box;
+    for (int d = dir + 1; d < AMREX_SPACEDIM; ++d) {
+      pbox.grow(d, ng);
+    }
+
+    amrex::Array4<amrex::Real> dst = qh;
+    int dst_comp = nstart;
+    if (dir < AMREX_SPACEDIM - 1) {
+      tmp[dir % 2].resize(pbox, ncnt, amrex::The_Async_Arena());
+      dst = tmp[dir % 2].array();
+      dst_comp = 0;
+    }
+
+    const amrex::IntVect e = amrex::IntVect::TheDimensionVector(dir);
+    amrex::ParallelFor(
+      pbox, ncnt, [=] AMREX_GPU_DEVICE(int i, int j, int k, int n) noexcept {
+        const amrex::IntVect iv(AMREX_D_DECL(i, j, k));
+        amrex::ignore_unused(j, k); // unused below 3D
+        dst(iv, n + dst_comp) = run_filter_1d(iv, n + src_comp, e, ng, w, src);
+      });
+
+    src = dst;
+    src_comp = dst_comp;
+  }
+}
+
+} // namespace
 
 // Set the filter weights for the standard box filter
 void
 Filter::set_box_weights()
 {
-
   AMREX_ASSERT(_fgr % 2 == 0 || _fgr == 1);
-  _ngrow = _fgr / 2;
-  _nweights = 2 * _ngrow + 1;
-  _weights.resize(_nweights);
+  resize_weights(_fgr / 2);
 
-  // Set the weights
-  for (int i = 0; i < _nweights; i++) {
-    _weights[i] = 1.0 / _fgr;
+  for (auto& w : _weights) {
+    w = 1.0 / _fgr;
   }
 
   // Only half the cell is used at the ends
   if (_fgr > 1) {
-    _weights[0] = 0.5 * _weights[0];
-    _weights[_nweights - 1] = _weights[0];
+    _weights.front() = 0.5 * _weights.front();
+    _weights.back() = _weights.front();
   }
 }
 
@@ -27,16 +124,12 @@ Filter::set_box_weights()
 void
 Filter::set_gaussian_weights()
 {
-
   AMREX_ASSERT(_fgr % 2 == 0);
-  _ngrow = _fgr / 2;
-  _nweights = 2 * _ngrow + 1;
-  _weights.resize(_nweights);
+  resize_weights(_fgr / 2);
 
-  // Set the weights
   amrex::Real gamma = 6.0;
   amrex::Real sigma = std::sqrt(1.0 / (2.0 * gamma)) * _fgr;
-  for (int i = 0; i < _nweights; i++) {
+  for (int i = 0; i < static_cast<int>(_weights.size()); i++) {
     // equivalent to: std::sqrt(gamma / (PI * _fgr * _fgr)) * std::exp((-gamma
     // * (i-_ngrow) * (i-_ngrow)) / (_fgr * _fgr));
     _weights[i] =
@@ -45,8 +138,8 @@ Filter::set_gaussian_weights()
   }
   // normalize to ensure it all sums to one
   amrex::Real sum = std::accumulate(_weights.begin(), _weights.end(), 0.0);
-  for (int i = 0; i < _nweights; i++) {
-    _weights[i] /= sum;
+  for (auto& w : _weights) {
+    w /= sum;
   }
 }
 
@@ -56,12 +149,7 @@ Filter::set_gaussian_weights()
 void
 Filter::set_box_3pt_approx_weights()
 {
-
-  _ngrow = 1;
-  _nweights = 2 * _ngrow + 1;
-  _weights.resize(_nweights);
-
-  // Set the weights
+  resize_weights(1);
   _weights[0] = _fgr * _fgr / 24.0;
   _weights[1] = (12.0 - _fgr * _fgr) / 12.0;
   _weights[2] = _weights[0];
@@ -73,164 +161,12 @@ Filter::set_box_3pt_approx_weights()
 void
 Filter::set_box_5pt_approx_weights()
 {
-
-  _ngrow = 2;
-  _nweights = 2 * _ngrow + 1;
-  _weights.resize(_nweights);
-
-  // Set the weights
-  int _fgr2 = _fgr * _fgr;
-  int _fgr4 = _fgr2 * _fgr2;
-  _weights[0] = (3.0 * _fgr4 - 20.0 * _fgr2) / 5760.0;
-  _weights[1] = (80.0 * _fgr2 - 3.0 * _fgr4) / 1440.0;
-  _weights[2] = (3.0 * _fgr4 - 100.0 * _fgr2 + 960.0) / 960.0;
-  _weights[3] = _weights[1];
-  _weights[4] = _weights[0];
-}
-
-// Set the filter weights for the 3pt optimized approximation of the
-// box filter. See Table I in Sagaut & Grohens (1999)
-// Int. J. Num. Meth. Fluids.
-void
-Filter::set_box_3pt_optimized_approx_weights()
-{
-
-  _ngrow = 1;
-  _nweights = 2 * _ngrow + 1;
-  _weights.resize(_nweights);
-
-  amrex::Real ratio;
-  switch (_fgr) {
-
-  case 1:
-    ratio = 0.079;
-    break;
-
-  case 2:
-    ratio = 0.274;
-    break;
-
-  case 3:
-    ratio = 1.377;
-    break;
-
-  case 4:
-    ratio = -2.375;
-    break;
-
-  case 5:
-    ratio = -1.000;
-    break;
-
-  case 6:
-    ratio = -0.779;
-    break;
-
-  case 7:
-    ratio = -0.680;
-    break;
-
-  case 8:
-    ratio = -0.627;
-    break;
-
-  case 9:
-    ratio = -0.596;
-    break;
-
-  case 10:
-    ratio = -0.575;
-    break;
-
-  default: // default to standard box filter
-    set_box_weights();
-    return;
-    break;
-
-  } // end switch
-
-  // Set the weights
-  _weights[0] = ratio / (1 + 2.0 * ratio);
-  _weights[1] = 1.0 - 2.0 * _weights[0];
-  _weights[2] = _weights[0];
-}
-
-// Set the filter weights for the 5pt optimized approximation of the
-// box filter. See Table I in Sagaut & Grohens (1999)
-// Int. J. Num. Meth. Fluids.
-void
-Filter::set_box_5pt_optimized_approx_weights()
-{
-
-  _ngrow = 2;
-  _nweights = 2 * _ngrow + 1;
-  _weights.resize(_nweights);
-
-  amrex::Real ratio1;
-  amrex::Real ratio2;
-  switch (_fgr) {
-
-  case 1:
-    ratio1 = 0.0886;
-    ratio2 = -0.0169;
-    break;
-
-  case 2:
-    ratio1 = 0.3178;
-    ratio2 = -0.0130;
-    break;
-
-  case 3:
-    ratio1 = 1.0237;
-    ratio2 = 0.0368;
-    break;
-
-  case 4:
-    ratio1 = 2.4414;
-    ratio2 = 0.5559;
-    break;
-
-  case 5:
-    ratio1 = 0.2949;
-    ratio2 = 0.7096;
-    break;
-
-  case 6:
-    ratio1 = -0.5276;
-    ratio2 = 0.4437;
-    break;
-
-  case 7:
-    ratio1 = -0.6708;
-    ratio2 = 0.3302;
-    break;
-
-  case 8:
-    ratio1 = -0.7003;
-    ratio2 = 0.2767;
-    break;
-
-  case 9:
-    ratio1 = -0.7077;
-    ratio2 = 0.2532;
-    break;
-
-  case 10:
-    ratio1 = -0.6996;
-    ratio2 = 0.2222;
-    break;
-
-  default: // default to standard box filter
-    set_box_weights();
-    return;
-    break;
-
-  } // end switch
-
-  // Set the weights
-  _weights[0] = ratio2 / (1 + 2.0 * ratio1 + 2.0 * ratio2);
-  _weights[1] = ratio1 / ratio2 * _weights[0];
-  _weights[2] = 1.0 - 2.0 * _weights[0] - 2.0 * _weights[1];
+  resize_weights(2);
+  const int fgr2 = _fgr * _fgr;
+  const int fgr4 = fgr2 * fgr2;
+  _weights[0] = (3.0 * fgr4 - 20.0 * fgr2) / 5760.0;
+  _weights[1] = (80.0 * fgr2 - 3.0 * fgr4) / 1440.0;
+  _weights[2] = (3.0 * fgr4 - 100.0 * fgr2 + 960.0) / 960.0;
   _weights[3] = _weights[1];
   _weights[4] = _weights[0];
 }
@@ -241,166 +177,80 @@ Filter::set_box_5pt_optimized_approx_weights()
 void
 Filter::set_gaussian_5pt_approx_weights()
 {
-
-  _ngrow = 2;
-  _nweights = 2 * _ngrow + 1;
-  _weights.resize(_nweights);
-
-  // Set the weights
-  int _fgr2 = _fgr * _fgr;
-  int _fgr4 = _fgr2 * _fgr2;
-  _weights[0] = (_fgr4 - 4.0 * _fgr2) / 1152.0;
-  _weights[1] = (16.0 * _fgr2 - _fgr4) / 288.0;
-  _weights[2] = (_fgr4 - 20.0 * _fgr2 + 192.0) / 192.0;
+  resize_weights(2);
+  const int fgr2 = _fgr * _fgr;
+  const int fgr4 = fgr2 * fgr2;
+  _weights[0] = (fgr4 - 4.0 * fgr2) / 1152.0;
+  _weights[1] = (16.0 * fgr2 - fgr4) / 288.0;
+  _weights[2] = (fgr4 - 20.0 * fgr2 + 192.0) / 192.0;
   _weights[3] = _weights[1];
   _weights[4] = _weights[0];
 }
 
-// Set the filter weights for the 3pt optimized approximation of the
-// gaussian filter. See Table I in Sagaut & Grohens (1999)
-// Int. J. Num. Meth. Fluids.
 void
-Filter::set_gaussian_3pt_optimized_approx_weights()
+Filter::set_3pt_weights_from_ratio(const amrex::Real ratio)
 {
-
-  _ngrow = 1;
-  _nweights = 2 * _ngrow + 1;
-  _weights.resize(_nweights);
-
-  amrex::Real ratio;
-  switch (_fgr) {
-
-  case 1:
-    ratio = 0.0763;
-    break;
-
-  case 2:
-    ratio = 0.2527;
-    break;
-
-  case 3:
-    ratio = 1.1160;
-    break;
-
-  case 4:
-    ratio = -3.144;
-    break;
-
-  case 5:
-    ratio = -1.102;
-    break;
-
-  case 6:
-    ratio = -0.809;
-    break;
-
-  case 7:
-    ratio = -0.696;
-    break;
-
-  case 8:
-    ratio = -0.638;
-    break;
-
-  case 9:
-    ratio = -0.604;
-    break;
-
-  case 10:
-    ratio = -0.581;
-    break;
-
-  default: // default to the 3pt gaussian filter
-    set_box_3pt_approx_weights();
-    return;
-    break;
-
-  } // end switch
-
-  // Set the weights
+  resize_weights(1);
   _weights[0] = ratio / (1 + 2.0 * ratio);
   _weights[1] = 1.0 - 2.0 * _weights[0];
   _weights[2] = _weights[0];
 }
 
-// Set the filter weights for the 5pt optimized approximation of the
-// gaussian filter. See Table I in Sagaut & Grohens (1999)
-// Int. J. Num. Meth. Fluids.
 void
-Filter::set_gaussian_5pt_optimized_approx_weights()
+Filter::set_5pt_weights_from_ratios(
+  const amrex::Real ratio1, const amrex::Real ratio2)
 {
-
-  _ngrow = 2;
-  _nweights = 2 * _ngrow + 1;
-  _weights.resize(_nweights);
-
-  amrex::Real ratio1;
-  amrex::Real ratio2;
-  switch (_fgr) {
-
-  case 1:
-    ratio1 = 0.0871;
-    ratio2 = -0.0175;
-    break;
-
-  case 2:
-    ratio1 = 0.2596;
-    ratio2 = -0.0021;
-    break;
-
-  case 3:
-    ratio1 = 0.4740;
-    ratio2 = 0.0785;
-    break;
-
-  case 4:
-    ratio1 = 0.1036;
-    ratio2 = 0.2611;
-    break;
-
-  case 5:
-    ratio1 = -0.4252;
-    ratio2 = 0.3007;
-    break;
-
-  case 6:
-    ratio1 = -0.6134;
-    ratio2 = 0.2696;
-    break;
-
-  case 7:
-    ratio1 = -0.6679;
-    ratio2 = 0.2419;
-    break;
-
-  case 8:
-    ratio1 = -0.6836;
-    ratio2 = 0.2231;
-    break;
-
-  case 9:
-    ratio1 = -0.6873;
-    ratio2 = 0.2103;
-    break;
-
-  case 10:
-    ratio1 = -0.6870;
-    ratio2 = 0.2014;
-    break;
-
-  default: // default to 5pt gaussian filter
-    set_gaussian_5pt_approx_weights();
-    return;
-    break;
-
-  } // end switch
-
-  // Set the weights
+  resize_weights(2);
   _weights[0] = ratio2 / (1 + 2.0 * ratio1 + 2.0 * ratio2);
   _weights[1] = ratio1 / ratio2 * _weights[0];
   _weights[2] = 1.0 - 2.0 * _weights[0] - 2.0 * _weights[1];
   _weights[3] = _weights[1];
   _weights[4] = _weights[0];
+}
+
+// Optimized approximations (Table I in Sagaut & Grohens (1999)). Beyond the
+// table, the box ones fall back to the standard box filter and the gaussian
+// ones to the polynomial approximations.
+void
+Filter::set_box_3pt_optimized_approx_weights()
+{
+  if (has_optimized_ratios(_fgr)) {
+    set_3pt_weights_from_ratio(box_3pt_ratio[_fgr - 1]);
+  } else {
+    set_box_weights();
+  }
+}
+
+void
+Filter::set_box_5pt_optimized_approx_weights()
+{
+  if (has_optimized_ratios(_fgr)) {
+    set_5pt_weights_from_ratios(
+      box_5pt_ratios[_fgr - 1][0], box_5pt_ratios[_fgr - 1][1]);
+  } else {
+    set_box_weights();
+  }
+}
+
+void
+Filter::set_gaussian_3pt_optimized_approx_weights()
+{
+  if (has_optimized_ratios(_fgr)) {
+    set_3pt_weights_from_ratio(gaussian_3pt_ratio[_fgr - 1]);
+  } else {
+    set_box_3pt_approx_weights(); // same as the 3pt gaussian approximation
+  }
+}
+
+void
+Filter::set_gaussian_5pt_optimized_approx_weights()
+{
+  if (has_optimized_ratios(_fgr)) {
+    set_5pt_weights_from_ratios(
+      gaussian_5pt_ratios[_fgr - 1][0], gaussian_5pt_ratios[_fgr - 1][1]);
+  } else {
+    set_gaussian_5pt_approx_weights();
+  }
 }
 
 // Run the filtering operation on a MultiFab
@@ -418,11 +268,6 @@ Filter::apply_filter(
   const int ncnt) const
 {
   BL_PROFILE("Filter::apply_filter()");
-
-  AMREX_ALWAYS_ASSERT(
-    nstart >= 0 && ncnt >= 0 && nstart + ncnt <= in.nComp() &&
-    nstart + ncnt <= out.nComp());
-  // Ensure enough grow cells
   AMREX_ASSERT(in.nGrow() >= out.nGrow() + _ngrow);
 
   // The device copy of the weights is freed once the kernels are done
@@ -433,11 +278,10 @@ Filter::apply_filter(
 #pragma omp parallel if (amrex::Gpu::notInLaunchRegion())
 #endif
   for (amrex::MFIter mfi(out, amrex::TilingIfNotGPU()); mfi.isValid(); ++mfi) {
-    const amrex::Box& bx = mfi.growntilebox();
     run_filter_separable(
-      bx, in.const_array(mfi), out.array(mfi), nstart, ncnt, _ngrow, w);
+      mfi.growntilebox(), in.const_array(mfi), out.array(mfi), nstart, ncnt,
+      _ngrow, w);
   }
-  amrex::Gpu::synchronize();
 }
 
 // Run the filtering operation on a FAB
@@ -459,10 +303,9 @@ Filter::apply_filter(
   const int ncnt) const
 {
   BL_PROFILE("Filter::apply_filter()");
-  AMREX_ASSERT(in.nComp() == out.nComp());
-
-  const int ncomp = in.nComp();
-  apply_filter(cbox, in, out, nstart, ncnt, ncomp);
+  amrex::Gpu::AsyncArray<amrex::Real> weights(_weights.data(), _weights.size());
+  run_filter_separable(
+    cbox, in.const_array(), out.array(), nstart, ncnt, _ngrow, weights.data());
 }
 
 void
@@ -474,53 +317,5 @@ Filter::apply_filter(
   const int ncnt,
   const int /*ncomp*/) const
 {
-  AMREX_ALWAYS_ASSERT(
-    nstart >= 0 && ncnt >= 0 && nstart + ncnt <= in.nComp() &&
-    nstart + ncnt <= out.nComp());
-  amrex::Gpu::AsyncArray<amrex::Real> weights(_weights.data(), _weights.size());
-  run_filter_separable(
-    box, in.const_array(), out.array(), nstart, ncnt, _ngrow, weights.data());
-}
-
-void
-run_filter_separable(
-  const amrex::Box& box,
-  amrex::Array4<const amrex::Real> const& q,
-  amrex::Array4<amrex::Real> const& qh,
-  const int nstart,
-  const int ncnt,
-  const int ng,
-  const amrex::Real* w)
-{
-  // Intermediate results; the async arena frees them once the kernels are done
-  amrex::Array<amrex::FArrayBox, 2> tmp;
-  amrex::Array4<const amrex::Real> src = q;
-  int src_comp = nstart;
-
-  for (int dir = 0; dir < AMREX_SPACEDIM; ++dir) {
-    amrex::Box pbox = box;
-    for (int d = dir + 1; d < AMREX_SPACEDIM; ++d) {
-      pbox.grow(d, ng);
-    }
-
-    amrex::Array4<amrex::Real> dst = qh;
-    int dst_comp = nstart;
-    if (dir < AMREX_SPACEDIM - 1) {
-      tmp[dir % 2].resize(pbox, ncnt, amrex::The_Async_Arena());
-      dst = tmp[dir % 2].array();
-      dst_comp = 0;
-    }
-
-    const int di = static_cast<int>(dir == 0);
-    const int dj = static_cast<int>(dir == 1);
-    const int dk = static_cast<int>(dir == 2);
-    amrex::ParallelFor(
-      pbox, ncnt, [=] AMREX_GPU_DEVICE(int i, int j, int k, int n) noexcept {
-        dst(i, j, k, n + dst_comp) =
-          run_filter_1d(i, j, k, n + src_comp, di, dj, dk, ng, w, src);
-      });
-
-    src = dst;
-    src_comp = dst_comp;
-  }
+  apply_filter(box, in, out, nstart, ncnt);
 }
