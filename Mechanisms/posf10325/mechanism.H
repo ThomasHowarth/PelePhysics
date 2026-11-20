@@ -9904,8 +9904,8 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
     wdot[5] += 0.239186 * qdot;
     wdot[9] += 0.246500 * qdot;
     wdot[11] += 0.236833 * qdot;
-    wdot[12] += 0.700000 * qdot;
     wdot[12] -= qdot;
+    wdot[12] += 0.700000 * qdot;
     wdot[19] += 0.300000 * qdot;
   }
 

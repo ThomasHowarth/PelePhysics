@@ -30,6 +30,13 @@ To install them too::
 ``uv sync`` removes what it is not asked for, so a later ``uv sync --locked`` uninstalls them again: give
 ``--extra plot`` to every sync (or to ``uv run``) when you need them.
 
+The committed mechanisms are exactly what CEPTR generates with these versions: the CI regenerates every mechanism in
+``Mechanisms/list_mech`` and ``Mechanisms/list_qss_mech`` on Linux and fails if any differs. When the check fails, the
+``regenerated-mechanisms`` artifact of the CI run holds the differences as a patch::
+
+  $ gh run download <run-id> -n regenerated-mechanisms
+  $ git apply mechanisms.patch
+
 .. note:: CEPTR is a standard Python package, so it can also be installed with ``pip install -e .`` from ``Support/ceptr``. pip then picks any versions allowed by ``pyproject.toml``, which may generate mechanisms that differ from the committed ones.
 
 Usage

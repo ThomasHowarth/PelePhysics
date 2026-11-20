@@ -12,6 +12,9 @@ on:
       run-checks:
         description: "has-source-changes, except on scheduled runs"
         value: ${{ jobs.filter.outputs['run-checks'] }}
+      has-mechanism-changes:
+        description: "CEPTR or the mechanisms changed, or the run was not filtered"
+        value: ${{ jobs.filter.outputs['has-mechanism-changes'] }}
 
 jobs:
   filter:
@@ -25,6 +28,7 @@ jobs:
       # Empty when the filter did not run or failed, so those runs build.
       has-source-changes: ${{ steps.changes.outputs.src || 'true' }}
       run-checks: ${{ github.event_name != 'schedule' && (steps.changes.outputs.src || 'true') == 'true' }}
+      has-mechanism-changes: ${{ steps.changes.outputs.mechanisms || 'true' }}
     steps:
       # On PRs the filter lists the changed files through the API instead.
       - uses: actions/checkout@v6
@@ -56,3 +60,6 @@ jobs:
               - '!CONTRIBUTING.md'
               - '!.codespell*'
               - '!.gitignore'
+            # One pattern: with 'every', a file must match all of a filter's patterns
+            mechanisms:
+              - '{Support/ceptr/**,Mechanisms/**,.clang-format,.github/workflows/ci.yml,.github/workflows/detect-changes.yml}'

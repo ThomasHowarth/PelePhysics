@@ -677,7 +677,7 @@ def update_group_needs(mechanism, species_info, reaction_info):
             print("... for group member: " + spec)
             # look at any additional needs that are not already
             # accounted for with the group
-            for need in list(
+            for need in sorted(
                 set(species_info.qssa_info.needs_running[spec])
                 - set(species_info.qssa_info.group[group_key])
             ):
@@ -720,7 +720,7 @@ def update_group_needs(mechanism, species_info, reaction_info):
                     update_needs_count += 1
             # look at any additional species (outside of the group)
             # that depend on the current group member
-            for needed in list(
+            for needed in sorted(
                 set(species_info.qssa_info.is_needed_running[spec])
                 - set(species_info.qssa_info.group[group_key])
             ):
@@ -983,12 +983,7 @@ def sort_qssa_solution_elements(mechanism, species_info, reaction_info, syms):
             direction = species_info.qssa_info.srnet[i][r]
 
             # Check if reaction contains other QSSA species
-            coupled = [
-                species
-                for species in list(
-                    set(species_info.sr_si[species_info.qssa_info.sr_rj == r])
-                )
-            ]
+            coupled = sorted(set(species_info.sr_si[species_info.qssa_info.sr_rj == r]))
             coupled_qssa = [species_info.qssa_species_list[j] for j in coupled]
 
             for species in coupled_qssa:

@@ -972,7 +972,9 @@ def production_rate(
             reaction = mechanism.reaction(orig_idx)
             lst_reactants = [(k, v) for k, v in reaction.reactants.items()]
             lst_products = [(k, v) for k, v in reaction.products.items()]
-            all_agents = list(set(lst_reactants + lst_products))
+            # Each (species, coefficient) once, in a fixed order: the sort
+            # below keeps it for a species on both sides of the reaction
+            all_agents = list(dict.fromkeys(lst_reactants + lst_products))
             agents = []
             # remove QSS species from agents
             for symbol, coefficient in all_agents:
@@ -1432,7 +1434,9 @@ def production_rate_light(fstream, mechanism, species_info, reaction_info):
             reaction = mechanism.reaction(orig_idx)
             lst_reactants = [(k, v) for k, v in reaction.reactants.items()]
             lst_products = [(k, v) for k, v in reaction.products.items()]
-            all_agents = list(set(lst_reactants + lst_products))
+            # Each (species, coefficient) once, in a fixed order: the sort
+            # below keeps it for a species on both sides of the reaction
+            all_agents = list(dict.fromkeys(lst_reactants + lst_products))
             agents = []
             # remove QSS species from agents
             for symbol, coefficient in all_agents:
