@@ -70,7 +70,8 @@ jobs:
             make_args: DIM=3
             run: ./PeleC3d.gnu.MPI.ex example.inp max_step=2 amr.plot_int=-1 amr.check_int=-1 amrex.abort_on_unused_inputs=0 amr.n_cell=8 8 128
     steps:
-      # Defined once here and reused (*checkout_pr, *clone_code) by clang-tidy.
+      # Defined once here and reused (*checkout_pr, *clone_code,
+      # *install_ccache) by clang-tidy.
       - &checkout_pr
         name: Checkout PelePhysics
         uses: actions/checkout@v6
@@ -94,12 +95,13 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends libopenmpi-dev openmpi-bin
-      - name: Install Ccache
+      - &install_ccache
+        name: Install Ccache
         # Outside the workspace: AMReX's script downloads into the current directory.
         working-directory: ${{ runner.temp }}
         run: |
-          # AMReX's install script, from the code's amrex pin. It exits 0 even
-          # if the download fails, so check the result.
+          # AMReX's install script, from the PR's amrex pin (the same ccache as
+          # PeleC). It exits 0 even if the download fails, so check the result.
           ${{ github.workspace }}/${{ matrix.code }}/Submodules/PelePhysics/Submodules/amrex/.github/workflows/dependencies/dependencies_ccache.sh > /dev/null
           ccache --version | sed -n 1p
           # Marks the start of the run for Trim Ccache
@@ -144,8 +146,8 @@ jobs:
           key: ${{ steps.ccache.outputs.cache-primary-key }}
 
   clang-tidy:
-    needs: [Detect-Changes, Run]
-    if: needs['Detect-Changes'].outputs['has-source-changes'] == 'true'
+    # After Run, which carries the docs-only gate: a skipped Run skips this.
+    needs: Run
     name: ${{ matrix.code }} clang-tidy
     runs-on: ubuntu-24.04
     strategy:
@@ -171,14 +173,9 @@ jobs:
     steps:
       - *checkout_pr
       - *clone_code
-      - name: Install Ccache and clang-tidy-cache
-        # Outside the workspace: AMReX's script downloads into the current directory.
-        working-directory: ${{ runner.temp }}
+      - *install_ccache
+      - name: Install clang-tidy-cache
         run: |
-          # AMReX's install script, from the PR's amrex pin (the same ccache as
-          # PeleC). It exits 0 even if the download fails, so check the result.
-          ${{ github.workspace }}/${{ matrix.code }}/Submodules/PelePhysics/Submodules/amrex/.github/workflows/dependencies/dependencies_ccache.sh > /dev/null
-          ccache --version | sed -n 1p
           # ctcache 1.2.0; the module is a self-contained script
           sudo curl -fsSL https://raw.githubusercontent.com/matus-chochlik/ctcache/e33c063ca6e52b48bcefbc45d46d8c150ffa81ca/src/ctcache/clang_tidy_cache.py -o /usr/local/bin/clang-tidy-cache
           sudo chmod +x /usr/local/bin/clang-tidy-cache
