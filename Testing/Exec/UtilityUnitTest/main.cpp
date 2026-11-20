@@ -202,6 +202,54 @@ test_filters()
         AMREX_ALWAYS_ASSERT(max_diff(ip, out, 1, 2, 0) < tol);
         AMREX_ALWAYS_ASSERT(max_diff(ip, in, 0, 1, 0) == 0.0);
       }
+
+      // Two levels with different filter widths, each filled on its own:
+      // level 1 covers the domain at twice the resolution, so there is no
+      // coarse/fine interface and each level must match apply_filter with
+      // its own filter
+      {
+        const amrex::Array<int, AMREX_SPACEDIM> isper{AMREX_D_DECL(1, 1, 1)};
+        const amrex::Geometry cgeom(domain, rb, 0, isper);
+        const amrex::Box fdomain = amrex::refine(domain, 2);
+        const amrex::Geometry fgeom(fdomain, rb, 0, isper);
+        amrex::BoxArray fba(fdomain);
+        fba.maxSize(8);
+        const amrex::DistributionMapping fdm(fba);
+        Filter ff(type, 2 * fgr);
+        amrex::Real fwsum = 0.0;
+        for (const auto x : ff.get_weights()) {
+          fwsum += std::abs(x);
+        }
+        const amrex::Real ftol = 1e4 *
+                                 std::numeric_limits<amrex::Real>::epsilon() *
+                                 std::pow(fwsum, AMREX_SPACEDIM);
+
+        // References: apply_filter on each level with full ghost cells
+        amrex::MultiFab cin(ba, dm, ncomp, ng);
+        amrex::MultiFab fin(fba, fdm, ncomp, ff.get_filter_ngrow());
+        fill_wavy(cin, domain);
+        fill_wavy(fin, fdomain);
+        cin.FillBoundary(cgeom.periodicity());
+        fin.FillBoundary(fgeom.periodicity());
+        amrex::MultiFab cref(ba, dm, ncomp, 0);
+        amrex::MultiFab fref(fba, fdm, ncomp, 0);
+        f.apply_filter(cin, cref);
+        ff.apply_filter(fin, fref);
+
+        amrex::MultiFab c(ba, dm, ncomp, 0);
+        amrex::MultiFab fdat(fba, fdm, ncomp, 0);
+        amrex::MultiFab::Copy(c, cin, 0, 0, ncomp, 0);
+        amrex::MultiFab::Copy(fdat, fin, 0, 0, ncomp, 0);
+        apply_filter_low_memory(
+          {f, ff}, {&c, &fdat}, {&c, &fdat}, 0, ncomp,
+          [&](amrex::Vector<amrex::MultiFab>& mf, int /*nstart*/) {
+            AMREX_ALWAYS_ASSERT(mf.size() == 2);
+            mf[0].FillBoundary(cgeom.periodicity());
+            mf[1].FillBoundary(fgeom.periodicity());
+          });
+        AMREX_ALWAYS_ASSERT(max_diff(c, cref, 0, ncomp, 0) < tol);
+        AMREX_ALWAYS_ASSERT(max_diff(fdat, fref, 0, ncomp, 0) < ftol);
+      }
     }
   }
 }

@@ -141,8 +141,9 @@ public:
 
   // One 1D pass along dir on the valid region of dst: dst components
   // [dcomp, dcomp + ncnt) are set from src components [scomp, scomp + ncnt),
-  // which need get_filter_ngrow() ghost cells along dir. src and dst must
-  // share the BoxArray and DistributionMapping.
+  // which need get_filter_ngrow() ghost cells along dir. src and dst must be
+  // different MultiFabs sharing the BoxArray and DistributionMapping. Like
+  // ParallelFor, it does not wait for the kernel to finish.
   void apply_filter_1d(
     const int dir,
     const amrex::MultiFab& src,

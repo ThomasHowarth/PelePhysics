@@ -330,8 +330,15 @@ Filter::apply_filter_1d(
   const int ncnt) const
 {
   BL_PROFILE("Filter::apply_filter_1d()");
-  AMREX_ASSERT(dir >= 0 && dir < AMREX_SPACEDIM);
-  AMREX_ASSERT(src.nGrowVect()[dir] >= _ngrow);
+  AMREX_ALWAYS_ASSERT(dir >= 0 && dir < AMREX_SPACEDIM);
+  AMREX_ALWAYS_ASSERT(&src != &dst);
+  AMREX_ALWAYS_ASSERT(
+    src.boxArray() == dst.boxArray() &&
+    src.DistributionMap() == dst.DistributionMap());
+  AMREX_ALWAYS_ASSERT(src.nGrowVect()[dir] >= _ngrow);
+  AMREX_ALWAYS_ASSERT(
+    scomp >= 0 && dcomp >= 0 && ncnt >= 0 && scomp + ncnt <= src.nComp() &&
+    dcomp + ncnt <= dst.nComp());
 
   // The device copy of the weights is freed once the kernels are done
   amrex::Gpu::AsyncArray<amrex::Real> weights(_weights.data(), _weights.size());
@@ -348,7 +355,6 @@ Filter::apply_filter_1d(
       amrex::ignore_unused(j, k); // unused below 3D
       d[b](iv, n + dcomp) = run_filter_1d(iv, n + scomp, e, ng, w, s[b]);
     });
-  amrex::Gpu::streamSynchronize();
 }
 
 void
@@ -365,6 +371,14 @@ apply_filter_low_memory(
   AMREX_ALWAYS_ASSERT(
     static_cast<int>(out.size()) == nlev &&
     static_cast<int>(filters.size()) == nlev);
+  for (int lev = 0; lev < nlev; ++lev) {
+    AMREX_ALWAYS_ASSERT(
+      in[lev]->boxArray() == out[lev]->boxArray() &&
+      in[lev]->DistributionMap() == out[lev]->DistributionMap());
+    AMREX_ALWAYS_ASSERT(
+      nstart >= 0 && ncnt >= 0 && nstart + ncnt <= in[lev]->nComp() &&
+      nstart + ncnt <= out[lev]->nComp());
+  }
 
   for (int dir = 0; dir < AMREX_SPACEDIM; ++dir) {
     // Data filtered along the previous directions, with ghost cells along dir
@@ -381,5 +395,8 @@ apply_filter_low_memory(
     for (int lev = 0; lev < nlev; ++lev) {
       filters[lev].apply_filter_1d(dir, tmp[lev], 0, *out[lev], nstart, ncnt);
     }
+    // tmp is freed here, possibly while the fill of the next direction runs
+    // on other streams, so the kernels reading it must be done
+    amrex::Gpu::streamSynchronize();
   }
 }
