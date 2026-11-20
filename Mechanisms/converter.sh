@@ -4,10 +4,12 @@ help()
    # Display Help
    echo "Convert mechanism yaml file."
    echo
-   echo "Syntax: converter.sh [-h|f]"
+   echo "Syntax: converter.sh [-h|f] [-- extra ceptr arguments]"
    echo "options:"
    echo "h     Print this Help."
    echo "f     Convert mechanism yaml file."
+   echo "Arguments after -- are passed to ceptr, e.g."
+   echo "  converter.sh -f mechanism.yaml -- -c heterogeneous --interface_name surf"
    echo
 }
 
@@ -48,6 +50,7 @@ while getopts ":hf:" option; do
          exit;;
    esac
 done
+shift $((OPTIND - 1))
 
 if [ -z "${PELE_PHYSICS_HOME+xxx}" ]; then
     remove="Mechanisms"
@@ -71,11 +74,11 @@ echo "Converting ${filename}"
 if command -v poetry &> /dev/null
 then
     poetry update
-    poetry run convert -f "${filename}"
+    poetry run convert -f "${filename}" "$@"
 else
     echo "poetry could not be found. We recommend the use of poetry to ensure all necessary packages are available."
     echo "However, this script will proceed with the current python environment (and hope all the packages are available)."
-    python3 -m ceptr -f "${filename}"
+    python3 -m ceptr -f "${filename}" "$@"
 fi
 
 

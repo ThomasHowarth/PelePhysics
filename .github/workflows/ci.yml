@@ -273,6 +273,12 @@ jobs:
             fi
             make realclean
           done
+      - name: Test Surface Chemistry
+        working-directory: Testing/Exec/SurfaceEval
+        run: |
+          make -j $(nproc) ${MAKE_ARGS}
+          if [ ${RUN_TESTS} = true ]; then ${EXE}; fi
+          make realclean
       - name: Test Integration
         working-directory: Testing/Exec/ReactEval
         run: |

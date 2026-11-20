@@ -1648,9 +1648,37 @@ def surface_chemistry(fstream, interface, species_info):
     # surface standard concentrations site_density / sigma_k [mol/m^2]
     ref_conc = {sp.name: site_density / sp.size for sp in interface.species()}
     reactions = interface.reactions()
+    site_info(fstream, interface, species_info, site_density)
     surface_progress_rate(fstream, reactions, species_info, site_density, ref_conc)
     surface_production_rate(fstream, reactions, species_info)
     surface_kfkr(fstream, species_info, ref_conc)
+
+
+def site_info(fstream, interface, species_info, site_density):
+    """Write get_site_info: site density and site sizes of the surface species.
+
+    Coverages theta_k relate to surface concentrations [mol/m^2] by
+    sc_k = theta_k * site_density / site_size_k.
+    """
+    cw.writer(fstream)
+    cw.writer(
+        fstream,
+        cw.comment("site density [mol/m^2] and number of sites occupied by each"),
+    )
+    cw.writer(
+        fstream, cw.comment("surface species (indexed 0 .. NUM_SURFACE_SPECIES-1)")
+    )
+    cw.writer(
+        fstream,
+        "AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE void get_site_info("
+        "amrex::Real& site_density, amrex::Real* site_size)",
+    )
+    cw.writer(fstream, "{")
+    cw.writer(fstream, f"site_density = {site_density:.15g};")
+    for k, name in enumerate(species_info.surface_species_list):
+        size = interface.species(name).size
+        cw.writer(fstream, f"site_size[{k}] = {size:.15g};" + cw.comment(name))
+    cw.writer(fstream, "}")
 
 
 def _int_power(base, exponent):

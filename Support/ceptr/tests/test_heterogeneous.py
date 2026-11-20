@@ -191,6 +191,7 @@ def test_ptcombust_generation(ptcombust):
         "surfaceProductionRate",
         "gibbs_surface",
         "SKKFKR",
+        "get_site_info",
         "SKAWT",
     ):
         assert f"void{function}(" in compact
