@@ -6,6 +6,7 @@
 #include "BlackBoxFunction.H"
 #include "Filter.H"
 #include <AMReX_MultiFab.H>
+#include <AMReX_BCUtil.H>
 #include <AMReX_GpuAsyncArray.H>
 
 namespace m2c = pele::physics::utilities::mks2cgs;
@@ -99,6 +100,8 @@ test_filters()
   ba.maxSize(8);
   const amrex::DistributionMapping dm(ba);
   const int out_ng = 1;
+  const amrex::RealBox rb(
+    {AMREX_D_DECL(0.0, 0.0, 0.0)}, {AMREX_D_DECL(1.0, 1.0, 1.0)});
 
   for (int type = no_filter; type < num_filter_types; ++type) {
     for (int fgr : {2, 4, 8}) {
@@ -152,6 +155,52 @@ test_filters()
         AMREX_ALWAYS_ASSERT(diff.norm<amrex::RunOn::Device>(bx, 0, 0, 2) < tol);
         AMREX_ALWAYS_ASSERT(fout.min<amrex::RunOn::Device>(bx, 0) == -123.0);
         AMREX_ALWAYS_ASSERT(fout.max<amrex::RunOn::Device>(bx, 0) == -123.0);
+      }
+      // Low-memory path: same as apply_filter on data whose ghost cells are
+      // filled the same way, for periodic and for first-order extrapolated
+      // domain boundaries (which commute with filtering along the others)
+      for (const int periodic : {1, 0}) {
+        const amrex::Array<int, AMREX_SPACEDIM> isper{
+          AMREX_D_DECL(periodic, periodic, periodic)};
+        const amrex::Geometry geom(domain, rb, 0, isper);
+        amrex::Vector<amrex::BCRec> bcr(ncomp);
+        for (auto& bc : bcr) {
+          for (int d = 0; d < AMREX_SPACEDIM; ++d) {
+            const int t =
+              periodic ? amrex::BCType::int_dir : amrex::BCType::foextrap;
+            bc.setLo(d, t);
+            bc.setHi(d, t);
+          }
+        }
+        const auto fill_ghosts = [&](amrex::MultiFab& mf) {
+          mf.FillBoundary(geom.periodicity());
+          amrex::FillDomainBoundary(mf, geom, bcr);
+        };
+
+        fill_wavy(in, domain);
+        fill_ghosts(in);
+        f.apply_filter(in, out);
+
+        // Out of place, all components
+        amrex::MultiFab lm(ba, dm, ncomp, 0);
+        apply_filter_low_memory(
+          {f}, {&in}, {&lm}, 0, ncomp,
+          [&](amrex::Vector<amrex::MultiFab>& mf, int /*nstart*/) {
+            fill_ghosts(mf[0]);
+          });
+        AMREX_ALWAYS_ASSERT(max_diff(lm, out, 0, ncomp, 0) < tol);
+
+        // In place, component sub-range
+        amrex::MultiFab ip(ba, dm, ncomp, 0);
+        amrex::MultiFab::Copy(ip, in, 0, 0, ncomp, 0);
+        apply_filter_low_memory(
+          {f}, {&ip}, {&ip}, 1, 2,
+          [&](amrex::Vector<amrex::MultiFab>& mf, int nstart) {
+            AMREX_ALWAYS_ASSERT(nstart == 1 && mf[0].nComp() == 2);
+            fill_ghosts(mf[0]);
+          });
+        AMREX_ALWAYS_ASSERT(max_diff(ip, out, 1, 2, 0) < tol);
+        AMREX_ALWAYS_ASSERT(max_diff(ip, in, 0, 1, 0) == 0.0);
       }
     }
   }

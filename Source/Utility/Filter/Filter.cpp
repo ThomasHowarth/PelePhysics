@@ -319,3 +319,67 @@ Filter::apply_filter(
 {
   apply_filter(box, in, out, nstart, ncnt);
 }
+
+void
+Filter::apply_filter_1d(
+  const int dir,
+  const amrex::MultiFab& src,
+  const int scomp,
+  amrex::MultiFab& dst,
+  const int dcomp,
+  const int ncnt) const
+{
+  BL_PROFILE("Filter::apply_filter_1d()");
+  AMREX_ASSERT(dir >= 0 && dir < AMREX_SPACEDIM);
+  AMREX_ASSERT(src.nGrowVect()[dir] >= _ngrow);
+
+  // The device copy of the weights is freed once the kernels are done
+  amrex::Gpu::AsyncArray<amrex::Real> weights(_weights.data(), _weights.size());
+  const amrex::Real* w = weights.data();
+  const int ng = _ngrow;
+  const amrex::IntVect e = amrex::IntVect::TheDimensionVector(dir);
+
+  const auto& s = src.const_arrays();
+  const auto& d = dst.arrays();
+  amrex::ParallelFor(
+    dst, amrex::IntVect(0), ncnt,
+    [=] AMREX_GPU_DEVICE(int b, int i, int j, int k, int n) noexcept {
+      const amrex::IntVect iv(AMREX_D_DECL(i, j, k));
+      amrex::ignore_unused(j, k); // unused below 3D
+      d[b](iv, n + dcomp) = run_filter_1d(iv, n + scomp, e, ng, w, s[b]);
+    });
+  amrex::Gpu::streamSynchronize();
+}
+
+void
+apply_filter_low_memory(
+  const amrex::Vector<Filter>& filters,
+  const amrex::Vector<const amrex::MultiFab*>& in,
+  const amrex::Vector<amrex::MultiFab*>& out,
+  const int nstart,
+  const int ncnt,
+  const FilterFillFn& fill)
+{
+  BL_PROFILE("apply_filter_low_memory()");
+  const int nlev = static_cast<int>(in.size());
+  AMREX_ALWAYS_ASSERT(
+    static_cast<int>(out.size()) == nlev &&
+    static_cast<int>(filters.size()) == nlev);
+
+  for (int dir = 0; dir < AMREX_SPACEDIM; ++dir) {
+    // Data filtered along the previous directions, with ghost cells along dir
+    amrex::Vector<amrex::MultiFab> tmp(nlev);
+    for (int lev = 0; lev < nlev; ++lev) {
+      const amrex::MultiFab& src = (dir == 0) ? *in[lev] : *out[lev];
+      amrex::IntVect ng(0);
+      ng[dir] = filters[lev].get_filter_ngrow();
+      tmp[lev].define(
+        out[lev]->boxArray(), out[lev]->DistributionMap(), ncnt, ng);
+      amrex::MultiFab::Copy(tmp[lev], src, nstart, 0, ncnt, 0);
+    }
+    fill(tmp, nstart);
+    for (int lev = 0; lev < nlev; ++lev) {
+      filters[lev].apply_filter_1d(dir, tmp[lev], 0, *out[lev], nstart, ncnt);
+    }
+  }
+}

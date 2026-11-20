@@ -5,6 +5,8 @@
 #include <AMReX_Array.H>
 #include <AMReX_MultiFab.H>
 
+#include <functional>
+
 // Filter types
 enum filter_types {
   no_filter = 0,
@@ -137,6 +139,18 @@ public:
     const int ncnt,
     const int ncomp) const;
 
+  // One 1D pass along dir on the valid region of dst: dst components
+  // [dcomp, dcomp + ncnt) are set from src components [scomp, scomp + ncnt),
+  // which need get_filter_ngrow() ghost cells along dir. src and dst must
+  // share the BoxArray and DistributionMapping.
+  void apply_filter_1d(
+    const int dir,
+    const amrex::MultiFab& src,
+    const int scomp,
+    amrex::MultiFab& dst,
+    const int dcomp,
+    const int ncnt) const;
+
 private:
   int _fgr;
   int _ngrow{0};
@@ -173,5 +187,33 @@ private:
 
   void set_gaussian_5pt_optimized_approx_weights();
 };
+
+// Fills the ghost cells of mf[lev] for every level. Component n of mf[lev]
+// holds component nstart + n of the data being filtered. Each mf[lev] has
+// ghost cells along one direction only, e.g. FillBoundary for a single
+// level, or FillPatch from the coarser levels (which hold data filtered along
+// the same directions) for a hierarchy.
+using FilterFillFn =
+  std::function<void(amrex::Vector<amrex::MultiFab>& mf, int nstart)>;
+
+// Low-memory filtering for wide filters: instead of ngrow ghost cells in every
+// direction at once, each 1D pass uses one temporary per level with ngrow
+// ghost cells along that direction only, filled by fill. Only the valid data
+// of in is used and only the valid region of out is set. filters[lev] is the
+// filter for level lev. in[lev] and out[lev] must share the BoxArray and
+// DistributionMapping, and may be the same MultiFab to filter in place, in
+// which case the peak memory is the data plus one temporary per level.
+//
+// The result equals apply_filter on data whose ghost cells were filled the
+// same way, except where the ghost cells of an intermediate pass are not
+// determined by the valid data alone (non-periodic domain boundaries,
+// depending on the boundary condition, and coarse/fine interfaces).
+void apply_filter_low_memory(
+  const amrex::Vector<Filter>& filters,
+  const amrex::Vector<const amrex::MultiFab*>& in,
+  const amrex::Vector<amrex::MultiFab*>& out,
+  const int nstart,
+  const int ncnt,
+  const FilterFillFn& fill);
 
 #endif /*_FILTER_H*/

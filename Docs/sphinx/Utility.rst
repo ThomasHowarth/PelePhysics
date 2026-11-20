@@ -401,6 +401,34 @@ one 1D pass per direction. The result is the same as a direct multi-dimensional 
 cost of :math:`d (2 n_{grow} + 1)` rather than :math:`(2 n_{grow} + 1)^{d}` operations per cell
 (:math:`d` = ``AMREX_SPACEDIM``), using small temporaries per box for the intermediate passes.
 
+Low-memory filtering for wide filters
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+``apply_filter`` needs :math:`n_{grow}` ghost cells in every direction at once, so the input takes
+:math:`((L + 2 n_{grow}) / L)^{d}` times its valid size for boxes of side :math:`L`: 8 times for :math:`L = 32` and
+:math:`n_{grow} = 16`. For wide filters, ``apply_filter_low_memory`` instead uses one temporary per level with ghost
+cells along the direction of the current pass only, :math:`(L + 2 n_{grow}) / L` times the valid size, and calls a
+user-supplied function to fill those ghost cells before each pass. It filters a whole AMR hierarchy, with one
+``Filter`` per level, because filling the ghost cells of a fine level needs the coarser levels filtered along the same
+directions:
+
+::
+
+   amrex::Vector<Filter> filters;  // one per level, e.g. with fgr scaled by the refinement ratio
+   apply_filter_low_memory(
+     filters, GetVecOfConstPtrs(data), GetVecOfPtrs(data), nstart, ncnt,
+     [&](amrex::Vector<amrex::MultiFab>& mf, int nstart) {
+       // Fill the ghost cells of every mf[lev]; component n holds data component nstart + n,
+       // e.g. FillBoundary on a single level or FillPatch from the coarser levels.
+     });
+
+Only valid data is read and only the valid region of the output is set. Input and output may be the same
+MultiFabs, in which case the peak memory is the data plus one temporary per level. The result matches
+``apply_filter`` with the ghost cells filled the same way within a level, across periodic boundaries and across
+first-order extrapolated domain boundaries. It differs at coarse/fine interfaces and at other domain boundary
+conditions, where the ghost cells of the intermediate passes are interpolated or extrapolated from partially filtered
+data.
+
 Utilities
 =============================
 The ``utilities`` namespace contains some functions that may be useful to users when writing problem-specific source code.
