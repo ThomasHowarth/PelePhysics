@@ -396,6 +396,11 @@ discussed in PeleC milestone reports. An example call to the filtering operation
 
 The user must ensure that the correct number of grow cells is present in the Fab or MultiFab.
 
+Every filter type is a tensor product of the same 1D weights in each direction, so ``apply_filter`` applies it as
+one 1D pass per direction. The result is the same as a direct multi-dimensional convolution up to round-off, at a
+cost of :math:`d (2 n_{grow} + 1)` rather than :math:`(2 n_{grow} + 1)^{d}` operations per cell
+(:math:`d` = ``AMREX_SPACEDIM``), using small temporaries per box for the intermediate passes.
+
 Utilities
 =============================
 The ``utilities`` namespace contains some functions that may be useful to users when writing problem-specific source code.

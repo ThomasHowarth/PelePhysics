@@ -25,6 +25,9 @@ enum filter_types {
   num_filter_types
 };
 
+// Direct multi-dimensional convolution with the 1D weights w at one cell,
+// accumulated into qh. Filter::apply_filter does not use it (it applies the
+// same filter as one 1D pass per direction); it is kept as a reference.
 AMREX_GPU_DEVICE
 AMREX_FORCE_INLINE
 void
@@ -39,20 +42,52 @@ run_filter(
   amrex::Array4<const amrex::Real> const& q,
   amrex::Array4<amrex::Real> const& qh)
 {
-  for (int n = -ng; n <= ng; n++) {
-    for (int m = -ng; m <= ng; m++) {
+  // Only filter along the directions that exist
+  const int ngy = (AMREX_SPACEDIM > 1) ? ng : 0;
+  const int ngz = (AMREX_SPACEDIM > 2) ? ng : 0;
+  for (int n = -ngz; n <= ngz; n++) {
+    const amrex::Real wz = (AMREX_SPACEDIM > 2) ? w[n + ng] : 1.0;
+    for (int m = -ngy; m <= ngy; m++) {
+      const amrex::Real wy = (AMREX_SPACEDIM > 1) ? w[m + ng] : 1.0;
       for (int l = -ng; l <= ng; l++) {
-        qh(i, j, k, nc + nstart) += w[l + ng] * w[m + ng] * w[n + ng] *
-                                    q(i + l, j + m, k + n, nc + nstart);
+        qh(i, j, k, nc + nstart) +=
+          w[l + ng] * wy * wz * q(i + l, j + m, k + n, nc + nstart);
       }
     }
   }
+}
+
+// One 1D pass of the filter along the direction (di, dj, dk)
+AMREX_GPU_DEVICE
+AMREX_FORCE_INLINE
+amrex::Real
+run_filter_1d(
+  const int i,
+  const int j,
+  const int k,
+  const int n,
+  const int di,
+  const int dj,
+  const int dk,
+  const int ng,
+  const amrex::Real* w,
+  amrex::Array4<const amrex::Real> const& q)
+{
+  amrex::Real sum = 0.0;
+  for (int m = -ng; m <= ng; m++) {
+    sum += w[m + ng] * q(i + m * di, j + m * dj, k + m * dk, n);
+  }
+  return sum;
 }
 
 class Filter
 {
 
 public:
+  // Every filter type is a tensor product of the same 1D weights in each
+  // direction, so the filter is applied as one 1D pass per direction: the
+  // cost per cell is AMREX_SPACEDIM * (2 * ngrow + 1) rather than
+  // (2 * ngrow + 1)^AMREX_SPACEDIM.
   explicit Filter(const int type = box, const int fgr = 2)
     : _type(type), _fgr(fgr)
   {
@@ -113,6 +148,8 @@ public:
 
   int get_filter_ngrow() const { return _ngrow; }
 
+  const amrex::Vector<amrex::Real>& get_weights() const { return _weights; }
+
   void apply_filter(const amrex::MultiFab& in, amrex::MultiFab& out);
 
   void apply_filter(
@@ -145,6 +182,13 @@ private:
   int _ngrow;
   int _nweights;
   amrex::Vector<amrex::Real> _weights;
+
+  void apply_filter_box(
+    const amrex::Box& box,
+    amrex::Array4<const amrex::Real> const& q,
+    amrex::Array4<amrex::Real> const& qh,
+    const int nstart,
+    const int ncnt) const;
 
   void set_box_weights();
 

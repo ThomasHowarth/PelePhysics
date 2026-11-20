@@ -1,3 +1,4 @@
+#include <AMReX_GpuAsyncArray.H>
 #include "Filter.H"
 
 // Set the filter weights for the standard box filter
@@ -416,27 +417,18 @@ Filter::apply_filter(
   const int nstart,
   const int ncnt)
 {
+  BL_PROFILE("Filter::apply_filter()");
 
   // Ensure enough grow cells
   AMREX_ASSERT(in.nGrow() >= out.nGrow() + _ngrow);
 
-  const auto& ins = in.const_arrays();
-  const auto& outs = out.arrays();
-  out.setVal(0, nstart, ncnt);
-
-  amrex::Gpu::DeviceVector<amrex::Real> weights(_weights.size());
-  amrex::Real* w = weights.data();
-  amrex::Gpu::copy(
-    amrex::Gpu::hostToDevice, _weights.begin(), _weights.end(),
-    weights.begin());
-  const int captured_ngrow = _ngrow;
-
-  const amrex::IntVect ngs(out.nGrow());
-  amrex::ParallelFor(
-    in, ngs, ncnt - nstart,
-    [=] AMREX_GPU_DEVICE(int nbx, int i, int j, int k, int nc) noexcept {
-      run_filter(i, j, k, nc, captured_ngrow, nstart, w, ins[nbx], outs[nbx]);
-    });
+#ifdef AMREX_USE_OMP
+#pragma omp parallel if (amrex::Gpu::notInLaunchRegion())
+#endif
+  for (amrex::MFIter mfi(out, amrex::TilingIfNotGPU()); mfi.isValid(); ++mfi) {
+    const amrex::Box& bx = mfi.growntilebox();
+    apply_filter_box(bx, in.const_array(mfi), out.array(mfi), nstart, ncnt);
+  }
   amrex::Gpu::synchronize();
 }
 
@@ -472,20 +464,55 @@ Filter::apply_filter(
   const int ncnt,
   const int /*ncomp*/)
 {
-  const auto q = in.const_array();
-  out.setVal<amrex::RunOn::Device>(0.0, box, nstart, ncnt);
-  auto qh = out.array();
+  apply_filter_box(box, in.const_array(), out.array(), nstart, ncnt);
+}
 
-  amrex::Gpu::DeviceVector<amrex::Real> weights(_weights.size());
-  amrex::Real* w = weights.data();
-  amrex::Gpu::copy(
-    amrex::Gpu::hostToDevice, _weights.begin(), _weights.end(),
-    weights.begin());
+// Apply the filter as one 1D pass per direction. The pass along dir covers
+// box grown by ngrow in the directions not yet filtered, so the last pass
+// only needs the result of the previous ones on box itself and reads the
+// same input cells as a single multi-dimensional pass would.
+void
+Filter::apply_filter_box(
+  const amrex::Box& box,
+  amrex::Array4<const amrex::Real> const& q,
+  amrex::Array4<amrex::Real> const& qh,
+  const int nstart,
+  const int ncnt) const
+{
+  // The device copy of the weights is freed once the kernels are done
+  amrex::Gpu::AsyncArray<amrex::Real> weights(_weights.data(), _weights.size());
+  const amrex::Real* w = weights.data();
+  const int ng = _ngrow;
 
-  const int captured_ngrow = _ngrow;
-  amrex::ParallelFor(
-    box, ncnt - nstart,
-    [=] AMREX_GPU_DEVICE(int i, int j, int k, int nc) noexcept {
-      run_filter(i, j, k, nc, captured_ngrow, nstart, w, q, qh);
-    });
+  // Intermediate results; the async arena frees them once the kernels are done
+  amrex::Array<amrex::FArrayBox, 2> tmp;
+  amrex::Array4<const amrex::Real> src = q;
+  int src_comp = nstart;
+
+  for (int dir = 0; dir < AMREX_SPACEDIM; ++dir) {
+    amrex::Box pbox = box;
+    for (int d = dir + 1; d < AMREX_SPACEDIM; ++d) {
+      pbox.grow(d, ng);
+    }
+
+    amrex::Array4<amrex::Real> dst = qh;
+    int dst_comp = nstart;
+    if (dir < AMREX_SPACEDIM - 1) {
+      tmp[dir % 2].resize(pbox, ncnt, amrex::The_Async_Arena());
+      dst = tmp[dir % 2].array();
+      dst_comp = 0;
+    }
+
+    const int di = static_cast<int>(dir == 0);
+    const int dj = static_cast<int>(dir == 1);
+    const int dk = static_cast<int>(dir == 2);
+    amrex::ParallelFor(
+      pbox, ncnt, [=] AMREX_GPU_DEVICE(int i, int j, int k, int n) noexcept {
+        dst(i, j, k, n + dst_comp) =
+          run_filter_1d(i, j, k, n + src_comp, di, dj, dk, ng, w, src);
+      });
+
+    src = dst;
+    src_comp = dst_comp;
+  }
 }
