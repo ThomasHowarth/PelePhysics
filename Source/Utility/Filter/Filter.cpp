@@ -405,7 +405,7 @@ Filter::set_gaussian_5pt_optimized_approx_weights()
 
 // Run the filtering operation on a MultiFab
 void
-Filter::apply_filter(const amrex::MultiFab& in, amrex::MultiFab& out)
+Filter::apply_filter(const amrex::MultiFab& in, amrex::MultiFab& out) const
 {
   apply_filter(in, out, 0, out.nComp());
 }
@@ -415,19 +415,27 @@ Filter::apply_filter(
   const amrex::MultiFab& in,
   amrex::MultiFab& out,
   const int nstart,
-  const int ncnt)
+  const int ncnt) const
 {
   BL_PROFILE("Filter::apply_filter()");
 
+  AMREX_ALWAYS_ASSERT(
+    nstart >= 0 && ncnt >= 0 && nstart + ncnt <= in.nComp() &&
+    nstart + ncnt <= out.nComp());
   // Ensure enough grow cells
   AMREX_ASSERT(in.nGrow() >= out.nGrow() + _ngrow);
+
+  // The device copy of the weights is freed once the kernels are done
+  amrex::Gpu::AsyncArray<amrex::Real> weights(_weights.data(), _weights.size());
+  const amrex::Real* w = weights.data();
 
 #ifdef AMREX_USE_OMP
 #pragma omp parallel if (amrex::Gpu::notInLaunchRegion())
 #endif
   for (amrex::MFIter mfi(out, amrex::TilingIfNotGPU()); mfi.isValid(); ++mfi) {
     const amrex::Box& bx = mfi.growntilebox();
-    apply_filter_box(bx, in.const_array(mfi), out.array(mfi), nstart, ncnt);
+    run_filter_separable(
+      bx, in.const_array(mfi), out.array(mfi), nstart, ncnt, _ngrow, w);
   }
   amrex::Gpu::synchronize();
 }
@@ -435,7 +443,9 @@ Filter::apply_filter(
 // Run the filtering operation on a FAB
 void
 Filter::apply_filter(
-  const amrex::Box& cbox, const amrex::FArrayBox& in, amrex::FArrayBox& out)
+  const amrex::Box& cbox,
+  const amrex::FArrayBox& in,
+  amrex::FArrayBox& out) const
 {
   apply_filter(cbox, in, out, 0, out.nComp());
 }
@@ -446,7 +456,7 @@ Filter::apply_filter(
   const amrex::FArrayBox& in,
   amrex::FArrayBox& out,
   const int nstart,
-  const int ncnt)
+  const int ncnt) const
 {
   BL_PROFILE("Filter::apply_filter()");
   AMREX_ASSERT(in.nComp() == out.nComp());
@@ -462,28 +472,26 @@ Filter::apply_filter(
   amrex::FArrayBox& out,
   const int nstart,
   const int ncnt,
-  const int /*ncomp*/)
+  const int /*ncomp*/) const
 {
-  apply_filter_box(box, in.const_array(), out.array(), nstart, ncnt);
+  AMREX_ALWAYS_ASSERT(
+    nstart >= 0 && ncnt >= 0 && nstart + ncnt <= in.nComp() &&
+    nstart + ncnt <= out.nComp());
+  amrex::Gpu::AsyncArray<amrex::Real> weights(_weights.data(), _weights.size());
+  run_filter_separable(
+    box, in.const_array(), out.array(), nstart, ncnt, _ngrow, weights.data());
 }
 
-// Apply the filter as one 1D pass per direction. The pass along dir covers
-// box grown by ngrow in the directions not yet filtered, so the last pass
-// only needs the result of the previous ones on box itself and reads the
-// same input cells as a single multi-dimensional pass would.
 void
-Filter::apply_filter_box(
+run_filter_separable(
   const amrex::Box& box,
   amrex::Array4<const amrex::Real> const& q,
   amrex::Array4<amrex::Real> const& qh,
   const int nstart,
-  const int ncnt) const
+  const int ncnt,
+  const int ng,
+  const amrex::Real* w)
 {
-  // The device copy of the weights is freed once the kernels are done
-  amrex::Gpu::AsyncArray<amrex::Real> weights(_weights.data(), _weights.size());
-  const amrex::Real* w = weights.data();
-  const int ng = _ngrow;
-
   // Intermediate results; the async arena frees them once the kernels are done
   amrex::Array<amrex::FArrayBox, 2> tmp;
   amrex::Array4<const amrex::Real> src = q;

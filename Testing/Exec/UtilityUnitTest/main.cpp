@@ -1,3 +1,4 @@
+#include <limits>
 #include <AMReX.H>
 #include <AMReX_Print.H>
 #include "Utilities.H"
@@ -24,7 +25,7 @@ fill_wavy(amrex::MultiFab& mf, const amrex::Box& domain)
     mf, mf.nGrowVect(), mf.nComp(),
     [=] AMREX_GPU_DEVICE(int nbx, int i, int j, int k, int n) noexcept {
       const amrex::Real x = twopi * i / len[0];
-      const amrex::Real y = twopi * j / len[1];
+      const amrex::Real y = (AMREX_SPACEDIM > 1) ? twopi * j / len[1] : 0.0;
       const amrex::Real z = (AMREX_SPACEDIM > 2) ? twopi * k / len[2] : 0.0;
       a[nbx](i, j, k, n) =
         std::sin(x + 2.0 * y + 3.0 * z + n) + std::cos(2.0 * x - y) * (n + 1);
@@ -107,7 +108,9 @@ test_filters()
       for (const auto x : f.get_weights()) {
         wsum += std::abs(x);
       }
-      const amrex::Real tol = 1e-12 * std::pow(wsum, AMREX_SPACEDIM);
+      const amrex::Real tol = 1e4 *
+                              std::numeric_limits<amrex::Real>::epsilon() *
+                              std::pow(wsum, AMREX_SPACEDIM);
       amrex::MultiFab in(ba, dm, ncomp, out_ng + ng);
       amrex::MultiFab out(ba, dm, ncomp, out_ng);
       amrex::MultiFab ref(ba, dm, ncomp, out_ng);
@@ -145,6 +148,7 @@ test_filters()
         diff.copy<amrex::RunOn::Device>(fout, bx, 1, bx, 0, 2);
         diff.minus<amrex::RunOn::Device>(ref[mfi], bx, bx, 1, 0, 2);
         AMREX_ALWAYS_ASSERT(diff.norm<amrex::RunOn::Device>(bx, 0, 0, 2) < tol);
+        AMREX_ALWAYS_ASSERT(fout.min<amrex::RunOn::Device>(bx, 0) == -123.0);
         AMREX_ALWAYS_ASSERT(fout.max<amrex::RunOn::Device>(bx, 0) == -123.0);
       }
     }

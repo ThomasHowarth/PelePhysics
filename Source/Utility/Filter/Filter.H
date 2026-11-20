@@ -80,6 +80,22 @@ run_filter_1d(
   return sum;
 }
 
+// Applies the filter with 1D weights w (2 * ng + 1 of them, in device
+// memory) to components [nstart, nstart + ncnt) of q on box, writing qh, as
+// one 1D pass per direction. q needs ng ghost cells around box in every
+// direction. Each pass covers box grown by ng in the directions not yet
+// filtered, so the last pass only needs box itself and the same input cells
+// are read as by run_filter. A free function rather than a private member so
+// that it can contain GPU lambdas under CUDA.
+void run_filter_separable(
+  const amrex::Box& box,
+  amrex::Array4<const amrex::Real> const& q,
+  amrex::Array4<amrex::Real> const& qh,
+  const int nstart,
+  const int ncnt,
+  const int ng,
+  const amrex::Real* w);
+
 class Filter
 {
 
@@ -150,23 +166,27 @@ public:
 
   const amrex::Vector<amrex::Real>& get_weights() const { return _weights; }
 
-  void apply_filter(const amrex::MultiFab& in, amrex::MultiFab& out);
+  void apply_filter(const amrex::MultiFab& in, amrex::MultiFab& out) const;
 
+  // Filters components [nstart, nstart + ncnt) of in into out, which may
+  // have ghost cells; in needs get_filter_ngrow() more ghost cells than out.
   void apply_filter(
     const amrex::MultiFab& in,
     amrex::MultiFab& out,
     const int nstart,
-    const int ncnt);
+    const int ncnt) const;
 
   void apply_filter(
-    const amrex::Box& cbox, const amrex::FArrayBox& in, amrex::FArrayBox& out);
+    const amrex::Box& cbox,
+    const amrex::FArrayBox& in,
+    amrex::FArrayBox& out) const;
 
   void apply_filter(
     const amrex::Box& cbox,
     const amrex::FArrayBox& in,
     amrex::FArrayBox& out,
     const int nstart,
-    const int ncnt);
+    const int ncnt) const;
 
   void apply_filter(
     const amrex::Box& box,
@@ -174,7 +194,7 @@ public:
     amrex::FArrayBox& out,
     const int nstart,
     const int ncnt,
-    const int ncomp);
+    const int ncomp) const;
 
 private:
   int _type;
@@ -182,13 +202,6 @@ private:
   int _ngrow;
   int _nweights;
   amrex::Vector<amrex::Real> _weights;
-
-  void apply_filter_box(
-    const amrex::Box& box,
-    amrex::Array4<const amrex::Real> const& q,
-    amrex::Array4<amrex::Real> const& qh,
-    const int nstart,
-    const int ncnt) const;
 
   void set_box_weights();
 
