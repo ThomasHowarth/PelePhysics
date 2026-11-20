@@ -136,6 +136,7 @@
 #define NUM_GAS_ELEMENTS 6     // Elements in the homogeneous phase
 #define NUM_GAS_SPECIES 118    // Species in the homogeneous phase
 #define NUM_GAS_REACTIONS 1246 // Reactions in the homogeneous phase
+#define NUM_QSS_GAS_SPECIES 0  // QSS species in the homogeneous phase
 
 #define SITE_DENSITY 0.000000E+00 // mol/cm^2
 
@@ -143,9 +144,15 @@
 #define NUM_SURFACE_SPECIES 0   // Species in the heterogeneous phase
 #define NUM_SURFACE_REACTIONS 0 // Reactions in the heterogeneous phase
 
-#define NUM_ELEMENTS (NUM_GAS_ELEMENTS + NUM_SURFACE_ELEMENTS)
-#define NUM_SPECIES (NUM_GAS_SPECIES + NUM_SURFACE_SPECIES)
-#define NUM_REACTIONS (NUM_GAS_REACTIONS + NUM_SURFACE_REACTIONS)
+// NUM_ELEMENTS/SPECIES/REACTIONS count the gas phase only (transported
+// species); NUM_ALL_* add the surface phase (surface species IDs follow the gas
+// species in NUM_ALL_SPECIES arrays).
+#define NUM_ELEMENTS NUM_GAS_ELEMENTS
+#define NUM_SPECIES NUM_GAS_SPECIES
+#define NUM_REACTIONS NUM_GAS_REACTIONS
+#define NUM_ALL_ELEMENTS (NUM_GAS_ELEMENTS + NUM_SURFACE_ELEMENTS)
+#define NUM_ALL_SPECIES (NUM_GAS_SPECIES + NUM_SURFACE_SPECIES)
+#define NUM_ALL_REACTIONS (NUM_GAS_REACTIONS + NUM_SURFACE_REACTIONS)
 
 #define NUM_IONS 0
 
@@ -214,9 +221,9 @@ CKAWT(amrex::Real* awt)
 AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE void
 CKNCF(int* ncf)
 {
-  int kd = 6;
+  int kd = NUM_ELEMENTS;
   // Zero ncf
-  for (int id = 0; id < kd * 118; ++id) {
+  for (int id = 0; id < kd * NUM_SPECIES; ++id) {
     ncf[id] = 0;
   }
 
@@ -142404,7 +142411,7 @@ egtransetCOFLAM(amrex::Real* COFLAM)
   COFLAM[292] = -9.25905015E+00;
   COFLAM[293] = 4.19521307E+00;
   COFLAM[294] = -2.21286487E-01;
-  COFLAM[295] = 6.15676251E-05;
+  COFLAM[295] = 6.15676252E-05;
   COFLAM[296] = -1.02946201E+01;
   COFLAM[297] = 4.43693862E+00;
   COFLAM[298] = -2.37437627E-01;
@@ -143887,7 +143894,7 @@ egtransetCOFD(amrex::Real* COFD)
   COFD[1297] = 3.48070094E+00;
   COFD[1298] = -2.40859499E-01;
   COFD[1299] = 1.05972514E-02;
-  COFD[1300] = -1.79310920E+01;
+  COFD[1300] = -1.79310921E+01;
   COFD[1301] = 4.98037650E+00;
   COFD[1302] = -4.26676911E-01;
   COFD[1303] = 1.83007231E-02;
@@ -155580,7 +155587,7 @@ egtransetCOFD(amrex::Real* COFD)
   COFD[12990] = -4.37707223E-01;
   COFD[12991] = 1.72157190E-02;
   COFD[12992] = -2.25999325E+01;
-  COFD[12993] = 5.42562555E+00;
+  COFD[12993] = 5.42562556E+00;
   COFD[12994] = -4.48132861E-01;
   COFD[12995] = 1.77847329E-02;
   COFD[12996] = -1.95250705E+01;
@@ -156900,7 +156907,7 @@ egtransetCOFD(amrex::Real* COFD)
   COFD[14310] = -4.37707223E-01;
   COFD[14311] = 1.72157190E-02;
   COFD[14312] = -2.25933772E+01;
-  COFD[14313] = 5.42562555E+00;
+  COFD[14313] = 5.42562556E+00;
   COFD[14314] = -4.48132861E-01;
   COFD[14315] = 1.77847329E-02;
   COFD[14316] = -1.95201761E+01;
@@ -158284,7 +158291,7 @@ egtransetCOFD(amrex::Real* COFD)
   COFD[15694] = -4.37707223E-01;
   COFD[15695] = 1.72157190E-02;
   COFD[15696] = -2.25933772E+01;
-  COFD[15697] = 5.42562555E+00;
+  COFD[15697] = 5.42562556E+00;
   COFD[15698] = -4.48132861E-01;
   COFD[15699] = 1.77847329E-02;
   COFD[15700] = -1.95201761E+01;

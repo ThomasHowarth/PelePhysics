@@ -59,6 +59,7 @@
 #define NUM_GAS_ELEMENTS 6    // Elements in the homogeneous phase
 #define NUM_GAS_SPECIES 41    // Species in the homogeneous phase
 #define NUM_GAS_REACTIONS 202 // Reactions in the homogeneous phase
+#define NUM_QSS_GAS_SPECIES 0 // QSS species in the homogeneous phase
 
 #define SITE_DENSITY 0.000000E+00 // mol/cm^2
 
@@ -66,9 +67,15 @@
 #define NUM_SURFACE_SPECIES 0   // Species in the heterogeneous phase
 #define NUM_SURFACE_REACTIONS 0 // Reactions in the heterogeneous phase
 
-#define NUM_ELEMENTS (NUM_GAS_ELEMENTS + NUM_SURFACE_ELEMENTS)
-#define NUM_SPECIES (NUM_GAS_SPECIES + NUM_SURFACE_SPECIES)
-#define NUM_REACTIONS (NUM_GAS_REACTIONS + NUM_SURFACE_REACTIONS)
+// NUM_ELEMENTS/SPECIES/REACTIONS count the gas phase only (transported
+// species); NUM_ALL_* add the surface phase (surface species IDs follow the gas
+// species in NUM_ALL_SPECIES arrays).
+#define NUM_ELEMENTS NUM_GAS_ELEMENTS
+#define NUM_SPECIES NUM_GAS_SPECIES
+#define NUM_REACTIONS NUM_GAS_REACTIONS
+#define NUM_ALL_ELEMENTS (NUM_GAS_ELEMENTS + NUM_SURFACE_ELEMENTS)
+#define NUM_ALL_SPECIES (NUM_GAS_SPECIES + NUM_SURFACE_SPECIES)
+#define NUM_ALL_REACTIONS (NUM_GAS_REACTIONS + NUM_SURFACE_REACTIONS)
 
 #define NUM_IONS 0
 
@@ -137,9 +144,9 @@ CKAWT(amrex::Real* awt)
 AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE void
 CKNCF(int* ncf)
 {
-  int kd = 6;
+  int kd = NUM_ELEMENTS;
   // Zero ncf
-  for (int id = 0; id < kd * 41; ++id) {
+  for (int id = 0; id < kd * NUM_SPECIES; ++id) {
     ncf[id] = 0;
   }
 
@@ -9883,8 +9890,8 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
     wdot[9] += 0.246500 * qdot;
     wdot[11] += 0.236833 * qdot;
     wdot[12] += 0.700000 * qdot;
-    wdot[19] -= qdot;
     wdot[19] += 0.300000 * qdot;
+    wdot[19] -= qdot;
   }
 
   {
@@ -9904,8 +9911,8 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
     wdot[5] += 0.239186 * qdot;
     wdot[9] += 0.246500 * qdot;
     wdot[11] += 0.236833 * qdot;
-    wdot[12] += 0.700000 * qdot;
     wdot[12] -= qdot;
+    wdot[12] += 0.700000 * qdot;
     wdot[19] += 0.300000 * qdot;
   }
 
@@ -38183,7 +38190,7 @@ egtransetCOFLAM(amrex::Real* COFLAM)
   COFLAM[148] = -3.36316309E+01;
   COFLAM[149] = 1.41867239E+01;
   COFLAM[150] = -1.60184772E+00;
-  COFLAM[151] = 6.37331096E-02;
+  COFLAM[151] = 6.37331095E-02;
   COFLAM[152] = -2.51773024E+01;
   COFLAM[153] = 1.03193854E+01;
   COFLAM[154] = -1.02806485E+00;

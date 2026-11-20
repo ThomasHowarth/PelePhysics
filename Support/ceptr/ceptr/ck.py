@@ -2,6 +2,7 @@
 
 import ceptr.constants as cc
 import ceptr.thermo as cth
+import ceptr.utilities as cu
 import ceptr.writer as cw
 
 
@@ -20,76 +21,122 @@ def ckawt(fstream, mechanism):
     cw.writer(fstream, "}")
 
 
-def ckncf(fstream, mechanism, species_info):
-    """Write ckncf."""
-    n_elements = mechanism.n_elements
-    n_species = species_info.n_species
+def ckncf(fstream, mechanism, interface, species_info, write_sk=False):
+    """Write ckncf/skncf.
+
+    CKNCF: the NUM_SPECIES gas species, row stride NUM_ELEMENTS (gas
+    elements). SKNCF: the NUM_SURFACE_SPECIES surface species, row stride
+    NUM_ALL_ELEMENTS in the global element order (gas elements first, see
+    utilities.get_element_names).
+    """
+    if write_sk:
+        phase, species = interface, species_info.surface_species_list
+        n_rows, n_cols = "NUM_SURFACE_SPECIES", "NUM_ALL_ELEMENTS"
+    else:
+        phase, species = mechanism, species_info.nonqssa_species_list
+        n_rows, n_cols = "NUM_SPECIES", "NUM_ELEMENTS"
+    element_ids = {
+        e: i for i, e in enumerate(cu.get_element_names(mechanism, interface))
+    }
 
     cw.writer(fstream)
     cw.writer(fstream, cw.comment("Returns the elemental composition "))
     cw.writer(fstream, cw.comment("of the speciesi (mdim is num of elements)"))
     cw.writer(
         fstream,
-        "AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE void CKNCF" + cc.sym + "(int * ncf)",
+        "AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE void"
+        f" {cu.get_function_prefix(write_sk)}KNCF" + cc.sym + "(int * ncf)",
     )
     cw.writer(fstream, "{")
-    cw.writer(fstream, f"int kd = {n_elements}; ")
+    cw.writer(fstream, f"int kd = {n_cols}; ")
     cw.writer(fstream, cw.comment("Zero ncf"))
-    cw.writer(fstream, f"for (int id = 0; id < kd * {n_species}; ++ id) {{")
+    cw.writer(fstream, f"for (int id = 0; id < kd * {n_rows}; ++ id) {{")
     cw.writer(fstream, " ncf[id] = 0; ")
     cw.writer(fstream, "}")
 
     cw.writer(fstream)
-    for sp in species_info.nonqssa_species_list:
-        spec_idx = species_info.ordered_idx_map[sp]
-        species = species_info.nonqssa_species[spec_idx]
-        cw.writer(fstream, cw.comment(f"{species.name}"))
-        for elem, coef in mechanism.species(sp).composition.items():
+    for row, sp in enumerate(species):
+        cw.writer(fstream, cw.comment(f"{sp}"))
+        for elem, coef in phase.species(sp).composition.items():
             cw.writer(
                 fstream,
-                f"ncf[ {species_info.ordered_idx_map[sp]} * kd +"
-                f" {mechanism.element_index(elem)} ] = {int(coef)}; "
+                f"ncf[ {row} * kd + {element_ids[elem]} ] = {int(coef)}; "
                 + cw.comment(f"{elem}"),
             )
         cw.writer(fstream)
     cw.writer(fstream, "}")
 
 
-def cksyme_str(fstream, mechanism, species_info):
-    """Write cksyme."""
-    n_elements = mechanism.n_elements
+def cksyme_str(fstream, mechanism, interface, write_sk=False):
+    """Write cksyme/sksyme.
+
+    CKSYME_STR: the NUM_ELEMENTS gas elements. SKSYME_STR: all
+    NUM_ALL_ELEMENTS elements in the global order.
+    """
+    if write_sk:
+        element_names = cu.get_element_names(mechanism, interface)
+        n_elements = "NUM_ALL_ELEMENTS"
+    else:
+        element_names = mechanism.element_names
+        n_elements = "NUM_ELEMENTS"
+
     cw.writer(fstream)
     cw.writer(fstream, cw.comment("Returns the vector of strings of element names"))
     cw.writer(
         fstream,
-        "void CKSYME_STR" + cc.sym + "(amrex::Vector<std::string>& ename)",
+        f"void {cu.get_function_prefix(write_sk)}KSYME_STR"
+        + cc.sym
+        + "(amrex::Vector<std::string>& ename)",
     )
     cw.writer(fstream, "{")
     cw.writer(fstream, f"ename.resize({n_elements});")
-    for elem in mechanism.element_names:
+    for idx, elem in enumerate(element_names):
         cw.writer(
             fstream,
-            f'ename[{mechanism.element_index(elem)}] = "{elem}";',
+            f'ename[{idx}] = "{elem}";',
         )
     cw.writer(fstream, "}")
 
 
-def cksyms_str(fstream, mechanism, species_info):
-    """Write cksyms."""
-    n_species = species_info.n_species
+def cksyms_str(fstream, species_info, write_sk=False):
+    """Write cksyms/sksyms.
+
+    CKSYMS_STR: the NUM_SPECIES gas species. SKSYMS_STR: the
+    NUM_SURFACE_SPECIES surface species.
+    """
     cw.writer(fstream)
     cw.writer(fstream, cw.comment("Returns the vector of strings of species names"))
     cw.writer(
         fstream,
-        "void CKSYMS_STR" + cc.sym + "(amrex::Vector<std::string>& kname)",
+        f"void {cu.get_function_prefix(write_sk)}KSYMS_STR"
+        + cc.sym
+        + "(amrex::Vector<std::string>& kname)",
     )
+    if write_sk:
+        names, n_species = species_info.surface_species_list, "NUM_SURFACE_SPECIES"
+    else:
+        names, n_species = species_info.nonqssa_species_list, "NUM_SPECIES"
     cw.writer(fstream, "{")
     cw.writer(fstream, f"kname.resize({n_species});")
-    for species in species_info.nonqssa_species_list:
-        cw.writer(
-            fstream,
-            f'kname[{species_info.ordered_idx_map[species]}] = "{species}";',
-        )
+    for k, species in enumerate(names):
+        cw.writer(fstream, f'kname[{k}] = "{species}";')
+    cw.writer(fstream, "}")
+
+
+def skawt(fstream, mechanism, interface):
+    """Write skawt: atomic weights of all NUM_ALL_ELEMENTS elements."""
+    cw.writer(fstream)
+    cw.writer(fstream, cw.comment("get atomic weight for all gas and surface elements"))
+    cw.writer(
+        fstream,
+        "AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE void SKAWT"
+        + cc.sym
+        + "( amrex::Real *  awt)",
+    )
+    cw.writer(fstream, "{")
+    for idx, elem in enumerate(cu.get_element_names(mechanism, interface)):
+        aw = cu.get_atomic_weight(mechanism, interface, elem)
+        cw.writer(fstream, f"awt[{idx}] = {aw:f}; " + cw.comment(f"{elem}"))
     cw.writer(fstream, "}")
 
 
@@ -2460,60 +2507,29 @@ def temp_given_hy(fstream, mechanism, species_list):
 
 
 # NEED TO DEAL WITH THIS WHEN QSS
-def ckinu(fstream, mechanism, species_info, reaction_info, write_sk=False):
-    """Write ckinu/skinu."""
+def ckinu(fstream, mechanism, species_info, write_sk=False):
+    """Write ckinu/skinu for the reactions of mechanism, in mechanism order."""
     n_reactions = mechanism.n_reactions
-    n_gas_reactions = reaction_info.n_reactions
-    phase = "surface" if write_sk else "gas"
-    function_prefix = "S" if write_sk else "C"
+    phase = cu.get_phase(is_heterogeneous=write_sk)
     function_args = (
         "int* /*ki*/, int* /*nu*/" if n_reactions == 0 else "int ki[], int nu[]"
     )
 
-    maxsp = 0
-
-    ns = [0 for _ in range(n_reactions)]
     ki = [[] for _ in range(n_reactions)]
     nu = [[] for _ in range(n_reactions)]
-
-    for orig_idx, _ in reaction_info.idxmap.items():
-
-        # ignore heterogeneous reactions for CKINU and homogeneous reactions for SKINU
-        if (phase == "gas" and orig_idx >= n_gas_reactions) or (
-            phase == "surface" and orig_idx < n_gas_reactions
-        ):
-            continue
-        # ensure orig_idx is in the range 0, NUM_SURFACE_REACTIONS for SKINU
-        if phase == "surface":
-            orig_idx -= n_gas_reactions
-
-        reaction = mechanism.reaction(orig_idx)
-
+    for i, reaction in enumerate(mechanism.reactions()):
         for symbol, coefficient in reaction.reactants.items():
-            ki[orig_idx].append(species_info.ordered_idx_map[symbol])
-            nu[orig_idx].append(-int(coefficient))
+            ki[i].append(species_info.ordered_idx_map[symbol])
+            nu[i].append(-int(coefficient))
         for symbol, coefficient in reaction.products.items():
-            ki[orig_idx].append(species_info.ordered_idx_map[symbol])
-            nu[orig_idx].append(int(coefficient))
+            ki[i].append(species_info.ordered_idx_map[symbol])
+            nu[i].append(int(coefficient))
 
-        maxsp = max(maxsp, len(ki[orig_idx]))
-
-    for orig_idx, _ in reaction_info.idxmap.items():
-        # ignore heterogeneous reactions for CKINU and homogeneous reactions for SKINU
-        if (phase == "gas" and orig_idx >= n_gas_reactions) or (
-            phase == "surface" and orig_idx < n_gas_reactions
-        ):
-            continue
-        # ensure orig_idx is in the range 0, NUM_SURFACE_REACTIONS for SKINU
-        if phase == "surface":
-            orig_idx -= n_gas_reactions
-
-        reaction = mechanism.reaction(orig_idx)
-
-        ns[orig_idx] = len(ki[orig_idx])
-        for _ in range(ns[orig_idx], maxsp):
-            ki[orig_idx].append(0)
-            nu[orig_idx].append(0)
+    ns = [len(k) for k in ki]
+    maxsp = max(ns, default=0)
+    for i in range(n_reactions):
+        ki[i] += [0] * (maxsp - ns[i])
+        nu[i] += [0] * (maxsp - ns[i])
 
     cw.writer(fstream)
     cw.writer(
@@ -2526,7 +2542,7 @@ def ckinu(fstream, mechanism, species_info, reaction_info, write_sk=False):
     cw.writer(fstream, cw.comment("and stoichiometric coefficients. (Eq 50)"))
     cw.writer(
         fstream,
-        f"void {function_prefix}KINU"
+        f"void {cu.get_function_prefix(write_sk)}KINU"
         + cc.sym
         + f"(const int i, int& nspec, {function_args})",
     )
@@ -2576,13 +2592,10 @@ def ckinu(fstream, mechanism, species_info, reaction_info, write_sk=False):
     cw.writer(fstream, "}")
 
 
-def ckkfkr(fstream, mechanism, species_info):
-    """Write ckkfkr."""
-    n_species = species_info.n_species
-    n_reactions = mechanism.n_reactions
-
+def ckkfkr(fstream, mech_is_reacting):
+    """Write ckkfkr (gas reactions; see SKKFKR for the surface)."""
     cw.writer(fstream)
-    cw.writer(fstream, cw.comment("Returns the progress rates of each reactions"))
+    cw.writer(fstream, cw.comment("Returns the progress rates of each reaction"))
     cw.writer(fstream, cw.comment("Given P, T, and mole fractions"))
     cw.writer(
         fstream,
@@ -2595,7 +2608,7 @@ def ckkfkr(fstream, mechanism, species_info):
 
     cw.writer(
         fstream,
-        f"amrex::Real c[{n_species}]; " + cw.comment("temporary storage"),
+        "amrex::Real c[NUM_SPECIES]; " + cw.comment("temporary storage"),
     )
     cw.writer(
         fstream,
@@ -2607,7 +2620,7 @@ def ckkfkr(fstream, mechanism, species_info):
     # now compute conversion
     cw.writer(fstream)
     cw.writer(fstream, cw.comment("Compute conversion, see Eq 10"))
-    cw.writer(fstream, f"for (int id = 0; id < {n_species}; ++id) {{")
+    cw.writer(fstream, "for (int id = 0; id < NUM_GAS_SPECIES; ++id) {")
     cw.writer(fstream, "c[id] = x[id]*PORT;")
     cw.writer(fstream, "}")
 
@@ -2618,9 +2631,9 @@ def ckkfkr(fstream, mechanism, species_info):
 
     # convert qdot to chemkin units
     cw.writer(fstream)
-    if n_reactions > 0:
+    if mech_is_reacting:
         cw.writer(fstream, cw.comment("convert to chemkin units"))
-        cw.writer(fstream, f"for (int id = 0; id < {n_reactions}; ++id) {{")
+        cw.writer(fstream, "for (int id = 0; id < NUM_GAS_REACTIONS; ++id) {")
         cw.writer(fstream, "q_f[id] *= 1.0e-6;")
         cw.writer(fstream, "q_r[id] *= 1.0e-6;")
         cw.writer(fstream, "}")

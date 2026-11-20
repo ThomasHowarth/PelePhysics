@@ -53,9 +53,10 @@
 #define NCO_ID 37
 #define CH3O2_ID 38
 
-#define NUM_GAS_ELEMENTS 5      // Elements in the homogeneous phase
-#define NUM_QSSA_GAS_SPECIES 39 // Species in the homogeneous phase
-#define NUM_GAS_REACTIONS 269   // Reactions in the homogeneous phase
+#define NUM_GAS_ELEMENTS 5    // Elements in the homogeneous phase
+#define NUM_GAS_SPECIES 39    // Species in the homogeneous phase
+#define NUM_GAS_REACTIONS 269 // Reactions in the homogeneous phase
+#define NUM_QSS_GAS_SPECIES 5 // QSS species in the homogeneous phase
 
 #define SITE_DENSITY 0.000000E+00 // mol/cm^2
 
@@ -63,9 +64,15 @@
 #define NUM_SURFACE_SPECIES 0   // Species in the heterogeneous phase
 #define NUM_SURFACE_REACTIONS 0 // Reactions in the heterogeneous phase
 
-#define NUM_ELEMENTS (NUM_GAS_ELEMENTS + NUM_SURFACE_ELEMENTS)
-#define NUM_SPECIES (NUM_QSSA_GAS_SPECIES + NUM_SURFACE_SPECIES)
-#define NUM_REACTIONS (NUM_GAS_REACTIONS + NUM_SURFACE_REACTIONS)
+// NUM_ELEMENTS/SPECIES/REACTIONS count the gas phase only (transported
+// species); NUM_ALL_* add the surface phase (surface species IDs follow the gas
+// species in NUM_ALL_SPECIES arrays).
+#define NUM_ELEMENTS NUM_GAS_ELEMENTS
+#define NUM_SPECIES NUM_GAS_SPECIES
+#define NUM_REACTIONS NUM_GAS_REACTIONS
+#define NUM_ALL_ELEMENTS (NUM_GAS_ELEMENTS + NUM_SURFACE_ELEMENTS)
+#define NUM_ALL_SPECIES (NUM_GAS_SPECIES + NUM_SURFACE_SPECIES)
+#define NUM_ALL_REACTIONS (NUM_GAS_REACTIONS + NUM_SURFACE_REACTIONS)
 
 #define NUM_IONS 0
 

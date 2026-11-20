@@ -45,7 +45,7 @@ CKINU(const int i, int& nspec, int ki[], int nu[])
   }
 }
 
-// Returns the progress rates of each reactions
+// Returns the progress rates of each reaction
 // Given P, T, and mole fractions
 void
 CKKFKR(
@@ -55,12 +55,12 @@ CKKFKR(
   amrex::Real q_f[],
   amrex::Real q_r[])
 {
-  amrex::Real c[9]; // temporary storage
+  amrex::Real c[NUM_SPECIES]; // temporary storage
   amrex::Real PORT =
     1e6 * P / (8.31446261815324e+07 * T); // 1e6 * P/RT so c goes to SI units
 
   // Compute conversion, see Eq 10
-  for (int id = 0; id < 9; ++id) {
+  for (int id = 0; id < NUM_GAS_SPECIES; ++id) {
     c[id] = x[id] * PORT;
   }
 
@@ -68,7 +68,7 @@ CKKFKR(
   progressRateFR(q_f, q_r, c, T);
 
   // convert to chemkin units
-  for (int id = 0; id < 21; ++id) {
+  for (int id = 0; id < NUM_GAS_REACTIONS; ++id) {
     q_f[id] *= 1.0e-6;
     q_r[id] *= 1.0e-6;
   }
@@ -83,7 +83,7 @@ progressRateFR(
   const amrex::Real invT = 1.0 / T;
   const amrex::Real logT = log(T);
   // compute the Gibbs free energy
-  amrex::Real g_RT[9];
+  amrex::Real g_RT[NUM_SPECIES];
   gibbs(g_RT, T);
 
   amrex::Real sc_qss[1];
@@ -94,7 +94,7 @@ progressRateFR(
 void
 CKSYME_STR(amrex::Vector<std::string>& ename)
 {
-  ename.resize(3);
+  ename.resize(NUM_ELEMENTS);
   ename[0] = "H";
   ename[1] = "O";
   ename[2] = "N";
@@ -104,7 +104,7 @@ CKSYME_STR(amrex::Vector<std::string>& ename)
 void
 CKSYMS_STR(amrex::Vector<std::string>& kname)
 {
-  kname.resize(9);
+  kname.resize(NUM_SPECIES);
   kname[0] = "H2";
   kname[1] = "O2";
   kname[2] = "H2O";

@@ -20,6 +20,7 @@ import ceptr.species_info as csi
 import ceptr.symbolic_math as csm
 import ceptr.thermo as cth
 import ceptr.transport as ctr
+import ceptr.utilities as cu
 import ceptr.writer as cw
 
 
@@ -36,7 +37,7 @@ class Converter:
         qss_symbolic_jacobian=False,
         plog_pressure=None,
     ):
-        self.mechIsAHetMech = chemistry == "heterogeneous"
+        self.mech_is_heterogeneous = chemistry == "heterogeneous"
 
         self.mechanism = mechanism
         self.interface = interface
@@ -48,7 +49,7 @@ class Converter:
 
         self.mechpath = (
             pathlib.Path(self.interface.source)
-            if self.mechIsAHetMech
+            if self.mech_is_heterogeneous
             else pathlib.Path(self.mechanism.source)
         )
 
@@ -61,15 +62,9 @@ class Converter:
         # followed by three-body, simple and other "weird" reactions
         # 0/ntroe/nsri/nlindem/nTB/nSimple/nWeird
         # 0/1    /2   /3      /4  /5      /6
-
-        # indexing of heterogeneous reactions
-        # All the reactions are simple reactions and are either
-        # "Interface" or "Sticking" reactions
-        # within the interface reactions three sub-types exist:
-        # Elementary, Surface-Coverage Modified and FORD
-        # 6/interface/sticking
-        # 6/7        /8
-        self.reaction_info = cri.sort_reactions(self.mechanism, self.interface)
+        # Heterogeneous reactions are not sorted; the surface routines use
+        # the interface's reaction order.
+        self.reaction_info = cri.sort_reactions(self.mechanism)
 
         # Set up folder structure for PLOG reactions
         if self.reaction_info.has_plog_reactions:
@@ -153,10 +148,14 @@ class Converter:
         self.species_info.n_species = (
             self.species_info.n_gas_species - self.species_info.n_qssa_species
         )
+        if self.mech_is_heterogeneous and self.species_info.n_qssa_species > 0:
+            raise NotImplementedError(
+                "Heterogeneous chemistry is not supported with QSS species."
+            )
 
         self.species_info.n_all_species = (
             self.species_info.n_species + self.interface.n_species
-            if self.mechIsAHetMech
+            if self.mech_is_heterogeneous
             else self.species_info.n_species
         )
 
@@ -237,7 +236,7 @@ class Converter:
             "d",
         )
 
-        if self.mechIsAHetMech:
+        if self.mech_is_heterogeneous:
             # Initialize gas-solid interface species
             self.species_info.n_surface_species = self.interface.n_species
             for id, species in enumerate(self.interface.species()):
@@ -275,22 +274,16 @@ class Converter:
             cw.writer(cpp, self.mechanism_cpp_includes())
             cri.rmap(cpp, self.reaction_info)
             cri.get_rmap(cpp, self.reaction_info)
-            cck.ckinu(cpp, self.mechanism, self.species_info, self.reaction_info)
-            cck.ckkfkr(cpp, self.mechanism, self.species_info)
-            cp.progress_rate_fr(
-                cpp, self.mechanism, self.species_info, self.reaction_info
-            )
-            cck.cksyme_str(cpp, self.mechanism, self.species_info)
-            cck.cksyms_str(cpp, self.mechanism, self.species_info)
+            cck.ckinu(cpp, self.mechanism, self.species_info)
+            cck.ckkfkr(cpp, self.reaction_info.n_reactions > 0)
+            cp.progress_rate_fr(cpp, self.species_info, self.reaction_info)
+            cck.cksyme_str(cpp, self.mechanism, self.interface)
+            cck.cksyms_str(cpp, self.species_info)
             csp.sparsity(cpp, self.species_info)
-            if self.interface is not None:
-                cck.ckinu(
-                    cpp,
-                    self.interface,
-                    self.species_info,
-                    self.reaction_info,
-                    write_sk=True,
-                )
+            if self.mech_is_heterogeneous:
+                cck.cksyme_str(cpp, self.mechanism, self.interface, write_sk=True)
+                cck.cksyms_str(cpp, self.species_info, write_sk=True)
+                cck.ckinu(cpp, self.interface, self.species_info, write_sk=True)
 
             # This is for the header file
             cw.writer(hdr, "#ifndef MECHANISM_H")
@@ -301,7 +294,16 @@ class Converter:
             cck.ckindx(hdr, self.mechanism, self.species_info)
             self.atomic_weight(hdr)
             cck.ckawt(hdr, self.mechanism)
-            cck.ckncf(hdr, self.mechanism, self.species_info)
+            cck.ckncf(hdr, self.mechanism, self.interface, self.species_info)
+            if self.mech_is_heterogeneous:
+                cck.skawt(hdr, self.mechanism, self.interface)
+                cck.ckncf(
+                    hdr,
+                    self.mechanism,
+                    self.interface,
+                    self.species_info,
+                    write_sk=True,
+                )
             self.molecular_weights(hdr)
             cck.ckrp(hdr, self.mechanism, self.species_info)
             cth.thermo(hdr, self.mechanism, self.species_info, self.syms)
@@ -560,7 +562,7 @@ class Converter:
             print("Clang-format not found. C++ files will be hard to parse by a human.")
 
     def atomic_weight(self, fstream):
-        """Write the atomic weight."""
+        """Write the atomic weight of the gas elements."""
         cw.writer(fstream)
         cw.writer(fstream, cw.comment("save atomic weights into array"))
         cw.writer(
@@ -678,6 +680,12 @@ class Converter:
         cw.writer(fstream, "void CKSYMS_STR(amrex::Vector<std::string>& kname);")
         cw.writer(fstream, "void GET_RMAP(int * _rmap);")
         cw.writer(fstream, "void CKINU(const int i, int &nspec, int * ki, int * nu);")
+        if self.mech_is_heterogeneous:
+            cw.writer(fstream, "void SKSYME_STR(amrex::Vector<std::string>& ename);")
+            cw.writer(fstream, "void SKSYMS_STR(amrex::Vector<std::string>& kname);")
+            cw.writer(
+                fstream, "void SKINU(const int i, int &nspec, int * ki, int * nu);"
+            )
         cw.writer(
             fstream,
             "void CKKFKR(const amrex::Real P, const amrex::Real T,"
@@ -732,42 +740,38 @@ class Converter:
         n_hom_b_elem = len(self.mechanism.element_names)
         n_hom_species = len(self.species_info.nonqssa_species_list)
         n_hom_reactions = self.mechanism.n_reactions
-        site_density = n_het_b_elem = n_het_species = n_het_reactions = 0
-
-        all_species_list = self.species_info.nonqssa_species_list
+        site_density = n_het_species = n_het_reactions = 0
+        interface = self.interface if self.mech_is_heterogeneous else None
+        element_names = cu.get_element_names(self.mechanism, interface)
+        n_het_b_elem = len(element_names) - n_hom_b_elem
+        all_species_list = list(self.species_info.nonqssa_species_list)
+        if interface is not None:
+            n_het_species = interface.n_species
+            n_het_reactions = interface.n_reactions
+            all_species_list += interface.species_names
 
         cw.writer(fstream)
         cw.writer(fstream, "#include <AMReX_Gpu.H>")
         cw.writer(fstream, "#include <AMReX_REAL.H>")
         cw.writer(fstream)
         cw.writer(fstream, "/* Elements")
-
-        for elem in self.mechanism.element_names:
-            cw.writer(fstream, f"{self.mechanism.element_index(elem)}  {elem}")
-
-        if self.interface is not None:
-            n_het_species = self.interface.n_species
-            n_het_reactions = self.interface.n_reactions
-            all_species_list += self.interface.species_names
-            for elem in self.interface.element_names:
-                if elem not in self.mechanism.element_names:
-                    cw.writer(fstream, f"{n_hom_b_elem+n_het_b_elem}  {elem}")
-                    n_het_b_elem += 1
+        for idx, elem in enumerate(element_names):
+            cw.writer(fstream, f"{idx}  {elem}")
         cw.writer(fstream, "*/")
         cw.writer(fstream)
         cw.writer(fstream, cw.comment("Species"))
-        nb_ions = 0
-
         for species in all_species_list:
-            s = cf.format_species(species)
             cw.writer(
                 fstream,
-                f"#define {s}_ID {self.species_info.ordered_idx_map[species]}",
+                f"#define {cf.format_species(species)}_ID"
+                f" {self.species_info.ordered_idx_map[species]}",
             )
+        # ions are counted over the gas species only
+        nb_ions = 0
+        for species in self.species_info.nonqssa_species_list:
+            s = cf.format_species(species)
             if s[-1] == "n" or s[-1] == "p" or s == "E":
                 nb_ions += 1
-
-        qssa_str = "QSSA_" if self.species_info.n_qssa_species > 0 else ""
 
         cw.writer(fstream)
         cw.writer(
@@ -777,7 +781,7 @@ class Converter:
         )
         cw.writer(
             fstream,
-            f"#define NUM_{qssa_str}GAS_SPECIES {n_hom_species}"
+            f"#define NUM_GAS_SPECIES {n_hom_species}"
             + cw.comment("Species in the homogeneous phase"),
         )
         cw.writer(
@@ -786,7 +790,13 @@ class Converter:
             + cw.comment("Reactions in the homogeneous phase"),
         )
 
-        if not isinstance(self.interface, type(None)):
+        cw.writer(
+            fstream,
+            f"#define NUM_QSS_GAS_SPECIES {self.species_info.n_qssa_species}"
+            + cw.comment("QSS species in the homogeneous phase"),
+        )
+
+        if self.mech_is_heterogeneous:
             site_density = 0.1 * self.interface.site_density  # Kmol/m**2 to mol/cm**2
 
         cw.writer(fstream)
@@ -812,14 +822,31 @@ class Converter:
         cw.writer(fstream)
 
         cw.writer(
-            fstream, "#define NUM_ELEMENTS (NUM_GAS_ELEMENTS + NUM_SURFACE_ELEMENTS)"
+            fstream,
+            cw.comment(
+                "NUM_ELEMENTS/SPECIES/REACTIONS count the gas phase only (transported"
+                " species);"
+            ),
         )
         cw.writer(
             fstream,
-            f"#define NUM_SPECIES (NUM_{qssa_str}GAS_SPECIES + NUM_SURFACE_SPECIES)",
+            cw.comment("NUM_ALL_* add the surface phase (surface species IDs follow"),
+        )
+        cw.writer(fstream, cw.comment("the gas species in NUM_ALL_SPECIES arrays)."))
+        cw.writer(fstream, "#define NUM_ELEMENTS NUM_GAS_ELEMENTS")
+        cw.writer(fstream, "#define NUM_SPECIES NUM_GAS_SPECIES")
+        cw.writer(fstream, "#define NUM_REACTIONS NUM_GAS_REACTIONS")
+        cw.writer(
+            fstream,
+            "#define NUM_ALL_ELEMENTS (NUM_GAS_ELEMENTS + NUM_SURFACE_ELEMENTS)",
         )
         cw.writer(
-            fstream, "#define NUM_REACTIONS (NUM_GAS_REACTIONS + NUM_SURFACE_REACTIONS)"
+            fstream,
+            "#define NUM_ALL_SPECIES (NUM_GAS_SPECIES + NUM_SURFACE_SPECIES)",
+        )
+        cw.writer(
+            fstream,
+            "#define NUM_ALL_REACTIONS (NUM_GAS_REACTIONS + NUM_SURFACE_REACTIONS)",
         )
         cw.writer(fstream)
         cw.writer(fstream, f"#define NUM_IONS {nb_ions}")

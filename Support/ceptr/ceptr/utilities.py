@@ -635,6 +635,39 @@ def enhancement_d(mechanism, species_info, reaction, syms=None):
         return " + ".join(alpha).replace("+ -", "- ")
 
 
+def get_function_prefix(is_heterogeneous):
+    """Get the function prefix for homogeneous/heterogeneous mechanisms."""
+    return "S" if is_heterogeneous else "C"
+
+
+def get_phase(is_heterogeneous):
+    """Get the phase for homogeneous/heterogeneous mechanisms."""
+    return "surface" if is_heterogeneous else "gas"
+
+
+def get_atomic_weight(mechanism, interface, element):
+    """Get atomic weight of element associated with homogeneous/heterogeneous species."""
+    return (
+        mechanism.atomic_weight(element)
+        if element in mechanism.element_names
+        else interface.atomic_weight(element)
+    )
+
+
+def get_element_names(mechanism, interface):
+    """Get all element names in global order.
+
+    Gas elements come first in mechanism order, followed by the elements
+    that only appear in the interface, in interface order.
+    """
+    surface_only = (
+        [e for e in interface.element_names if e not in mechanism.element_names]
+        if interface is not None
+        else []
+    )
+    return mechanism.element_names + surface_only
+
+
 def evaluate_plog(rates, plog_pressure):
     """Evaluate rate constants for a PLOG reaction."""
     if plog_pressure <= rates[0][0]:

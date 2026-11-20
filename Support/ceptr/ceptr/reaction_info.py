@@ -9,8 +9,8 @@ import ceptr.writer as cw
 class ReactionInfo:
     """Information on reactions."""
 
-    def __init__(self, mechanism, interface):
-        """Initialize the reaction information."""
+    def __init__(self, mechanism):
+        """Initialize the gas reaction information."""
         self.n_reactions = mechanism.n_reactions
         self.rs = []
         self.rs_unsorted = mechanism.reactions()
@@ -29,15 +29,12 @@ class ReactionInfo:
 
         self.has_plog_reactions = False
 
-        if interface is not None:
-            self.rs_unsorted += interface.reactions()
-
         self.has_reactions = len(self.rs_unsorted) > 0
 
 
-def sort_reactions(mechanism, interface):
-    """Sort reactions."""
-    reaction_info = ReactionInfo(mechanism, interface)
+def sort_reactions(mechanism):
+    """Sort the gas reactions."""
+    reaction_info = ReactionInfo(mechanism)
     i = 0
 
     # troe
@@ -79,14 +76,6 @@ def sort_reactions(mechanism, interface):
     # simplest case (Arrhenius reactions)
     for k, r in enumerate(reaction_info.rs_unsorted):
         if r not in reaction_info.rs:
-            # skip all interface-Arrhenius and sticking-Arrhenius heterogeneous reactions
-            # heterogeneous reactions are added after all the homogeneous reactions
-            if (
-                r.reaction_type == "interface-Arrhenius"
-                or r.reaction_type == "sticking-Arrhenius"
-            ):
-                continue
-
             if r.third_body is None:
                 # Check for PLOG reactions on the fly
                 if r.reaction_type == "pressure-dependent-Arrhenius":
@@ -99,34 +88,10 @@ def sort_reactions(mechanism, interface):
     # everything else
     for k, r in enumerate(reaction_info.rs_unsorted):
         if r not in reaction_info.rs:
-            # skip all interface-Arrhenius and sticking-Arrhenius heterogeneous reactions
-            # heterogeneous reactions are added after all the homogeneous reactions
-            if (
-                r.reaction_type == "interface-Arrhenius"
-                or r.reaction_type == "sticking-Arrhenius"
-            ):
-                continue
-
             reaction_info.idxmap[k] = i
             reaction_info.rs.append(r)
             i += 1
     reaction_info.index.append(i)
-
-    # surface reactions
-    if interface is not None:
-        for k, r in enumerate(reaction_info.rs_unsorted):
-            if r not in reaction_info.rs and r.reaction_type == "interface-Arrhenius":
-                reaction_info.idxmap[k] = i
-                reaction_info.rs.append(r)
-                i += 1
-        reaction_info.index.append(i)
-
-        for k, r in enumerate(reaction_info.rs_unsorted):
-            if r not in reaction_info.rs and r.reaction_type == "sticking-Arrhenius":
-                reaction_info.idxmap[k] = i
-                reaction_info.rs.append(r)
-                i += 1
-        reaction_info.index.append(i)
 
     reaction_info.is_sorted = True
 

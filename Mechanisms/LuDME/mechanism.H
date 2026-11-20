@@ -55,6 +55,7 @@
 #define NUM_GAS_ELEMENTS 4    // Elements in the homogeneous phase
 #define NUM_GAS_SPECIES 39    // Species in the homogeneous phase
 #define NUM_GAS_REACTIONS 175 // Reactions in the homogeneous phase
+#define NUM_QSS_GAS_SPECIES 0 // QSS species in the homogeneous phase
 
 #define SITE_DENSITY 0.000000E+00 // mol/cm^2
 
@@ -62,9 +63,15 @@
 #define NUM_SURFACE_SPECIES 0   // Species in the heterogeneous phase
 #define NUM_SURFACE_REACTIONS 0 // Reactions in the heterogeneous phase
 
-#define NUM_ELEMENTS (NUM_GAS_ELEMENTS + NUM_SURFACE_ELEMENTS)
-#define NUM_SPECIES (NUM_GAS_SPECIES + NUM_SURFACE_SPECIES)
-#define NUM_REACTIONS (NUM_GAS_REACTIONS + NUM_SURFACE_REACTIONS)
+// NUM_ELEMENTS/SPECIES/REACTIONS count the gas phase only (transported
+// species); NUM_ALL_* add the surface phase (surface species IDs follow the gas
+// species in NUM_ALL_SPECIES arrays).
+#define NUM_ELEMENTS NUM_GAS_ELEMENTS
+#define NUM_SPECIES NUM_GAS_SPECIES
+#define NUM_REACTIONS NUM_GAS_REACTIONS
+#define NUM_ALL_ELEMENTS (NUM_GAS_ELEMENTS + NUM_SURFACE_ELEMENTS)
+#define NUM_ALL_SPECIES (NUM_GAS_SPECIES + NUM_SURFACE_SPECIES)
+#define NUM_ALL_REACTIONS (NUM_GAS_REACTIONS + NUM_SURFACE_REACTIONS)
 
 #define NUM_IONS 0
 
@@ -131,9 +138,9 @@ CKAWT(amrex::Real* awt)
 AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE void
 CKNCF(int* ncf)
 {
-  int kd = 4;
+  int kd = NUM_ELEMENTS;
   // Zero ncf
-  for (int id = 0; id < kd * 39; ++id) {
+  for (int id = 0; id < kd * NUM_SPECIES; ++id) {
     ncf[id] = 0;
   }
 
@@ -33369,7 +33376,7 @@ egtransetCOFD(amrex::Real* COFD)
   COFD[177] = 9.28952533E-01;
   COFD[178] = 2.42107483E-01;
   COFD[179] = -1.59824150E-02;
-  COFD[180] = -1.79310920E+01;
+  COFD[180] = -1.79310921E+01;
   COFD[181] = 4.98037650E+00;
   COFD[182] = -4.26676911E-01;
   COFD[183] = 1.83007231E-02;

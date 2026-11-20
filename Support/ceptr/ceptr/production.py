@@ -1493,16 +1493,14 @@ def production_rate_light(fstream, mechanism, species_info, reaction_info):
     cw.writer(fstream)
 
 
-def progress_rate_fr(fstream, mechanism, species_info, reaction_info):
+def progress_rate_fr(fstream, species_info, reaction_info):
     """Write progress rates."""
-    n_reactions = mechanism.n_reactions
-
     assert len(reaction_info.index) == 7
 
     cw.writer(fstream)
     cw.writer(fstream, cw.comment("compute the progress rate for each reaction"))
     cw.writer(fstream, cw.comment("USES progressRate : todo switch to GPU"))
-    if n_reactions > 0:
+    if reaction_info.n_reactions > 0:
         cw.writer(
             fstream,
             "void progressRateFR"
@@ -1519,17 +1517,17 @@ def progress_rate_fr(fstream, mechanism, species_info, reaction_info):
 
     cw.writer(fstream, "{")
 
-    if n_reactions > 0:
+    if reaction_info.n_reactions > 0:
         cw.writer(fstream, "const amrex::Real invT = 1.0 / T;")
         cw.writer(fstream, "const amrex::Real logT = log(T);")
 
         cw.writer(fstream, cw.comment("compute the Gibbs free energy"))
-        cw.writer(fstream, f"amrex::Real g_RT[{species_info.n_species}];")
+        cw.writer(fstream, "amrex::Real g_RT[NUM_SPECIES];")
         cw.writer(fstream, "gibbs(g_RT, T);")
         if species_info.n_qssa_species > 0:
             cw.writer(
                 fstream,
-                f"amrex::Real g_RT_qss[{species_info.n_qssa_species}];",
+                "amrex::Real g_RT_qss[NUM_QSS_GAS_SPECIES];",
             )
             cw.writer(fstream, "gibbs_qss(g_RT_qss, T);")
 
