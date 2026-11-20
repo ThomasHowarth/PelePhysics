@@ -113,9 +113,47 @@ jobs:
         run: uv run --locked --extra plot pytest
       - name: Convert air mechanism
         run: uv run convert -f ${{github.workspace}}/Mechanisms/air/mechanism.yaml
-      - name: Convert LiDryer mechanism
-        run: uv run convert -f ${{github.workspace}}/Mechanisms/LiDryer/mechanism.yaml
       # Pull requests reuse the cache from development, without writing their own
+      - name: Save the uv cache
+        if: github.ref == 'refs/heads/development' && steps.uv.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v5
+        with:
+          path: ~/.cache/uv
+          key: ${{steps.uv.outputs.cache-key}}
+
+  Mechanisms:
+    # The committed mechanisms must be what CEPTR generates from uv.lock
+    needs: Detect-Changes
+    if: github.event_name != 'schedule' && needs['Detect-Changes'].outputs['has-mechanism-changes'] == 'true'
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ${{github.workspace}}/Support/ceptr
+    steps:
+      - uses: actions/checkout@v6
+      - uses: ./.github/actions/setup-uv
+        id: uv
+      - name: Install dependencies
+        run: uv sync --locked
+      - name: Regenerate the mechanisms
+        run: |
+          uv run convert -l ${{github.workspace}}/Mechanisms/list_mech
+          uv run convert -lq ${{github.workspace}}/Mechanisms/list_qss_mech
+      - name: Compare with the committed mechanisms
+        run: |
+          # Also show the files CEPTR generated that are not committed
+          git add --intent-to-add -- ${{github.workspace}}/Mechanisms
+          if ! git diff --stat --exit-code -- ${{github.workspace}}/Mechanisms; then
+            git diff --binary -- ${{github.workspace}}/Mechanisms > ${{runner.temp}}/mechanisms.patch
+            echo "::error::The committed mechanisms differ from what CEPTR generates. Download the patch with 'gh run download ${{github.run_id}} -n regenerated-mechanisms' and apply it with 'git apply mechanisms.patch'."
+            exit 1
+          fi
+      - uses: actions/upload-artifact@v7
+        if: failure()
+        with:
+          name: regenerated-mechanisms
+          path: ${{runner.temp}}/mechanisms.patch
+          if-no-files-found: ignore
       - name: Save the uv cache
         if: github.ref == 'refs/heads/development' && steps.uv.outputs.cache-hit != 'true'
         uses: actions/cache/save@v5

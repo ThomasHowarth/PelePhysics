@@ -20,8 +20,9 @@ KC_T_HIGH = 10000.0
 
 
 def intersection(lst1, lst2):
-    """Return intersection of two lists."""
-    return list(set(lst1).intersection(lst2))
+    """Return the items of lst1 that are in lst2, once each, in lst1's order."""
+    in_lst2 = set(lst2)
+    return list(dict.fromkeys(x for x in lst1 if x in in_lst2))
 
 
 def sc_cutoff(exponent):
