@@ -39,12 +39,12 @@ run_filter(
   amrex::Array4<amrex::Real> const& qh)
 {
   // Only filter along the directions that exist
-  const int ngy = (AMREX_SPACEDIM > 1) ? ng : 0;
-  const int ngz = (AMREX_SPACEDIM > 2) ? ng : 0;
+  const int ngy = AMREX_D_PICK(0, ng, ng);
+  const int ngz = AMREX_D_PICK(0, 0, ng);
   for (int n = -ngz; n <= ngz; n++) {
-    const amrex::Real wz = (AMREX_SPACEDIM > 2) ? w[n + ng] : 1.0;
+    const amrex::Real wz = AMREX_D_PICK(1.0, 1.0, w[n + ng]);
     for (int m = -ngy; m <= ngy; m++) {
-      const amrex::Real wy = (AMREX_SPACEDIM > 1) ? w[m + ng] : 1.0;
+      const amrex::Real wy = AMREX_D_PICK(1.0, w[m + ng], w[m + ng]);
       for (int l = -ng; l <= ng; l++) {
         qh(i, j, k, nc + nstart) +=
           w[l + ng] * wy * wz * q(i + l, j + m, k + n, nc + nstart);

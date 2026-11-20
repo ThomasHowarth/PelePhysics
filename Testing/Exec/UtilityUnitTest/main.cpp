@@ -24,9 +24,11 @@ fill_wavy(amrex::MultiFab& mf, const amrex::Box& domain)
   amrex::ParallelFor(
     mf, mf.nGrowVect(), mf.nComp(),
     [=] AMREX_GPU_DEVICE(int nbx, int i, int j, int k, int n) noexcept {
+      amrex::ignore_unused(j, k); // unused below 3D
       const amrex::Real x = twopi * i / len[0];
-      const amrex::Real y = (AMREX_SPACEDIM > 1) ? twopi * j / len[1] : 0.0;
-      const amrex::Real z = (AMREX_SPACEDIM > 2) ? twopi * k / len[2] : 0.0;
+      const amrex::Real y =
+        AMREX_D_PICK(0.0, twopi * j / len[1], twopi * j / len[1]);
+      const amrex::Real z = AMREX_D_PICK(0.0, 0.0, twopi * k / len[2]);
       a[nbx](i, j, k, n) =
         std::sin(x + 2.0 * y + 3.0 * z + n) + std::cos(2.0 * x - y) * (n + 1);
     });
