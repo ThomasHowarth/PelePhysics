@@ -5,7 +5,7 @@ on:
    schedule:
      # Twice a week, so the ccaches are refreshed before GitHub evicts them
      # after 7 days without access, with a margin for late scheduled starts.
-     # Jobs without a cache skip the scheduled runs (run-checks).
+     # The scheduled runs build (refreshing the caches) but skip the cases.
      - cron: '0 3 * * 1,4'
    push:
      branches: [development]
@@ -29,6 +29,9 @@ defaults:
 # appended to it (Tools/GNUMake/Make.defs).
 env:
   XTRA_CXXFLAGS: "-Werror -Wshadow -Woverloaded-virtual -Wunreachable-code"
+  # The scheduled runs only refresh the caches: they build but skip the
+  # cases, which already ran on this commit.
+  RUN_TESTS: ${{ github.event_name != 'schedule' }}
 
 jobs:
   Detect-Changes:
@@ -41,9 +44,19 @@ jobs:
 
   Run:
     needs: Detect-Changes
-    if: needs['Detect-Changes'].outputs['run-checks'] == 'true'
+    if: needs['Detect-Changes'].outputs['has-source-changes'] == 'true'
     name: ${{ matrix.code }} GNU MPI Run [${{ matrix.case }}]
     runs-on: ubuntu-24.04
+    env:
+      CCACHE_MAXSIZE: 300M
+      # Only development saves the cache (the scheduled runs keep it from
+      # being evicted); PRs restore it. Compress hard only when it is kept.
+      SAVE_CCACHE: ${{ github.ref == 'refs/heads/development' }}
+      CCACHE_COMPRESSLEVEL: ${{ github.ref == 'refs/heads/development' && 10 || 1 }}
+      # ccache for the CMake-built TPLs (SUNDIALS) too: CMake reads these as
+      # the default compiler launchers.
+      CMAKE_C_COMPILER_LAUNCHER: ccache
+      CMAKE_CXX_COMPILER_LAUNCHER: ccache
     strategy:
       fail-fast: false
       matrix:
@@ -81,19 +94,58 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends libopenmpi-dev openmpi-bin
+      - name: Install Ccache
+        # Outside the workspace: AMReX's script downloads into the current directory.
+        working-directory: ${{ runner.temp }}
+        run: |
+          # AMReX's install script, from the code's amrex pin. It exits 0 even
+          # if the download fails, so check the result.
+          ${{ github.workspace }}/${{ matrix.code }}/Submodules/PelePhysics/Submodules/amrex/.github/workflows/dependencies/dependencies_ccache.sh > /dev/null
+          ccache --version | sed -n 1p
+          # Marks the start of the run for Trim Ccache
+          touch ${{ runner.temp }}/ccache-start
+      # Restore only; saved at the end of the job, and only from development.
+      - name: Set Up Ccache
+        id: ccache
+        uses: actions/cache/restore@v5
+        with:
+          path: ~/.cache/ccache
+          key: ccache-${{ github.workflow }}-${{ github.job }}-${{ matrix.code }}-${{ matrix.case }}-git-${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
+          restore-keys: |
+            ccache-${{ github.workflow }}-${{ github.job }}-${{ matrix.code }}-${{ matrix.case }}-git-
       - name: Build
         working-directory: ${{ matrix.code }}/Exec/RegTests/${{ matrix.case }}
         run: |
+          ccache -z
           make TPL COMP=gnu USE_MPI=TRUE
-          make -j $(nproc) ${{ matrix.make_args }} COMP=gnu USE_MPI=TRUE
+          make -j $(nproc) ${{ matrix.make_args }} COMP=gnu USE_MPI=TRUE USE_CCACHE=TRUE
+          ccache -s
       - name: Run
+        if: env.RUN_TESTS == 'true'
         working-directory: ${{ matrix.code }}/Exec/RegTests/${{ matrix.case }}
         run: mpirun -n 2 ${{ matrix.run }}
+      # Drop the entries this run did not use (hits refresh an entry's mtime),
+      # so the saved cache is the current working set. Only after a successful
+      # job (the default condition), since a failed one never reached some
+      # files.
+      - name: Trim Ccache
+        if: env.SAVE_CCACHE == 'true'
+        run: |
+          # A plain assignment, so a missing marker fails the step (bash -e)
+          # rather than silently trimming nothing.
+          start=$(stat -c %Y ${{ runner.temp }}/ccache-start)
+          ccache --evict-older-than $(( $(date +%s) - start + 60 ))s
+          du -hs ${HOME}/.cache/ccache
+      - name: Save Ccache
+        if: env.SAVE_CCACHE == 'true'
+        uses: actions/cache/save@v5
+        with:
+          path: ~/.cache/ccache
+          key: ${{ steps.ccache.outputs.cache-primary-key }}
 
   clang-tidy:
     needs: [Detect-Changes, Run]
-    # !failure(): after Run, or without it on the scheduled runs, which skip it.
-    if: ${{ !failure() && !cancelled() && needs['Detect-Changes'].outputs['has-source-changes'] == 'true' }}
+    if: needs['Detect-Changes'].outputs['has-source-changes'] == 'true'
     name: ${{ matrix.code }} clang-tidy
     runs-on: ubuntu-24.04
     strategy:
@@ -212,10 +264,10 @@ jobs:
         run: ${{ github.workspace }}/pelephysics-pr/.github/scripts/count_warnings.sh clang-tidy-full-report.txt
 
   # The one check for branch protection to require in Downstream-CI. A job
-  # skipped by its own `if:` (docs-only changes, scheduled runs) does not
-  # expand its matrix, so its per-entry checks never report and a PR
-  # requiring them waits forever; skipped jobs pass here. It also fails when Detect-Changes
-  # fails, which would otherwise skip every build.
+  # skipped by its own `if:` (docs-only changes) does not expand its matrix,
+  # so its per-entry checks never report and a PR requiring them waits
+  # forever; skipped jobs pass here. It also fails when Detect-Changes fails,
+  # which would otherwise skip every build.
   Downstream-Status:
     needs: [Detect-Changes, Run, clang-tidy]
     if: always()
