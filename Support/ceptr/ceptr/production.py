@@ -1,7 +1,8 @@
 """Production functions."""
 
-from math import isclose
+from math import isclose, log, pi, sqrt
 
+import cantera as ct
 import symengine as sme
 
 import ceptr.constants as cc
@@ -1636,3 +1637,287 @@ def enhancement_d_with_qss(mechanism, species_info, reaction, syms=None):
         return " + ".join(alpha).replace("+ -", "- ")
     else:
         return " + ".join(alpha).replace("+ -", "- "), enhancement_smp
+
+
+def surface_chemistry(fstream, interface, species_info):
+    """Write the surface reaction routines of a heterogeneous mechanism.
+
+    Surface reactions are numbered in mechanism order, as in SKINU.
+    """
+    site_density = interface.site_density * 1000.0  # kmol/m^2 -> mol/m^2
+    # surface standard concentrations site_density / sigma_k [mol/m^2]
+    ref_conc = {sp.name: site_density / sp.size for sp in interface.species()}
+    reactions = interface.reactions()
+    surface_progress_rate(fstream, reactions, species_info, site_density, ref_conc)
+    surface_production_rate(fstream, reactions, species_info)
+    surface_kfkr(fstream, species_info, ref_conc)
+
+
+def _int_power(base, exponent):
+    """Return the C++ product base^exponent for a positive integer exponent."""
+    return " * ".join([base] * int(exponent))
+
+
+def _concentration_product(species_info, orders):
+    """Return the C++ product of concentrations sc[k]^order (sc in SI mol units).
+
+    As in Cantera, a negative order on an absent species gives a zero rate.
+    """
+    terms = []
+    for name, order in orders.items():
+        sc = f"sc[{species_info.ordered_idx_map[name]}]"
+        if order > 0.0 and float(order).is_integer():
+            terms.append(_int_power(sc, order))
+        elif order > 0.0:
+            terms.append(f"pow({sc}, {order:.15g})")
+        elif order < 0.0:
+            terms.append(f"({sc} > 0.0 ? pow({sc}, {order:.15g}) : 0.0)")
+    return " * ".join(terms) if terms else "1.0"
+
+
+def _coverage_terms(species_info, reaction, ref_conc):
+    """Return the C++ exponent terms of a surface reaction's coverage dependencies.
+
+    A dependency on species k multiplies the rate constant by
+    exp(a theta_k ln10 + m ln(max(theta_k, 1e-20)) - E theta_k / RT), as in
+    Cantera, with the coverage theta_k = sc[k] / ref_conc_k. The clamp keeps
+    negative m finite on a bare surface.
+    """
+    terms = []
+    for name, dep in reaction.rate.coverage_dependencies.items():
+        idx = species_info.ordered_idx_map[name]
+        theta = f"(sc[{idx}] * {1.0 / ref_conc[name]:.15g})"
+        if dep["a"] != 0.0:
+            terms.append(f"{dep['a'] * log(10.0):+.15g} * {theta}")
+        if dep["m"] != 0.0:
+            terms.append(f"{dep['m']:+.15g} * log({theta} > 1e-20 ? {theta} : 1e-20)")
+        if dep["E"] != 0.0:
+            # E is in J/kmol
+            terms.append(f"{-dep['E'] / ct.gas_constant:+.15g} * {theta} * invT")
+    return terms
+
+
+def _arrhenius(pef, beta, ea_over_r, extra_terms=()):
+    """Return a C++ modified Arrhenius expression with extra exponent terms."""
+    arg = []
+    if beta != 0.0:
+        arg.append(f"{beta:+.15g} * logT")
+    if ea_over_r != 0.0:
+        arg.append(f"{-ea_over_r:+.15g} * invT")
+    arg += extra_terms
+    if not arg:
+        return f"{pef:.15g}"
+    return f"{pef:.15g} * exp({' '.join(arg).lstrip('+')})"
+
+
+def surface_progress_rate(fstream, reactions, species_info, site_density, ref_conc):
+    """Write comp_qfqr_surface: forward/reverse rates of the surface reactions.
+
+    sc (NUM_ALL_SPECIES) holds gas concentrations [mol/m^3] at
+    0 .. NUM_GAS_SPECIES-1, followed by surface concentrations [mol/m^2]
+    (theta_k * site_density / sigma_k).
+    qf/qr (NUM_SURFACE_REACTIONS, in mechanism order as in SKINU) are
+    returned in [mol/m^2/s]. Rates follow Cantera's interface and sticking
+    Arrhenius forms, including coverage dependencies, reaction orders and the
+    Motz-Wise correction. Reverse rates use k_r = k_f / Kc, with standard
+    concentrations P_atm/RT (gas) and site_density/sigma_k (surface).
+    """
+    r_kmol = ct.gas_constant  # J/kmol/K
+    # gas standard concentration P_atm / (RT) = ref_c_gas / T in mol/m^3
+    ref_c_gas = cc.Patm_pa / (r_kmol / 1000.0)
+    reversible_species = {
+        name for r in reactions if r.reversible for name in cu.kc_net_coefficients(r)
+    }
+    need_surface_g = bool(reversible_species & ref_conc.keys())
+    need_gas_g = bool(reversible_species - ref_conc.keys())
+    any_sticking = any(r.reaction_type == "sticking-Arrhenius" for r in reactions)
+
+    cw.writer(fstream)
+    cw.writer(fstream, cw.comment("Forward and reverse rates of the surface reactions"))
+    cw.writer(
+        fstream,
+        "AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE void comp_qfqr_surface(amrex::Real *"
+        " qf, amrex::Real * qr, const amrex::Real * sc, const amrex::Real T, const"
+        " amrex::Real invT, const amrex::Real logT)",
+    )
+    cw.writer(fstream, "{")
+    cw.writer(fstream, "amrex::ignore_unused(T, invT, logT);")
+    if need_gas_g:
+        cw.writer(fstream, "amrex::Real g_RT[NUM_GAS_SPECIES];")
+        cw.writer(fstream, "gibbs(g_RT, T);")
+    if need_surface_g:
+        cw.writer(fstream, "amrex::Real g_RT_s[NUM_SURFACE_SPECIES];")
+        cw.writer(fstream, "gibbs_surface(g_RT_s, T);")
+    if any_sticking:
+        cw.writer(fstream, "const amrex::Real sqrtT = sqrt(T);")
+    cw.writer(fstream)
+
+    for i, reaction in enumerate(reactions):
+        rate = reaction.rate
+        orders = dict(reaction.reactants)
+        orders.update(reaction.orders)
+        ea_over_r = rate.activation_energy / r_kmol
+        coverage = _coverage_terms(species_info, reaction, ref_conc)
+
+        cw.writer(fstream, cw.comment(f"surface reaction {i}: {reaction.equation}"))
+        cw.writer(fstream, "{")
+        if reaction.reaction_type == "sticking-Arrhenius":
+            # gamma is dimensionless:
+            # k_f = gamma / site_density^m * sqrt(RT / (2 pi W))
+            gamma = _arrhenius(
+                rate.pre_exponential_factor,
+                rate.temperature_exponent,
+                ea_over_r,
+                coverage,
+            )
+            cw.writer(fstream, f"amrex::Real gamma = {gamma};")
+            if rate.motz_wise_correction:
+                cw.writer(fstream, "gamma /= (1.0 - 0.5 * gamma);")
+            weight = rate.sticking_weight / 1000.0  # kg/mol
+            coeff = sqrt(r_kmol / 1000.0 / (2.0 * pi * weight)) / (
+                site_density**rate.sticking_order
+            )
+            k_f = f"gamma * {coeff:.15g} * sqrtT"
+        else:
+            # interface-Arrhenius (others are rejected by check_surface_reactions)
+            # kmol-based SI prefactor -> mol-based: 1000^(1 - total order)
+            pef = rate.pre_exponential_factor * 1000.0 ** (
+                1.0 - cu.phase_space_units(orders)
+            )
+            k_f = _arrhenius(pef, rate.temperature_exponent, ea_over_r, coverage)
+        cw.writer(fstream, f"const amrex::Real k_f = {k_f};")
+
+        cw.writer(
+            fstream,
+            f"qf[{i}] = k_f * {_concentration_product(species_info, orders)};",
+        )
+
+        if reaction.reversible:
+            # 1/Kc = exp(sum_k nu_k g_k/RT) * prod_k (C0_k)^-nu_k, with
+            # nu_k = products - reactants
+            dg = []
+            conv = 1.0
+            dn_gas = 0.0
+            for name, minus_n in cu.kc_net_coefficients(reaction).items():
+                n = -minus_n
+                if name in ref_conc:
+                    k = species_info.ordered_idx_map[name] - species_info.n_gas_species
+                    dg.append(f"{n:+.15g} * g_RT_s[{k}]")
+                    conv *= ref_conc[name] ** (-n)
+                else:
+                    k = species_info.ordered_idx_map[name]
+                    dg.append(f"{n:+.15g} * g_RT[{k}]")
+                    dn_gas += n
+            kc_inv = f"exp({' '.join(dg)}) * {conv:.15g}"
+            if dn_gas != 0.0:
+                if float(dn_gas).is_integer():
+                    # (ref_c_gas / T)^-dn_gas
+                    base = (
+                        f"({1.0 / ref_c_gas:.15g} * T)"
+                        if dn_gas > 0
+                        else f"({ref_c_gas:.15g} * invT)"
+                    )
+                    kc_inv += f" * {_int_power(base, abs(dn_gas))}"
+                else:
+                    kc_inv += f" * pow({ref_c_gas:.15g} * invT, {-dn_gas:.15g})"
+            products = _concentration_product(species_info, reaction.products)
+            cw.writer(fstream, f"qr[{i}] = k_f * {kc_inv} * {products};")
+        else:
+            cw.writer(fstream, f"qr[{i}] = 0.0;")
+        cw.writer(fstream, "}")
+    cw.writer(fstream, "}")
+
+
+def surface_production_rate(fstream, reactions, species_info):
+    """Write surfaceProductionRate: per-area production rates of all species.
+
+    sdot [mol/m^2/s] covers all NUM_ALL_SPECIES (gas, then surface) and only
+    the surface reactions; sc is laid out as for comp_qfqr_surface.
+    """
+    cw.writer(fstream)
+    cw.writer(
+        fstream,
+        cw.comment("Production rates of all species from surface reactions"),
+    )
+    cw.writer(fstream, cw.comment("sdot in mol/m^2/s; sc as in comp_qfqr_surface"))
+    cw.writer(
+        fstream,
+        "AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE void surfaceProductionRate("
+        "amrex::Real * sdot, const amrex::Real * sc, const amrex::Real T)",
+    )
+    cw.writer(fstream, "{")
+    cw.writer(fstream, "const amrex::Real invT = 1.0 / T;")
+    cw.writer(fstream, "const amrex::Real logT = log(T);")
+    cw.writer(
+        fstream,
+        "amrex::Real qf[NUM_SURFACE_REACTIONS], qr[NUM_SURFACE_REACTIONS];",
+    )
+    cw.writer(fstream, "comp_qfqr_surface(qf, qr, sc, T, invT, logT);")
+    cw.writer(fstream, "for (int i = 0; i < NUM_ALL_SPECIES; ++i) {")
+    cw.writer(fstream, "sdot[i] = 0.0;")
+    cw.writer(fstream, "}")
+    for i, reaction in enumerate(reactions):
+        cw.writer(fstream, "{")
+        cw.writer(fstream, f"const amrex::Real qdot = qf[{i}] - qr[{i}];")
+        for name, coef in reaction.reactants.items():
+            k = species_info.ordered_idx_map[name]
+            cw.writer(fstream, f"sdot[{k}] -= {coef:.15g} * qdot;")
+        for name, coef in reaction.products.items():
+            k = species_info.ordered_idx_map[name]
+            cw.writer(fstream, f"sdot[{k}] += {coef:.15g} * qdot;")
+        cw.writer(fstream, "}")
+    cw.writer(fstream, "}")
+
+
+def surface_kfkr(fstream, species_info, ref_conc):
+    """Write SKKFKR: surface progress rates from P, T, mole fractions, coverages.
+
+    x (NUM_ALL_SPECIES) holds gas mole fractions followed by surface
+    coverages; q_f/q_r (NUM_SURFACE_REACTIONS) are returned in chemkin units
+    [mol/cm^2/s]. P is in dyn/cm^2.
+    """
+    cw.writer(fstream)
+    cw.writer(
+        fstream, cw.comment("Returns the progress rates of each surface reaction")
+    )
+    cw.writer(
+        fstream,
+        cw.comment("Given P, T, gas mole fractions and surface coverages"),
+    )
+    cw.writer(
+        fstream,
+        "AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE void SKKFKR(const amrex::Real P,"
+        " const amrex::Real T, const amrex::Real x[], amrex::Real q_f[],"
+        " amrex::Real q_r[])",
+    )
+    cw.writer(fstream, "{")
+    cw.writer(fstream, "amrex::Real sc[NUM_ALL_SPECIES];")
+    cw.writer(
+        fstream,
+        "const amrex::Real PORT = 1e6 *"
+        f" P/({(cc.R * cc.ureg.kelvin * cc.ureg.mole / cc.ureg.erg).m:1.14e} *"
+        " T); " + cw.comment("1e6 * P/RT so sc goes to SI units"),
+    )
+    cw.writer(fstream, "for (int id = 0; id < NUM_GAS_SPECIES; ++id) {")
+    cw.writer(fstream, "sc[id] = x[id] * PORT;")
+    cw.writer(fstream, "}")
+    cw.writer(
+        fstream,
+        cw.comment("surface concentrations: theta_k * site_density / sigma_k"),
+    )
+    for name in species_info.surface_species_list:
+        idx = species_info.ordered_idx_map[name]
+        cw.writer(
+            fstream,
+            f"sc[{idx}] = x[{idx}] * {ref_conc[name]:.15g};" + cw.comment(name),
+        )
+    cw.writer(
+        fstream,
+        "comp_qfqr_surface(q_f, q_r, sc, T, 1.0 / T, log(T));",
+    )
+    cw.writer(fstream, cw.comment("convert mol/m^2/s to chemkin units, mol/cm^2/s"))
+    cw.writer(fstream, "for (int id = 0; id < NUM_SURFACE_REACTIONS; ++id) {")
+    cw.writer(fstream, "q_f[id] *= 1.0e-4;")
+    cw.writer(fstream, "q_r[id] *= 1.0e-4;")
+    cw.writer(fstream, "}")
+    cw.writer(fstream, "}")

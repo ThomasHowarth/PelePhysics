@@ -29,6 +29,18 @@ def thermo(fstream, mechanism, species_info, syms=None):
     dcvpdtemp(fstream, species_info, models)
 
 
+def surface_thermo(fstream, interface, species_info):
+    """Write thermodynamics routines of the surface species."""
+    models = analyze_thermodynamics(interface, species_info.surface_species_list)
+    cw.writer(fstream)
+    cw.writer(
+        fstream,
+        cw.comment("compute the g/(RT) of the surface species at the given T"),
+    )
+    cw.writer(fstream, cw.comment("(indexed 0 .. NUM_SURFACE_SPECIES-1)"))
+    generate_thermo_routine(fstream, species_info, "gibbs_surface", models, 0)
+
+
 def model_type(model):
     """Return string for the model type."""
     if isinstance(model, NasaPoly2):
@@ -50,6 +62,7 @@ def expression_map_nasa7(name):
         "cp_R": cp_nasa7,
         "gibbs": gibbs_nasa7,
         "gibbs_qss": gibbs_nasa7,
+        "gibbs_surface": gibbs_nasa7,
         "helmholtz": helmholtz_nasa7,
         "speciesInternalEnergy": internal_energy_nasa7,
         "speciesEnthalpy": enthalpy_nasa7,
@@ -67,6 +80,7 @@ def expression_map_nasa9(name):
         "cp_R": cp_nasa9,
         "gibbs": gibbs_nasa9,
         "gibbs_qss": gibbs_nasa9,
+        "gibbs_surface": gibbs_nasa9,
         "helmholtz": helmholtz_nasa9,
         "speciesInternalEnergy": internal_energy_nasa9,
         "speciesEnthalpy": enthalpy_nasa9,
@@ -102,6 +116,13 @@ def variables_nasa7(name):
             "log_temp": True,
         },
         "gibbs_qss": {
+            "T4": True,
+            "inv_temp": True,
+            "inv_temp2": False,
+            "inv_temp3": False,
+            "log_temp": True,
+        },
+        "gibbs_surface": {
             "T4": True,
             "inv_temp": True,
             "inv_temp2": False,
@@ -185,6 +206,13 @@ def variables_nasa9(name):
             "inv_temp3": False,
             "log_temp": True,
         },
+        "gibbs_surface": {
+            "T4": True,
+            "inv_temp": True,
+            "inv_temp2": True,
+            "inv_temp3": False,
+            "log_temp": True,
+        },
         "helmholtz": {
             "T4": True,
             "inv_temp": True,
@@ -232,13 +260,23 @@ def variables_nasa9(name):
 
 
 def analyze_thermodynamics(mechanism, species_list):
-    """Extract information from the thermodynamics model."""
+    """Extract information from the thermodynamics model.
+
+    Each model's index is the species' position in species_list, which is
+    the index used in the generated arrays.
+    """
     models = []
-    for symbol in species_list:
+    for index, symbol in enumerate(species_list):
         species = mechanism.species(symbol)
         model = species.thermo
         mtype = model_type(model)
-        dct = {"species": species, "interval": [], "coefficients": [], "type": mtype}
+        dct = {
+            "species": species,
+            "index": index,
+            "interval": [],
+            "coefficients": [],
+            "type": mtype,
+        }
 
         if mtype == "nasa7":
             dct["coefficients"] = [model.coeffs[1:8]]
@@ -369,11 +407,7 @@ def generate_thermo_routine(
                 elif model["type"] == "nasa9":
                     expression_generator = expression_map_nasa9(name)
 
-                index = (
-                    species_info.ordered_idx_map[species.name] - species_info.n_species
-                    if qss_flag
-                    else species_info.ordered_idx_map[species.name]
-                )
+                index = model["index"]
                 cw.writer(fstream, cw.comment(f"species {index}: {species.name}"))
                 cw.writer(
                     fstream,

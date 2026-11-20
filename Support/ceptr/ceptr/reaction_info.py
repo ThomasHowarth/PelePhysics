@@ -32,8 +32,31 @@ class ReactionInfo:
         self.has_reactions = len(self.rs_unsorted) > 0
 
 
+SUPPORTED_SURFACE_REACTIONS = ("interface-Arrhenius", "sticking-Arrhenius")
+
+
+def check_surface_reactions(interface):
+    """Raise for surface reactions CEPTR cannot generate code for."""
+    for r in interface.reactions():
+        if r.reaction_type not in SUPPORTED_SURFACE_REACTIONS:
+            raise NotImplementedError(
+                f"Surface reaction type {r.reaction_type} is not supported:"
+                f" {r.equation}"
+            )
+        if r.rate.uses_electrochemistry:
+            raise NotImplementedError(
+                f"Electrochemical surface reactions are not supported: {r.equation}"
+            )
+        for name, dep in r.rate.coverage_dependencies.items():
+            if not all(isinstance(dep[k], (int, float)) for k in ("a", "m", "E")):
+                raise NotImplementedError(
+                    "Only constant coverage-dependency parameters are supported:"
+                    f" {r.equation} ({name})"
+                )
+
+
 def sort_reactions(mechanism):
-    """Sort the gas reactions."""
+    """Sort the gas reactions (surface reactions are kept in mechanism order)."""
     reaction_info = ReactionInfo(mechanism)
     i = 0
 

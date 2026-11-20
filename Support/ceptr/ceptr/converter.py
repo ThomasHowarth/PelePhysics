@@ -53,6 +53,9 @@ class Converter:
             else pathlib.Path(self.mechanism.source)
         )
 
+        if self.mech_is_heterogeneous:
+            cri.check_surface_reactions(self.interface)
+
         self.species_info = csi.SpeciesInfo()
 
         self.set_species()
@@ -307,6 +310,8 @@ class Converter:
             self.molecular_weights(hdr)
             cck.ckrp(hdr, self.mechanism, self.species_info)
             cth.thermo(hdr, self.mechanism, self.species_info, self.syms)
+            if self.mech_is_heterogeneous:
+                cth.surface_thermo(hdr, self.interface, self.species_info)
             # mean quantities -- do not take QSS into account, sumX and Y = 1 without them
             cck.ckcpbl(hdr, self.mechanism, self.species_info)
             cck.ckcpbs(hdr, self.mechanism, self.species_info)
@@ -538,6 +543,9 @@ class Converter:
                 cj.dproduction_rate(
                     hdr, self.mechanism, self.species_info, self.reaction_info
                 )
+
+            if self.mech_is_heterogeneous:
+                cp.surface_chemistry(hdr, self.interface, self.species_info)
 
             # Transport
             cw.writer(hdr)
