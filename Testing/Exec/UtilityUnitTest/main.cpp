@@ -89,6 +89,19 @@ max_diff(
   return m;
 }
 
+// Round-off grows with the sum of |weight| over the stencil, which is large
+// for the polynomial approximations at large fgr
+amrex::Real
+filter_tol(const Filter& f)
+{
+  amrex::Real wsum = 0.0;
+  for (const auto x : f.get_weights()) {
+    wsum += std::abs(x);
+  }
+  return 1e4 * std::numeric_limits<amrex::Real>::epsilon() *
+         std::pow(wsum, AMREX_SPACEDIM);
+}
+
 void
 test_filters()
 {
@@ -107,15 +120,7 @@ test_filters()
     for (int fgr : {2, 4, 8}) {
       Filter f(type, fgr);
       const int ng = f.get_filter_ngrow();
-      // Round-off grows with the sum of |weight| over the stencil, which is
-      // large for the polynomial approximations at large fgr
-      amrex::Real wsum = 0.0;
-      for (const auto x : f.get_weights()) {
-        wsum += std::abs(x);
-      }
-      const amrex::Real tol = 1e4 *
-                              std::numeric_limits<amrex::Real>::epsilon() *
-                              std::pow(wsum, AMREX_SPACEDIM);
+      const amrex::Real tol = filter_tol(f);
       amrex::MultiFab in(ba, dm, ncomp, out_ng + ng);
       amrex::MultiFab out(ba, dm, ncomp, out_ng);
       amrex::MultiFab ref(ba, dm, ncomp, out_ng);
@@ -164,10 +169,10 @@ test_filters()
           AMREX_D_DECL(periodic, periodic, periodic)};
         const amrex::Geometry geom(domain, rb, 0, isper);
         amrex::Vector<amrex::BCRec> bcr(ncomp);
+        const int t =
+          periodic ? amrex::BCType::int_dir : amrex::BCType::foextrap;
         for (auto& bc : bcr) {
           for (int d = 0; d < AMREX_SPACEDIM; ++d) {
-            const int t =
-              periodic ? amrex::BCType::int_dir : amrex::BCType::foextrap;
             bc.setLo(d, t);
             bc.setHi(d, t);
           }
@@ -185,18 +190,15 @@ test_filters()
         amrex::MultiFab lm(ba, dm, ncomp, 0);
         apply_filter_low_memory(
           {f}, {&in}, {&lm}, 0, ncomp,
-          [&](amrex::Vector<amrex::MultiFab>& mf, int /*nstart*/) {
-            fill_ghosts(mf[0]);
-          });
+          [&](amrex::Vector<amrex::MultiFab>& mf) { fill_ghosts(mf[0]); });
         AMREX_ALWAYS_ASSERT(max_diff(lm, out, 0, ncomp, 0) < tol);
 
         // In place, component sub-range
         amrex::MultiFab ip(ba, dm, ncomp, 0);
         amrex::MultiFab::Copy(ip, in, 0, 0, ncomp, 0);
         apply_filter_low_memory(
-          {f}, {&ip}, {&ip}, 1, 2,
-          [&](amrex::Vector<amrex::MultiFab>& mf, int nstart) {
-            AMREX_ALWAYS_ASSERT(nstart == 1 && mf[0].nComp() == 2);
+          {f}, {&ip}, {&ip}, 1, 2, [&](amrex::Vector<amrex::MultiFab>& mf) {
+            AMREX_ALWAYS_ASSERT(mf[0].nComp() == 2);
             fill_ghosts(mf[0]);
           });
         AMREX_ALWAYS_ASSERT(max_diff(ip, out, 1, 2, 0) < tol);
@@ -216,13 +218,6 @@ test_filters()
         fba.maxSize(8);
         const amrex::DistributionMapping fdm(fba);
         Filter ff(type, 2 * fgr);
-        amrex::Real fwsum = 0.0;
-        for (const auto x : ff.get_weights()) {
-          fwsum += std::abs(x);
-        }
-        const amrex::Real ftol = 1e4 *
-                                 std::numeric_limits<amrex::Real>::epsilon() *
-                                 std::pow(fwsum, AMREX_SPACEDIM);
 
         // References: apply_filter on each level with full ghost cells
         amrex::MultiFab cin(ba, dm, ncomp, ng);
@@ -238,17 +233,15 @@ test_filters()
 
         amrex::MultiFab c(ba, dm, ncomp, 0);
         amrex::MultiFab fdat(fba, fdm, ncomp, 0);
-        amrex::MultiFab::Copy(c, cin, 0, 0, ncomp, 0);
-        amrex::MultiFab::Copy(fdat, fin, 0, 0, ncomp, 0);
         apply_filter_low_memory(
-          {f, ff}, {&c, &fdat}, {&c, &fdat}, 0, ncomp,
-          [&](amrex::Vector<amrex::MultiFab>& mf, int /*nstart*/) {
+          {f, ff}, {&cin, &fin}, {&c, &fdat}, 0, ncomp,
+          [&](amrex::Vector<amrex::MultiFab>& mf) {
             AMREX_ALWAYS_ASSERT(mf.size() == 2);
             mf[0].FillBoundary(cgeom.periodicity());
             mf[1].FillBoundary(fgeom.periodicity());
           });
         AMREX_ALWAYS_ASSERT(max_diff(c, cref, 0, ncomp, 0) < tol);
-        AMREX_ALWAYS_ASSERT(max_diff(fdat, fref, 0, ncomp, 0) < ftol);
+        AMREX_ALWAYS_ASSERT(max_diff(fdat, fref, 0, ncomp, 0) < filter_tol(ff));
       }
     }
   }

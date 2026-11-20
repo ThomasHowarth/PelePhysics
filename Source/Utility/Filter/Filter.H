@@ -190,12 +190,12 @@ private:
 };
 
 // Fills the ghost cells of mf[lev] for every level. Component n of mf[lev]
-// holds component nstart + n of the data being filtered. Each mf[lev] has
+// holds component nstart + n of the data being filtered (nstart as passed to
+// apply_filter_low_memory). Each mf[lev] has
 // ghost cells along one direction only, e.g. FillBoundary for a single
 // level, or FillPatch from the coarser levels (which hold data filtered along
 // the same directions) for a hierarchy.
-using FilterFillFn =
-  std::function<void(amrex::Vector<amrex::MultiFab>& mf, int nstart)>;
+using FilterFillFn = std::function<void(amrex::Vector<amrex::MultiFab>& mf)>;
 
 // Low-memory filtering for wide filters: instead of ngrow ghost cells in every
 // direction at once, each 1D pass uses one temporary per level with ngrow

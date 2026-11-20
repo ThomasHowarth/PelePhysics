@@ -417,7 +417,7 @@ directions:
    amrex::Vector<Filter> filters;  // one per level, e.g. with fgr scaled by the refinement ratio
    apply_filter_low_memory(
      filters, GetVecOfConstPtrs(data), GetVecOfPtrs(data), nstart, ncnt,
-     [&](amrex::Vector<amrex::MultiFab>& mf, int nstart) {
+     [&](amrex::Vector<amrex::MultiFab>& mf) {
        // Fill the ghost cells of every mf[lev]; component n holds data component nstart + n,
        // e.g. FillBoundary on a single level or FillPatch from the coarser levels.
      });

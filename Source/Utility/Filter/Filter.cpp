@@ -29,6 +29,20 @@ has_optimized_ratios(const int fgr)
   return fgr >= 1 && fgr <= n_optimized;
 }
 
+// Components [scomp, scomp + ncnt) of src and [dcomp, dcomp + ncnt) of dst
+void
+check_comp_range(
+  const int scomp,
+  const int dcomp,
+  const int ncnt,
+  const int src_ncomp,
+  const int dst_ncomp)
+{
+  AMREX_ALWAYS_ASSERT(
+    scomp >= 0 && dcomp >= 0 && ncnt >= 0 && scomp + ncnt <= src_ncomp &&
+    dcomp + ncnt <= dst_ncomp);
+}
+
 // One 1D pass of the filter along the unit vector e
 AMREX_GPU_DEVICE
 AMREX_FORCE_INLINE
@@ -64,9 +78,7 @@ run_filter_separable(
   const int ng,
   const amrex::Real* w)
 {
-  AMREX_ALWAYS_ASSERT(
-    nstart >= 0 && ncnt >= 0 && nstart + ncnt <= q.nComp() &&
-    nstart + ncnt <= qh.nComp());
+  check_comp_range(nstart, nstart, ncnt, q.nComp(), qh.nComp());
 
   // Intermediate results; the async arena frees them once the kernels are done
   amrex::Array<amrex::FArrayBox, 2> tmp;
@@ -336,9 +348,7 @@ Filter::apply_filter_1d(
     src.boxArray() == dst.boxArray() &&
     src.DistributionMap() == dst.DistributionMap());
   AMREX_ALWAYS_ASSERT(src.nGrowVect()[dir] >= _ngrow);
-  AMREX_ALWAYS_ASSERT(
-    scomp >= 0 && dcomp >= 0 && ncnt >= 0 && scomp + ncnt <= src.nComp() &&
-    dcomp + ncnt <= dst.nComp());
+  check_comp_range(scomp, dcomp, ncnt, src.nComp(), dst.nComp());
 
   // The device copy of the weights is freed once the kernels are done
   amrex::Gpu::AsyncArray<amrex::Real> weights(_weights.data(), _weights.size());
@@ -371,13 +381,12 @@ apply_filter_low_memory(
   AMREX_ALWAYS_ASSERT(
     static_cast<int>(out.size()) == nlev &&
     static_cast<int>(filters.size()) == nlev);
+  // apply_filter_1d checks tmp against out; in is only read by the copy
   for (int lev = 0; lev < nlev; ++lev) {
     AMREX_ALWAYS_ASSERT(
       in[lev]->boxArray() == out[lev]->boxArray() &&
       in[lev]->DistributionMap() == out[lev]->DistributionMap());
-    AMREX_ALWAYS_ASSERT(
-      nstart >= 0 && ncnt >= 0 && nstart + ncnt <= in[lev]->nComp() &&
-      nstart + ncnt <= out[lev]->nComp());
+    check_comp_range(nstart, nstart, ncnt, in[lev]->nComp(), out[lev]->nComp());
   }
 
   for (int dir = 0; dir < AMREX_SPACEDIM; ++dir) {
@@ -387,16 +396,15 @@ apply_filter_low_memory(
       const amrex::MultiFab& src = (dir == 0) ? *in[lev] : *out[lev];
       amrex::IntVect ng(0);
       ng[dir] = filters[lev].get_filter_ngrow();
+      // The async arena frees tmp once the kernels reading it are done
       tmp[lev].define(
-        out[lev]->boxArray(), out[lev]->DistributionMap(), ncnt, ng);
+        out[lev]->boxArray(), out[lev]->DistributionMap(), ncnt, ng,
+        amrex::MFInfo().SetArena(amrex::The_Async_Arena()));
       amrex::MultiFab::Copy(tmp[lev], src, nstart, 0, ncnt, 0);
     }
-    fill(tmp, nstart);
+    fill(tmp);
     for (int lev = 0; lev < nlev; ++lev) {
       filters[lev].apply_filter_1d(dir, tmp[lev], 0, *out[lev], nstart, ncnt);
     }
-    // tmp is freed here, possibly while the fill of the next direction runs
-    // on other streams, so the kernels reading it must be done
-    amrex::Gpu::streamSynchronize();
   }
 }
