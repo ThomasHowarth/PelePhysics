@@ -300,8 +300,7 @@ class SymbolicMath:
         common_expr_lhs = [orig[0][i][0] for i in range(n_cse)]
         common_expr_rhs = [orig[0][i][1] for i in range(n_cse)]
         final_expr = [orig[1][i] for i in range(n_exp)]
-        to_replace = []
-        replace_with = []
+        replacement = {}
         print(
             f"Starting expression reduction from {n_cse} expressions",
             end="...\n",
@@ -319,7 +318,6 @@ class SymbolicMath:
                         common_expr_rhs,
                         final_expr,
                     ) = self.reduce_expr_top_bottom_rec_count(
-                        orig,
                         count_lim,
                         common_expr_lhs,
                         common_expr_rhs,
@@ -338,7 +336,6 @@ class SymbolicMath:
                     common_expr_rhs,
                     final_expr,
                 ) = self.reduce_expr_top_bottom_rec_count(
-                    orig,
                     count_lim,
                     common_expr_lhs,
                     common_expr_rhs,
@@ -360,7 +357,6 @@ class SymbolicMath:
                             common_expr_rhs,
                             final_expr,
                         ) = self.reduce_expr_top_bottom(
-                            orig,
                             count_lim,
                             common_expr_lhs,
                             common_expr_rhs,
@@ -372,7 +368,6 @@ class SymbolicMath:
                             common_expr_rhs,
                             final_expr,
                         ) = self.reduce_expr_bottom_up(
-                            orig,
                             count_lim,
                             common_expr_lhs,
                             common_expr_rhs,
@@ -392,7 +387,6 @@ class SymbolicMath:
                         common_expr_rhs,
                         final_expr,
                     ) = self.reduce_expr_top_bottom(
-                        orig,
                         count_lim,
                         common_expr_lhs,
                         common_expr_rhs,
@@ -404,7 +398,6 @@ class SymbolicMath:
                         common_expr_rhs,
                         final_expr,
                     ) = self.reduce_expr_bottom_up(
-                        orig,
                         count_lim,
                         common_expr_lhs,
                         common_expr_rhs,
@@ -419,7 +412,6 @@ class SymbolicMath:
                 common_expr_rhs,
                 final_expr,
             ) = self.remove_single_symbol(
-                orig,
                 common_expr_lhs,
                 common_expr_rhs,
                 final_expr,
@@ -432,11 +424,8 @@ class SymbolicMath:
                 common_expr_lhs,
                 common_expr_rhs,
                 final_expr,
-                to_replace,
-                replace_with,
-            ) = self.recycle_cse_post(
-                orig, common_expr_lhs, common_expr_rhs, final_expr
-            )
+                replacement,
+            ) = self.recycle_cse_post(common_expr_lhs, common_expr_rhs, final_expr)
             print("Done!", flush=True)
         print("Done!", flush=True)
 
@@ -444,13 +433,11 @@ class SymbolicMath:
             common_expr_lhs,
             common_expr_rhs,
             final_expr,
-            to_replace,
-            replace_with,
+            replacement,
         )
 
     def remove_single_symbol(
         self,
-        orig,
         common_expr_lhs,
         common_expr_rhs,
         final_expr,
@@ -463,30 +450,22 @@ class SymbolicMath:
         """
         replacements = []
         # The expressions each symbol appears in, before any substitution
-        common_users = free_symbol_users(common_expr_rhs)
-        final_users = free_symbol_users(final_expr)
+        common_users = symbol_users(rhs.free_symbols for rhs in common_expr_rhs)
+        final_users = symbol_users(expr.free_symbols for expr in final_expr)
 
         # Replacement loop
         for i, (lhs, rhs) in enumerate(
             zip(common_expr_lhs, common_expr_rhs, strict=True)
         ):
-            op_count = sme.count_ops(rhs)
-            is_float = True
-            is_single_symbol = True
-            try:
-                number = float(rhs)
-                rhs = number
-            except RuntimeError:
-                is_float = False
-            if not is_float:
-                if op_count > 1 or len(rhs.free_symbols) > 1:
-                    is_single_symbol = False
-            if is_float or is_single_symbol:
+            number = as_float(rhs)
+            is_single_symbol = number is None and (
+                sme.count_ops(rhs) <= 1 and len(rhs.free_symbols) <= 1
+            )
+            if number is not None or is_single_symbol:
+                rhs = rhs if number is None else number
                 replacements.append(i)
-                for j in sorted(j for j in common_users[lhs] if j >= i):
-                    common_expr_rhs[j] = common_expr_rhs[j].subs(lhs, rhs)
-                for j in sorted(final_users[lhs]):
-                    final_expr[j] = final_expr[j].subs(lhs, rhs)
+                substitute(common_expr_rhs, common_users, lhs, rhs, start=i)
+                substitute(final_expr, final_users, lhs, rhs)
 
         replacements.reverse()
         for rep in replacements:
@@ -499,7 +478,6 @@ class SymbolicMath:
 
     def reduce_expr_top_bottom_rec_count(
         self,
-        orig,
         count_lim,
         common_expr_lhs,
         common_expr_rhs,
@@ -532,21 +510,15 @@ class SymbolicMath:
             )
 
             total_op = (rec_count - 1) * op_count
-            is_float = True
-            try:
-                number = float(rhs)
-                rhs = number
-            except RuntimeError:
-                is_float = False
-            if total_op < count_lim or is_float:
+            number = as_float(rhs)
+            if total_op < count_lim or number is not None:
+                rhs = rhs if number is None else number
                 replacements.append(i)
-                for j in ind_rhs:
-                    common_expr_rhs[j] = common_expr_rhs[j].subs(lhs, rhs)
+                for j in substitute(common_expr_rhs, common_users, lhs, rhs, start=i):
                     update_symbol_counts(
                         common_counts, common_users, j, common_expr_rhs[j]
                     )
-                for j in ind_final_expr:
-                    final_expr[j] = final_expr[j].subs(lhs, rhs)
+                for j in substitute(final_expr, final_users, lhs, rhs):
                     update_symbol_counts(final_counts, final_users, j, final_expr[j])
 
         replacements.reverse()
@@ -560,7 +532,6 @@ class SymbolicMath:
 
     def reduce_expr_top_bottom(
         self,
-        orig,
         count_lim,
         common_expr_lhs,
         common_expr_rhs,
@@ -574,26 +545,19 @@ class SymbolicMath:
         """
         replacements = []
         # The expressions each symbol appears in, before any substitution
-        common_users = free_symbol_users(common_expr_rhs)
-        final_users = free_symbol_users(final_expr)
+        common_users = symbol_users(rhs.free_symbols for rhs in common_expr_rhs)
+        final_users = symbol_users(expr.free_symbols for expr in final_expr)
 
         # Replacement loop
         for i, (lhs, rhs) in enumerate(
             zip(common_expr_lhs, common_expr_rhs, strict=True)
         ):
-            op_count = sme.count_ops(rhs)
-            is_float = True
-            try:
-                number = float(rhs)
-                rhs = number
-            except RuntimeError:
-                is_float = False
-            if op_count < count_lim or is_float:
+            number = as_float(rhs)
+            if sme.count_ops(rhs) < count_lim or number is not None:
+                rhs = rhs if number is None else number
                 replacements.append(i)
-                for j in sorted(j for j in common_users[lhs] if j >= i):
-                    common_expr_rhs[j] = common_expr_rhs[j].subs(lhs, rhs)
-                for j in sorted(final_users[lhs]):
-                    final_expr[j] = final_expr[j].subs(lhs, rhs)
+                substitute(common_expr_rhs, common_users, lhs, rhs, start=i)
+                substitute(final_expr, final_users, lhs, rhs)
 
         replacements.reverse()
         for rep in replacements:
@@ -606,7 +570,6 @@ class SymbolicMath:
 
     def reduce_expr_bottom_up(
         self,
-        orig,
         count_lim,
         common_expr_lhs,
         common_expr_rhs,
@@ -621,30 +584,23 @@ class SymbolicMath:
         replacements = []
         # The expressions each symbol appears in, kept up to date with the
         # symbols that substitutions bring in
-        common_users = free_symbol_users(common_expr_rhs)
-        final_users = free_symbol_users(final_expr)
+        common_users = symbol_users(rhs.free_symbols for rhs in common_expr_rhs)
+        final_users = symbol_users(expr.free_symbols for expr in final_expr)
 
         # Replacement loop
         for i, (lhs, rhs) in reversed(
             list(enumerate(zip(common_expr_lhs, common_expr_rhs, strict=True)))
         ):
-            op_count = sme.count_ops(rhs)
-            is_float = True
-            try:
-                number = float(rhs)
-                rhs = number
-            except RuntimeError:
-                is_float = False
-            if op_count < count_lim or is_float:
-                replacements.append(i)
+            number = as_float(rhs)
+            if sme.count_ops(rhs) < count_lim or number is not None:
                 # A float has no symbols to bring in
-                new_symbols = () if is_float else rhs.free_symbols
-                for j in sorted(j for j in common_users[lhs] if j >= i):
-                    common_expr_rhs[j] = common_expr_rhs[j].subs(lhs, rhs)
+                new_symbols = rhs.free_symbols if number is None else ()
+                rhs = rhs if number is None else number
+                replacements.append(i)
+                for j in substitute(common_expr_rhs, common_users, lhs, rhs, start=i):
                     for symbol in new_symbols:
                         common_users[symbol].add(j)
-                for j in sorted(final_users[lhs]):
-                    final_expr[j] = final_expr[j].subs(lhs, rhs)
+                for j in substitute(final_expr, final_users, lhs, rhs):
                     for symbol in new_symbols:
                         final_users[symbol].add(j)
 
@@ -658,7 +614,6 @@ class SymbolicMath:
 
     def recycle_cse_post(
         self,
-        orig,
         common_expr_lhs,
         common_expr_rhs,
         final_expr,
@@ -666,18 +621,19 @@ class SymbolicMath:
         """Recycle cse that are not used later."""
         n_cse = len(common_expr_lhs)
         # The expressions each symbol appears in, before any substitution
-        common_users = free_symbol_users(common_expr_rhs)
-        final_users = free_symbol_users(final_expr)
+        common_users = symbol_users(rhs.free_symbols for rhs in common_expr_rhs)
+        final_users = symbol_users(expr.free_symbols for expr in final_expr)
         # The symbol each recycled symbol is replaced with
         replacement = {}
 
         # Figure out which symbols may be recycled
         for isymb, symb in enumerate(common_expr_lhs):
             if not final_users[symb]:
-                ind_cse = [j for j in common_users[symb] if j >= isymb]
-                if ind_cse:
-                    # This is the symbol we would like to replace
-                    target_replace = max(ind_cse)
+                # This is the symbol we would like to replace: its last user
+                target_replace = max(
+                    (j for j in common_users[symb] if j >= isymb), default=None
+                )
+                if target_replace is not None:
                     # Make sure that we haven't replaced it already
                     while (
                         target_replace < n_cse
@@ -690,28 +646,42 @@ class SymbolicMath:
                         replacement[common_expr_lhs[target_replace]] = replacement.get(
                             symb, symb
                         )
-        to_replace = list(replacement)
-        replace_with = list(replacement.values())
         # Use the recycling list to actually recycle
         for symb_replace, symb_with in replacement.items():
-            for ind in sorted(common_users[symb_replace]):
-                common_expr_rhs[ind] = common_expr_rhs[ind].subs(
-                    symb_replace, sme.symbols(symb_with.name)
-                )
-            for ind in sorted(final_users[symb_replace]):
-                final_expr[ind] = final_expr[ind].subs(
-                    symb_replace, sme.symbols(symb_with.name)
-                )
+            new_symb = sme.symbols(symb_with.name)
+            substitute(common_expr_rhs, common_users, symb_replace, new_symb)
+            substitute(final_expr, final_users, symb_replace, new_symb)
 
-        print(f"Remaining expressions = {n_cse - len(to_replace)}", end="...")
+        print(f"Remaining expressions = {n_cse - len(replacement)}", end="...")
 
-        return (
-            common_expr_lhs,
-            common_expr_rhs,
-            final_expr,
-            to_replace,
-            replace_with,
-        )
+        return common_expr_lhs, common_expr_rhs, final_expr, replacement
+
+    def write_cse(self, cw, fstream, common_expr_lhs, common_expr_rhs, replacement):
+        """Write the common subexpressions, reusing the recycled variables."""
+        recycled = set(replacement.values())
+        for cse_idx in range(len(common_expr_lhs)):
+            if common_expr_lhs[cse_idx] in replacement:
+                left_cse = self.convert_to_cpp(replacement[common_expr_lhs[cse_idx]])
+                right_cse = self.convert_to_cpp(common_expr_rhs[cse_idx])
+                if not left_cse == right_cse:
+                    cw.writer(
+                        fstream,
+                        f"{left_cse} = {right_cse};",
+                    )
+            elif common_expr_lhs[cse_idx] in recycled:
+                left_cse = self.convert_to_cpp(common_expr_lhs[cse_idx])
+                right_cse = self.convert_to_cpp(common_expr_rhs[cse_idx])
+                cw.writer(
+                    fstream,
+                    f"amrex::Real {left_cse} = {right_cse};",
+                )
+            else:
+                left_cse = self.convert_to_cpp(common_expr_lhs[cse_idx])
+                right_cse = self.convert_to_cpp(common_expr_rhs[cse_idx])
+                cw.writer(
+                    fstream,
+                    f"const amrex::Real {left_cse} = {right_cse};",
+                )
 
     def write_array_to_cpp(self, list_smp, array_str, cw, fstream, index_list=None):
         """Convert sympy array to C code compatible string."""
@@ -863,34 +833,9 @@ class SymbolicMath:
             common_expr_lhs,
             common_expr_rhs,
             final_expr,
-            to_replace,
-            replace_with,
+            replacement,
         ) = self.reduce_expr(array_cse)
-        replacement = dict(zip(to_replace, replace_with, strict=True))
-        recycled = set(replace_with)
-        for cse_idx in range(len(common_expr_lhs)):
-            if common_expr_lhs[cse_idx] in replacement:
-                left_cse = self.convert_to_cpp(replacement[common_expr_lhs[cse_idx]])
-                right_cse = self.convert_to_cpp(common_expr_rhs[cse_idx])
-                if not left_cse == right_cse:
-                    cw.writer(
-                        fstream,
-                        f"{left_cse} = {right_cse};",
-                    )
-            elif common_expr_lhs[cse_idx] in recycled:
-                left_cse = self.convert_to_cpp(common_expr_lhs[cse_idx])
-                right_cse = self.convert_to_cpp(common_expr_rhs[cse_idx])
-                cw.writer(
-                    fstream,
-                    f"amrex::Real {left_cse} = {right_cse};",
-                )
-            else:
-                left_cse = self.convert_to_cpp(common_expr_lhs[cse_idx])
-                right_cse = self.convert_to_cpp(common_expr_rhs[cse_idx])
-                cw.writer(
-                    fstream,
-                    f"const amrex::Real {left_cse} = {right_cse};",
-                )
+        self.write_cse(cw, fstream, common_expr_lhs, common_expr_rhs, replacement)
 
         cw.writer(
             fstream,
@@ -1008,34 +953,9 @@ class SymbolicMath:
             common_expr_lhs,
             common_expr_rhs,
             final_expr,
-            to_replace,
-            replace_with,
+            replacement,
         ) = self.reduce_expr(array_cse)
-        replacement = dict(zip(to_replace, replace_with, strict=True))
-        recycled = set(replace_with)
-        for cse_idx in range(len(common_expr_lhs)):
-            if common_expr_lhs[cse_idx] in replacement:
-                left_cse = self.convert_to_cpp(replacement[common_expr_lhs[cse_idx]])
-                right_cse = self.convert_to_cpp(common_expr_rhs[cse_idx])
-                if not left_cse == right_cse:
-                    cw.writer(
-                        fstream,
-                        f"{left_cse} = {right_cse};",
-                    )
-            elif common_expr_lhs[cse_idx] in recycled:
-                left_cse = self.convert_to_cpp(common_expr_lhs[cse_idx])
-                right_cse = self.convert_to_cpp(common_expr_rhs[cse_idx])
-                cw.writer(
-                    fstream,
-                    f"amrex::Real {left_cse} = {right_cse};",
-                )
-            else:
-                left_cse = self.convert_to_cpp(common_expr_lhs[cse_idx])
-                right_cse = self.convert_to_cpp(common_expr_rhs[cse_idx])
-                cw.writer(
-                    fstream,
-                    f"const amrex::Real {left_cse} = {right_cse};",
-                )
+        self.write_cse(cw, fstream, common_expr_lhs, common_expr_rhs, replacement)
 
         # Compute dscqss_dsc strings from CSEs
         dscqss_dsc = [""] * (species_info.n_species * species_info.n_qssa_species)
@@ -1288,22 +1208,39 @@ def symbol_counts(expr):
     return counts
 
 
-def free_symbol_users(exprs):
-    """Map each symbol to the indices of the expressions it appears in."""
+def symbol_users(symbol_sets):
+    """Map each symbol to the indices of the expressions it appears in.
+
+    symbol_sets gives the symbols of each expression in turn (free symbols,
+    or the symbol counts).
+    """
     users = defaultdict(set)
-    for j, expr in enumerate(exprs):
-        for symbol in expr.free_symbols:
+    for j, symbols in enumerate(symbol_sets):
+        for symbol in symbols:
             users[symbol].add(j)
     return users
 
 
-def symbol_users(counts):
-    """Map each symbol to the indices of the expressions it appears in."""
-    users = defaultdict(set)
-    for j, expr_counts in enumerate(counts):
-        for symbol in expr_counts:
-            users[symbol].add(j)
-    return users
+def substitute(exprs, users, lhs, rhs, start=0):
+    """Substitute lhs in the expressions (from index start) that use it.
+
+    Returns the indices of those expressions, in order.
+    """
+    updated = sorted(j for j in users[lhs] if j >= start)
+    for j in updated:
+        exprs[j] = exprs[j].subs(lhs, rhs)
+    return updated
+
+
+def as_float(expr):
+    """Return the value of a numeric expression, or None if it has symbols."""
+    # float() on a symbolic expression fails, but slowly: check first
+    if expr.free_symbols:
+        return None
+    try:
+        return float(expr)
+    except RuntimeError:
+        return None
 
 
 def update_symbol_counts(counts, users, j, expr):
