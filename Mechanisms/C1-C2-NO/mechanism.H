@@ -645,7 +645,7 @@ AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE void
 CKRP(amrex::Real& ru, amrex::Real& ruc, amrex::Real& pa)
 {
   ru = 8.31446261815324e+07;
-  ruc = 1.98721558317399615845;
+  ruc = 1.98720425864083161116;
   pa = 1.01325e+06;
 }
 
@@ -8294,7 +8294,7 @@ comp_qfqr(
   }
 
   // reference concentration: P_atm / (RT) in inverse mol/m^3
-  amrex::Real refC = 101325 / 8.31446 * invT;
+  amrex::Real refC = 101325 / 8.31446261815324 * invT;
   amrex::Real refCinv = 1 / refC;
 
   // Evaluate the kfs
@@ -8302,22 +8302,22 @@ comp_qfqr(
   amrex::Real redP, F, logPred, logFcent, troe_c, troe_n, troe, F_troe;
 
   // reaction 0:  H + O2 <=> O + OH
-  k_f = 26440000000 * exp((-0.6707) * logT - (8575.31520197823) * invT);
+  k_f = 26440000000 * exp((-0.6707) * logT - (8575.36407035247) * invT);
   qf[38] *= k_f;
   qr[38] *= k_f * (kc_fast ? (inv_ge[4] * ge[9] * ge[2] * inv_ge[3])
                            : exp(-(g_RT[2] - g_RT[3] - g_RT[4] + g_RT[9])));
   // reaction 1:  H2 + O <=> H + OH
-  k_f = 0.04589 * exp((2.7) * logT - (3150.13632793755) * invT);
+  k_f = 0.04589 * exp((2.7) * logT - (3150.15427970227) * invT);
   qf[39] *= k_f;
   qr[39] *= k_f * (kc_fast ? (ge[6] * inv_ge[4] * ge[3] * inv_ge[2])
                            : exp(-(-g_RT[2] + g_RT[3] - g_RT[4] + g_RT[6])));
   // reaction 2:  H2 + OH <=> H + H2O
-  k_f = 173.4 * exp((1.51) * logT - (1726.03316371019) * invT);
+  k_f = 173.4 * exp((1.51) * logT - (1726.04299990077) * invT);
   qf[40] *= k_f;
   qr[40] *= k_f * (kc_fast ? (ge[6] * ge[4] * inv_ge[2] * inv_ge[7])
                            : exp(-(-g_RT[2] + g_RT[4] + g_RT[6] - g_RT[7])));
   // reaction 3:  2 OH <=> H2O + O
-  k_f = 0.03973 * exp((2.4) * logT - (-1061.78716484796) * invT);
+  k_f = 0.03973 * exp((2.4) * logT - (-1061.7932156824) * invT);
   qf[41] *= k_f;
   qr[41] *= k_f * (kc_fast ? (ge[4] * ge[4] * inv_ge[3] * inv_ge[7])
                            : exp(-(-g_RT[3] + 2.000000 * g_RT[4] - g_RT[7])));
@@ -8397,7 +8397,7 @@ comp_qfqr(
                     : exp(-(g_RT[2] - g_RT[5] + g_RT[9]))) *
            (refC);
   // reaction 12:  H2 + O2 <=> H + HO2
-  k_f = 0.5916 * exp((2.433) * logT - (26923.0980538841) * invT);
+  k_f = 0.5916 * exp((2.433) * logT - (26923.251481251) * invT);
   qf[42] *= k_f;
   qr[42] *= k_f * (kc_fast ? (ge[6] * inv_ge[5] * ge[9] * inv_ge[2])
                            : exp(-(-g_RT[2] - g_RT[5] + g_RT[6] + g_RT[9])));
@@ -8405,7 +8405,7 @@ comp_qfqr(
   k_f = 111000000 * exp((-0.37) * logT);
   Corr = mixture + (-0.3) * sc[0] + sc[6] + (5) * sc[7] + (0.75) * sc[20] +
          (2.6) * sc[21];
-  redP = Corr / k_f * 201000 * exp(-0.584 * logT - (-1153.87581469022) * invT);
+  redP = Corr / k_f * 201000 * exp(-0.584 * logT - (-1153.88239031267) * invT);
   F = redP / (1.0 + redP);
   logPred = log10(redP);
   logFcent = log10(
@@ -8422,12 +8422,12 @@ comp_qfqr(
                     : exp(-(2.000000 * g_RT[4] - g_RT[8]))) *
            (refC);
   // reaction 14:  H + HO2 <=> H2O + O
-  k_f = 3970000 * exp(-(337.658382754967) * invT);
+  k_f = 3970000 * exp(-(337.660306977672) * invT);
   qf[43] *= k_f;
   qr[43] *= k_f * (kc_fast ? (ge[5] * ge[2] * inv_ge[3] * inv_ge[7])
                            : exp(-(g_RT[2] - g_RT[3] + g_RT[5] - g_RT[7])));
   // reaction 15:  H + HO2 <=> 2 OH
-  k_f = 74850000 * exp(-(148.448916412392) * invT);
+  k_f = 74850000 * exp(-(148.449762382136) * invT);
   qf[44] *= k_f;
   qr[44] *= k_f * (kc_fast ? (inv_ge[4] * ge[5] * inv_ge[4] * ge[2])
                            : exp(-(g_RT[2] - 2.000000 * g_RT[4] + g_RT[5])));
@@ -8437,71 +8437,71 @@ comp_qfqr(
   qr[45] *= k_f * (kc_fast ? (inv_ge[4] * ge[5] * inv_ge[9] * ge[3])
                            : exp(-(g_RT[3] - g_RT[4] + g_RT[5] - g_RT[9])));
   // reaction 17:  2 HO2 <=> H2O2 + O2
-  k_f = 130000 * exp(-(-820.243165261693) * invT);
+  k_f = 130000 * exp(-(-820.247839602988) * invT);
   qf[46] *= k_f;
   qr[46] *= k_f * (kc_fast ? (inv_ge[9] * ge[5] * ge[5] * inv_ge[8])
                            : exp(-(2.000000 * g_RT[5] - g_RT[8] - g_RT[9])));
   // reaction 18:  2 HO2 <=> H2O2 + O2
-  k_f = 365800000 * exp(-(6038.59998965664) * invT);
+  k_f = 365800000 * exp(-(6038.63440198519) * invT);
   qf[47] *= k_f;
   qr[47] *= k_f * (kc_fast ? (inv_ge[9] * ge[5] * ge[5] * inv_ge[8])
                            : exp(-(2.000000 * g_RT[5] - g_RT[8] - g_RT[9])));
   // reaction 19:  HO2 + OH <=> H2O + O2
-  k_f = 1410000000000 * exp((-1.76) * logT - (30.1929999482832) * invT);
+  k_f = 1410000000000 * exp((-1.76) * logT - (30.1931720099259) * invT);
   qf[48] *= k_f;
   qr[48] *= k_f * (kc_fast ? (ge[4] * inv_ge[9] * ge[5] * inv_ge[7])
                            : exp(-(g_RT[4] + g_RT[5] - g_RT[7] - g_RT[9])));
   // reaction 20:  HO2 + OH <=> H2O + O2
-  k_f = 1.12e+79 * exp((-22.3) * logT - (13536.528310147) * invT);
+  k_f = 1.12e+79 * exp((-22.3) * logT - (13536.6054511168) * invT);
   qf[49] *= k_f;
   qr[49] *= k_f * (kc_fast ? (ge[4] * inv_ge[9] * ge[5] * inv_ge[7])
                            : exp(-(g_RT[4] + g_RT[5] - g_RT[7] - g_RT[9])));
   // reaction 21:  HO2 + OH <=> H2O + O2
-  k_f = 5.37e+64 * exp((-16.72) * logT - (16555.8283049753) * invT);
+  k_f = 5.37e+64 * exp((-16.72) * logT - (16555.9226521094) * invT);
   qf[50] *= k_f;
   qr[50] *= k_f * (kc_fast ? (ge[4] * inv_ge[9] * ge[5] * inv_ge[7])
                            : exp(-(g_RT[4] + g_RT[5] - g_RT[7] - g_RT[9])));
   // reaction 22:  HO2 + OH <=> H2O + O2
-  k_f = 2510000 * exp((2) * logT - (20128.6666321888) * invT);
+  k_f = 2510000 * exp((2) * logT - (20128.7813399506) * invT);
   qf[51] *= k_f;
   qr[51] *= k_f * (kc_fast ? (ge[4] * inv_ge[9] * ge[5] * inv_ge[7])
                            : exp(-(g_RT[4] + g_RT[5] - g_RT[7] - g_RT[9])));
   // reaction 23:  HO2 + OH <=> H2O + O2
-  k_f = 1e+130 * exp((-40) * logT - (17511.9399700042) * invT);
+  k_f = 1e+130 * exp((-40) * logT - (17512.0397657571) * invT);
   qf[52] *= k_f;
   qr[52] *= k_f * (kc_fast ? (ge[4] * inv_ge[9] * ge[5] * inv_ge[7])
                            : exp(-(g_RT[4] + g_RT[5] - g_RT[7] - g_RT[9])));
   // reaction 24:  H + H2O2 <=> H2 + HO2
-  k_f = 6.05 * exp((2) * logT - (2616.72666218454) * invT);
+  k_f = 6.05 * exp((2) * logT - (2616.74157419358) * invT);
   qf[53] *= k_f;
   qr[53] *= k_f * (kc_fast ? (inv_ge[6] * inv_ge[5] * ge[8] * ge[2])
                            : exp(-(g_RT[2] - g_RT[5] - g_RT[6] + g_RT[8])));
   // reaction 25:  H + H2O2 <=> H2O + OH
-  k_f = 24100000 * exp(-(1997.77016324474) * invT);
+  k_f = 24100000 * exp(-(1997.7815479901) * invT);
   qf[54] *= k_f;
   qr[54] *= k_f * (kc_fast ? (inv_ge[4] * ge[8] * ge[2] * inv_ge[7])
                            : exp(-(g_RT[2] - g_RT[4] - g_RT[7] + g_RT[8])));
   // reaction 26:  H2O2 + O <=> HO2 + OH
-  k_f = 9.63 * exp((2) * logT - (1997.77016324474) * invT);
+  k_f = 9.63 * exp((2) * logT - (1997.7815479901) * invT);
   qf[55] *= k_f;
   qr[55] *= k_f * (kc_fast ? (inv_ge[4] * inv_ge[5] * ge[8] * ge[3])
                            : exp(-(g_RT[3] - g_RT[4] - g_RT[5] + g_RT[8])));
   // reaction 27:  H2O2 + OH <=> H2O + HO2
-  k_f = 2000000 * exp(-(214.873516298615) * invT);
+  k_f = 2000000 * exp(-(214.874740803973) * invT);
   qf[56] *= k_f;
   qr[56] *= k_f * (kc_fast ? (ge[4] * inv_ge[5] * ge[8] * inv_ge[7])
                            : exp(-(g_RT[4] - g_RT[5] - g_RT[7] + g_RT[8])));
   // reaction 28:  H2O2 + OH <=> H2O + HO2
-  k_f = 2.67e+35 * exp((-7) * logT - (18920.9466342575) * invT);
+  k_f = 2.67e+35 * exp((-7) * logT - (18921.0544595536) * invT);
   qf[57] *= k_f;
   qr[57] *= k_f * (kc_fast ? (ge[4] * inv_ge[5] * ge[8] * inv_ge[7])
                            : exp(-(g_RT[4] - g_RT[5] - g_RT[7] + g_RT[8])));
   // reaction 29:  CO + O (+M) <=> CO2 (+M)
-  k_f = 13620 * exp(-(1199.66853127845) * invT);
+  k_f = 13620 * exp(-(1199.67536786106) * invT);
   Corr = mixture + (-0.3) * sc[0] + sc[6] + (11) * sc[7] + (0.75) * sc[20] +
          (2.6) * sc[21];
   redP =
-    Corr / k_f * 1173000000000 * exp(-2.79 * logT - (2108.98104638758) * invT);
+    Corr / k_f * 1173000000000 * exp(-2.79 * logT - (2108.99306489333) * invT);
   Corr = redP / (1. + redP);
   qf[25] *= Corr * k_f;
   qr[25] *= Corr * k_f *
@@ -8509,22 +8509,22 @@ comp_qfqr(
                      : exp(-(g_RT[3] + g_RT[20] - g_RT[21]))) *
             (refC);
   // reaction 30:  CO + OH <=> CO2 + H
-  k_f = 0.07046 * exp((2.053) * logT - (-178.979071526765) * invT);
+  k_f = 0.07046 * exp((2.053) * logT - (-178.980091479506) * invT);
   qf[58] *= k_f;
   qr[58] *= k_f * (kc_fast ? (ge[4] * ge[20] * inv_ge[21] * inv_ge[2])
                            : exp(-(-g_RT[2] + g_RT[4] + g_RT[20] - g_RT[21])));
   // reaction 31:  CO + OH <=> CO2 + H
-  k_f = 5757000 * exp((-0.664) * logT - (166.98238621398) * invT);
+  k_f = 5757000 * exp((-0.664) * logT - (166.983337800895) * invT);
   qf[59] *= k_f;
   qr[59] *= k_f * (kc_fast ? (ge[4] * ge[20] * inv_ge[21] * inv_ge[2])
                            : exp(-(-g_RT[2] + g_RT[4] + g_RT[20] - g_RT[21])));
   // reaction 32:  CO + O2 <=> CO2 + O
-  k_f = 1119000 * exp(-(24003.4349588851) * invT);
+  k_f = 1119000 * exp(-(24003.5717478911) * invT);
   qf[60] *= k_f;
   qr[60] *= k_f * (kc_fast ? (ge[9] * ge[20] * inv_ge[21] * inv_ge[3])
                            : exp(-(-g_RT[3] + g_RT[9] + g_RT[20] - g_RT[21])));
   // reaction 33:  CO + HO2 <=> CO2 + OH
-  k_f = 0.157 * exp((2.18) * logT - (9029.02038003442) * invT);
+  k_f = 0.157 * exp((2.18) * logT - (9029.07183395029) * invT);
   qf[61] *= k_f;
   qr[61] *= k_f * (kc_fast ? (inv_ge[4] * ge[5] * ge[20] * inv_ge[21])
                            : exp(-(-g_RT[4] + g_RT[5] + g_RT[20] - g_RT[21])));
@@ -8549,7 +8549,7 @@ comp_qfqr(
   qr[65] *= k_f * (kc_fast ? (ge[4] * ge[16] * inv_ge[20] * inv_ge[7])
                            : exp(-(g_RT[4] - g_RT[7] + g_RT[16] - g_RT[20])));
   // reaction 38:  HCO + M <=> CO + H + M
-  k_f = 187000000000 * exp((-1) * logT - (8554.68331868023) * invT);
+  k_f = 187000000000 * exp((-1) * logT - (8554.73206947902) * invT);
   Corr = mixture + sc[6] + (-1) * sc[7] + (0.75) * sc[20] + (2.6) * sc[21];
   qf[34] *= Corr * k_f;
   qr[34] *= Corr * k_f *
@@ -8557,22 +8557,22 @@ comp_qfqr(
                      : exp(-(-g_RT[2] + g_RT[16] - g_RT[20]))) *
             (refCinv);
   // reaction 39:  HCO + H2O <=> CO + H + H2O
-  k_f = 2244000000000 * exp((-1) * logT - (8554.68331868023) * invT);
+  k_f = 2244000000000 * exp((-1) * logT - (8554.73206947902) * invT);
   qf[35] *= k_f;
   qr[35] *= k_f *
             (kc_fast ? (ge[16] * inv_ge[20] * inv_ge[2])
                      : exp(-(-g_RT[2] + g_RT[16] - g_RT[20]))) *
             (refCinv);
   // reaction 40:  HCO + O2 <=> CO + HO2
-  k_f = 12040 * exp((0.807) * logT - (-365.838516040031) * invT);
+  k_f = 12040 * exp((0.807) * logT - (-365.840600853603) * invT);
   qf[66] *= k_f;
   qr[66] *= k_f * (kc_fast ? (ge[9] * inv_ge[5] * ge[16] * inv_ge[20])
                            : exp(-(-g_RT[5] + g_RT[9] + g_RT[16] - g_RT[20])));
   // reaction 41:  CO + H2 (+M) <=> CH2O (+M)
-  k_f = 43 * exp((1.5) * logT - (40056.0465980557) * invT);
+  k_f = 43 * exp((1.5) * logT - (40056.2748665018) * invT);
   Corr = mixture + (-0.3) * sc[0] + sc[6] + (5) * sc[7] + sc[15] +
          (0.5) * sc[20] + sc[21] + (2) * sc[27];
-  redP = Corr / k_f * 5.07e+15 * exp(-3.42 * logT - (42446.3257606281) * invT);
+  redP = Corr / k_f * 5.07e+15 * exp(-3.42 * logT - (42446.5676506209) * invT);
   F = redP / (1.0 + redP);
   logPred = log10(redP);
   logFcent = log10(
@@ -8594,7 +8594,7 @@ comp_qfqr(
   qr[67] *= k_f * (kc_fast ? (ge[4] * inv_ge[20] * inv_ge[2] * ge[10])
                            : exp(-(-g_RT[2] + g_RT[4] + g_RT[10] - g_RT[20])));
   // reaction 43:  C + O2 <=> CO + O
-  k_f = 58000000 * exp(-(289.852799503519) * invT);
+  k_f = 58000000 * exp(-(289.854451295289) * invT);
   qf[68] *= k_f;
   qr[68] *= k_f * (kc_fast ? (ge[9] * inv_ge[20] * inv_ge[3] * ge[10])
                            : exp(-(-g_RT[3] + g_RT[9] + g_RT[10] - g_RT[20])));
@@ -8614,12 +8614,12 @@ comp_qfqr(
   qr[71] *= k_f * (kc_fast ? (ge[4] * inv_ge[16] * inv_ge[2] * ge[11])
                            : exp(-(-g_RT[2] + g_RT[4] + g_RT[11] - g_RT[16])));
   // reaction 47:  CH + H2 <=> CH2 + H
-  k_f = 110.7 * exp((1.79) * logT - (840.371831893882) * invT);
+  k_f = 110.7 * exp((1.79) * logT - (840.376620942939) * invT);
   qf[72] *= k_f;
   qr[72] *= k_f * (kc_fast ? (ge[6] * inv_ge[2] * ge[11] * inv_ge[12])
                            : exp(-(-g_RT[2] + g_RT[6] + g_RT[11] - g_RT[12])));
   // reaction 48:  CH + H2O <=> CH2O + H
-  k_f = 5710000 * exp(-(-379.928582682563) * invT);
+  k_f = 5710000 * exp(-(-379.930747791568) * invT);
   qf[73] *= k_f;
   qr[73] *= k_f * (kc_fast ? (inv_ge[17] * inv_ge[2] * ge[7] * ge[11])
                            : exp(-(-g_RT[2] + g_RT[7] + g_RT[11] - g_RT[17])));
@@ -8632,7 +8632,7 @@ comp_qfqr(
   k_f = 50000000;
   Corr = mixture + (-0.3) * sc[0] + sc[6] + (5) * sc[7] + sc[15] +
          (0.5) * sc[20] + sc[21] + (2) * sc[27];
-  redP = Corr / k_f * 2.69e+16 * exp(-3.74 * logT - (974.227464997937) * invT);
+  redP = Corr / k_f * 2.69e+16 * exp(-3.74 * logT - (974.233016853611) * invT);
   F = redP / (1.0 + redP);
   logPred = log10(redP);
   logFcent = log10(
@@ -8649,16 +8649,16 @@ comp_qfqr(
                     : exp(-(g_RT[11] + g_RT[20] - g_RT[28]))) *
            (refC);
   // reaction 51:  CH + CO2 <=> CO + HCO
-  k_f = 3400000 * exp(-(347.219499405257) * invT);
+  k_f = 3400000 * exp(-(347.221478114148) * invT);
   qf[75] *= k_f;
   qr[75] *= k_f * (kc_fast ? (inv_ge[16] * inv_ge[20] * ge[21] * ge[11])
                            : exp(-(g_RT[11] - g_RT[16] - g_RT[20] + g_RT[21])));
   // reaction 52:  H + HCO (+M) <=> CH2O (+M)
-  k_f = 1090000 * exp((0.48) * logT - (-130.836333109227) * invT);
+  k_f = 1090000 * exp((0.48) * logT - (-130.837078709679) * invT);
   Corr = mixture + (-0.3) * sc[0] + sc[6] + (5) * sc[7] + sc[15] +
          (0.5) * sc[20] + sc[21] + (2) * sc[27];
   redP =
-    Corr / k_f * 1350000000000 * exp(-2.57 * logT - (717.083748771726) * invT);
+    Corr / k_f * 1350000000000 * exp(-2.57 * logT - (717.087835235741) * invT);
   F = redP / (1.0 + redP);
   logPred = log10(redP);
   logFcent = log10(
@@ -8678,7 +8678,7 @@ comp_qfqr(
   k_f = 25000000000 * exp((-0.8) * logT);
   Corr = mixture + (-0.3) * sc[0] + sc[6] + (5) * sc[7] + sc[15] +
          (0.5) * sc[20] + sc[21] + (2) * sc[27];
-  redP = Corr / k_f * 3.2e+15 * exp(-3.14 * logT - (618.956498939805) * invT);
+  redP = Corr / k_f * 3.2e+15 * exp(-3.14 * logT - (618.960026203482) * invT);
   F = redP / (1.0 + redP);
   logPred = log10(redP);
   logFcent = log10(
@@ -8705,22 +8705,22 @@ comp_qfqr(
   qr[77] *= k_f * (kc_fast ? (ge[4] * inv_ge[17] * inv_ge[2] * ge[12])
                            : exp(-(-g_RT[2] + g_RT[4] + g_RT[12] - g_RT[17])));
   // reaction 56:  CH2 + OH <=> CH + H2O
-  k_f = 11.3 * exp((2) * logT - (1509.64999741416) * invT);
+  k_f = 11.3 * exp((2) * logT - (1509.6586004963) * invT);
   qf[78] *= k_f;
   qr[78] *= k_f * (kc_fast ? (ge[4] * inv_ge[7] * inv_ge[11] * ge[12])
                            : exp(-(g_RT[4] - g_RT[7] - g_RT[11] + g_RT[12])));
   // reaction 57:  CH2 + H2 <=> CH3 + H
-  k_f = 0.5 * exp((2) * logT - (3638.25649376812) * invT);
+  k_f = 0.5 * exp((2) * logT - (3638.27722719608) * invT);
   qf[79] *= k_f;
   qr[79] *= k_f * (kc_fast ? (ge[6] * inv_ge[14] * ge[12] * inv_ge[2])
                            : exp(-(-g_RT[2] + g_RT[6] + g_RT[12] - g_RT[14])));
   // reaction 58:  CH2 + O2 <=> HCO + OH
-  k_f = 10600000 * exp(-(754.82499870708) * invT);
+  k_f = 10600000 * exp(-(754.829300248149) * invT);
   qf[80] *= k_f;
   qr[80] *= k_f * (kc_fast ? (inv_ge[4] * ge[9] * inv_ge[16] * ge[12])
                            : exp(-(-g_RT[4] + g_RT[9] + g_RT[12] - g_RT[16])));
   // reaction 59:  CH2 + O2 <=> CO2 + 2 H
-  k_f = 2640000 * exp(-(754.82499870708) * invT);
+  k_f = 2640000 * exp(-(754.829300248149) * invT);
   qf[81] *= k_f;
   qr[81] *=
     k_f *
@@ -8733,10 +8733,10 @@ comp_qfqr(
   qr[82] *= k_f * (kc_fast ? (inv_ge[4] * ge[5] * inv_ge[17] * ge[12])
                            : exp(-(-g_RT[4] + g_RT[5] + g_RT[12] - g_RT[17])));
   // reaction 61:  CH2 + CO (+M) <=> CH2CO (+M)
-  k_f = 810000 * exp((0.5) * logT - (2269.50716277929) * invT);
+  k_f = 810000 * exp((0.5) * logT - (2269.52009607943) * invT);
   Corr = mixture + (-0.3) * sc[0] + sc[6] + (5) * sc[7] + sc[15] +
          (0.5) * sc[20] + sc[21] + (2) * sc[27];
-  redP = Corr / k_f * 2.69e+21 * exp(-5.11 * logT - (3570.32224388449) * invT);
+  redP = Corr / k_f * 2.69e+21 * exp(-5.11 * logT - (3570.34259017374) * invT);
   F = redP / (1.0 + redP);
   logPred = log10(redP);
   logFcent = log10(
@@ -8763,12 +8763,12 @@ comp_qfqr(
   qr[84] *= k_f * (kc_fast ? (inv_ge[6] * inv_ge[22] * ge[12] * ge[12])
                            : exp(-(-g_RT[6] + 2.000000 * g_RT[12] - g_RT[22])));
   // reaction 64:  CH2* + N2 <=> CH2 + N2
-  k_f = 15000000 * exp(-(301.929999482832) * invT);
+  k_f = 15000000 * exp(-(301.93172009926) * invT);
   qf[85] *= k_f;
   qr[85] *= k_f * (kc_fast ? (inv_ge[12] * ge[13])
                            : exp(-(g_RT[1] - g_RT[1] - g_RT[12] + g_RT[13])));
   // reaction 65:  AR + CH2* <=> AR + CH2
-  k_f = 9000000 * exp(-(301.929999482832) * invT);
+  k_f = 9000000 * exp(-(301.93172009926) * invT);
   qf[86] *= k_f;
   qr[86] *= k_f * (kc_fast ? (inv_ge[12] * ge[13])
                            : exp(-(g_RT[0] - g_RT[0] - g_RT[12] + g_RT[13])));
@@ -8814,7 +8814,7 @@ comp_qfqr(
   k_f = 20000000;
   Corr = mixture + sc[6] + (5) * sc[7] + sc[15] + (0.5) * sc[20] + sc[21] +
          (2) * sc[27];
-  redP = Corr / k_f * 2.7e+26 * exp(-6.3 * logT - (1559.97166399463) * invT);
+  redP = Corr / k_f * 2.7e+26 * exp(-6.3 * logT - (1559.98055384617) * invT);
   F = redP / (1.0 + redP);
   logPred = log10(redP);
   logFcent = log10(
@@ -8853,10 +8853,10 @@ comp_qfqr(
   qr[97] *= k_f * (kc_fast ? (inv_ge[20] * ge[21] * ge[13] * inv_ge[17])
                            : exp(-(g_RT[13] - g_RT[17] - g_RT[20] + g_RT[21])));
   // reaction 78:  CH2O + H (+M) <=> CH3O (+M)
-  k_f = 540000 * exp((0.454) * logT - (1308.36333109227) * invT);
+  k_f = 540000 * exp((0.454) * logT - (1308.37078709679) * invT);
   Corr = mixture + sc[6] + (5) * sc[7] + sc[15] + (0.5) * sc[20] + sc[21] +
          (2) * sc[27];
-  redP = Corr / k_f * 2.2e+18 * exp(-4.8 * logT - (2797.88466187424) * invT);
+  redP = Corr / k_f * 2.2e+18 * exp(-4.8 * logT - (2797.90060625314) * invT);
   F = redP / (1.0 + redP);
   logPred = log10(redP);
   logFcent = log10(
@@ -8873,41 +8873,41 @@ comp_qfqr(
                     : exp(-(g_RT[2] + g_RT[17] - g_RT[18]))) *
            (refC);
   // reaction 79:  CH2O + H <=> H2 + HCO
-  k_f = 23000 * exp((1.05) * logT - (1648.03458051046) * invT);
+  k_f = 23000 * exp((1.05) * logT - (1648.04397220846) * invT);
   qf[98] *= k_f;
   qr[98] *= k_f * (kc_fast ? (inv_ge[6] * inv_ge[16] * ge[17] * ge[2])
                            : exp(-(g_RT[2] - g_RT[6] - g_RT[16] + g_RT[17])));
   // reaction 80:  CH2O + O <=> HCO + OH
-  k_f = 39000000 * exp(-(1781.38699694871) * invT);
+  k_f = 39000000 * exp(-(1781.39714858563) * invT);
   qf[99] *= k_f;
   qr[99] *= k_f * (kc_fast ? (inv_ge[4] * inv_ge[16] * ge[17] * ge[3])
                            : exp(-(g_RT[3] - g_RT[4] - g_RT[16] + g_RT[17])));
   // reaction 81:  CH2O + OH <=> H2O + HCO
-  k_f = 3430 * exp((1.18) * logT - (-224.93784961471) * invT);
+  k_f = 3430 * exp((1.18) * logT - (-224.939131473948) * invT);
   qf[100] *= k_f;
   qr[100] *= k_f * (kc_fast ? (ge[4] * inv_ge[16] * ge[17] * inv_ge[7])
                             : exp(-(g_RT[4] - g_RT[7] - g_RT[16] + g_RT[17])));
   // reaction 82:  CH2O + O2 <=> HCO + HO2
-  k_f = 100000000 * exp(-(20128.6666321888) * invT);
+  k_f = 100000000 * exp(-(20128.7813399506) * invT);
   qf[101] *= k_f;
   qr[101] *= k_f * (kc_fast ? (ge[9] * inv_ge[5] * inv_ge[16] * ge[17])
                             : exp(-(-g_RT[5] + g_RT[9] - g_RT[16] + g_RT[17])));
   // reaction 83:  CH2O + HO2 <=> H2O2 + HCO
-  k_f = 1000000 * exp(-(4025.73332643776) * invT);
+  k_f = 1000000 * exp(-(4025.75626799013) * invT);
   qf[102] *= k_f;
   qr[102] *= k_f * (kc_fast ? (inv_ge[16] * ge[5] * inv_ge[8] * ge[17])
                             : exp(-(g_RT[5] - g_RT[8] - g_RT[16] + g_RT[17])));
   // reaction 84:  CH + CH2O <=> CH2CO + H
-  k_f = 94600000 * exp(-(-259.156582889431) * invT);
+  k_f = 94600000 * exp(-(-259.158059751864) * invT);
   qf[103] *= k_f;
   qr[103] *=
     k_f * (kc_fast ? (inv_ge[29] * ge[17] * inv_ge[2] * ge[11])
                    : exp(-(-g_RT[2] + g_RT[11] + g_RT[17] - g_RT[29])));
   // reaction 85:  CH3 + H (+M) <=> CH4 (+M)
-  k_f = 12700000000 * exp((-0.63) * logT - (192.731983003208) * invT);
+  k_f = 12700000000 * exp((-0.63) * logT - (192.733081330027) * invT);
   Corr = mixture + (-0.3) * sc[0] + sc[6] + (5) * sc[7] + sc[15] +
          (0.5) * sc[20] + sc[21] + (2) * sc[27];
-  redP = Corr / k_f * 2.477e+21 * exp(-4.76 * logT - (1227.84866456352) * invT);
+  redP = Corr / k_f * 2.477e+21 * exp(-4.76 * logT - (1227.85566173699) * invT);
   F = redP / (1.0 + redP);
   logPred = log10(redP);
   logFcent = log10(
@@ -8932,7 +8932,7 @@ comp_qfqr(
   k_f = 63000000;
   Corr = mixture + sc[6] + (5) * sc[7] + sc[15] + (0.5) * sc[20] + sc[21] +
          (2) * sc[27];
-  redP = Corr / k_f * 2.7e+26 * exp(-6.3 * logT - (1559.97166399463) * invT);
+  redP = Corr / k_f * 2.7e+26 * exp(-6.3 * logT - (1559.98055384617) * invT);
   F = redP / (1.0 + redP);
   logPred = log10(redP);
   logFcent = log10(
@@ -8949,7 +8949,7 @@ comp_qfqr(
                      : exp(-(g_RT[4] + g_RT[14] - g_RT[19]))) *
             (refC);
   // reaction 88:  CH3 + OH <=> CH2 + H2O
-  k_f = 56 * exp((1.6) * logT - (2727.43432866158) * invT);
+  k_f = 56 * exp((1.6) * logT - (2727.44987156331) * invT);
   qf[105] *= k_f;
   qr[105] *= k_f * (kc_fast ? (ge[4] * ge[14] * inv_ge[12] * inv_ge[7])
                             : exp(-(g_RT[4] - g_RT[7] - g_RT[12] + g_RT[14])));
@@ -8959,12 +8959,12 @@ comp_qfqr(
   qr[106] *= k_f * (kc_fast ? (ge[4] * ge[14] * inv_ge[13] * inv_ge[7])
                             : exp(-(g_RT[4] - g_RT[7] - g_RT[13] + g_RT[14])));
   // reaction 90:  CH3 + O2 <=> CH3O + O
-  k_f = 30830000 * exp(-(14492.6399751759) * invT);
+  k_f = 30830000 * exp(-(14492.7225647645) * invT);
   qf[107] *= k_f;
   qr[107] *= k_f * (kc_fast ? (ge[9] * inv_ge[18] * ge[14] * inv_ge[3])
                             : exp(-(-g_RT[3] + g_RT[9] + g_RT[14] - g_RT[18])));
   // reaction 91:  CH3 + O2 <=> CH2O + OH
-  k_f = 36000 * exp(-(4498.75699229419) * invT);
+  k_f = 36000 * exp(-(4498.78262947897) * invT);
   qf[108] *= k_f;
   qr[108] *= k_f * (kc_fast ? (inv_ge[4] * ge[9] * ge[14] * inv_ge[17])
                             : exp(-(-g_RT[4] + g_RT[9] + g_RT[14] - g_RT[17])));
@@ -8979,7 +8979,7 @@ comp_qfqr(
   qr[110] *= k_f * (kc_fast ? (inv_ge[4] * ge[5] * inv_ge[18] * ge[14])
                             : exp(-(-g_RT[4] + g_RT[5] + g_RT[14] - g_RT[18])));
   // reaction 94:  CH3 + H2O2 <=> CH4 + HO2
-  k_f = 0.0245 * exp((2.47) * logT - (2606.66232886845) * invT);
+  k_f = 0.0245 * exp((2.47) * logT - (2606.67718352361) * invT);
   qf[111] *= k_f;
   qr[111] *= k_f * (kc_fast ? (inv_ge[5] * ge[14] * ge[8] * inv_ge[15])
                             : exp(-(-g_RT[5] + g_RT[8] + g_RT[14] - g_RT[15])));
@@ -9002,7 +9002,7 @@ comp_qfqr(
     k_f * (kc_fast ? (ge[16] * inv_ge[15] * ge[14] * inv_ge[20])
                    : exp(-(g_RT[14] - g_RT[15] + g_RT[16] - g_RT[20])));
   // reaction 98:  CH2O + CH3 <=> CH4 + HCO
-  k_f = 0.00332 * exp((2.81) * logT - (2948.84966161566) * invT);
+  k_f = 0.00332 * exp((2.81) * logT - (2948.86646630277) * invT);
   qf[115] *= k_f;
   qr[115] *=
     k_f * (kc_fast ? (inv_ge[16] * ge[14] * ge[17] * inv_ge[15])
@@ -9014,16 +9014,16 @@ comp_qfqr(
     k_f * (kc_fast ? (inv_ge[25] * ge[14] * inv_ge[2] * ge[12])
                    : exp(-(-g_RT[2] + g_RT[12] + g_RT[14] - g_RT[25])));
   // reaction 100:  CH2* + CH3 <=> C2H4 + H
-  k_f = 12000000 * exp(-(-286.83349950869) * invT);
+  k_f = 12000000 * exp(-(-286.835134094297) * invT);
   qf[117] *= k_f;
   qr[117] *=
     k_f * (kc_fast ? (inv_ge[25] * ge[14] * inv_ge[2] * ge[13])
                    : exp(-(-g_RT[2] + g_RT[13] + g_RT[14] - g_RT[25])));
   // reaction 101:  2 CH3 (+M) <=> C2H6 (+M)
-  k_f = 21200000000 * exp((-0.97) * logT - (311.994332798926) * invT);
+  k_f = 21200000000 * exp((-0.97) * logT - (311.996110769235) * invT);
   Corr = mixture + (-0.3) * sc[0] + sc[6] + (5) * sc[7] + sc[15] +
          (0.5) * sc[20] + sc[21] + (2) * sc[27];
-  redP = Corr / k_f * 1.77e+38 * exp(-9.67 * logT - (3130.00766130536) * invT);
+  redP = Corr / k_f * 1.77e+38 * exp(-9.67 * logT - (3130.02549836232) * invT);
   F = redP / (1.0 + redP);
   logPred = log10(redP);
   logFcent = log10(
@@ -9040,7 +9040,7 @@ comp_qfqr(
                      : exp(-(2.000000 * g_RT[14] - g_RT[27]))) *
             (refC);
   // reaction 102:  2 CH3 <=> C2H5 + H
-  k_f = 4990000 * exp((0.1) * logT - (5334.09665753003) * invT);
+  k_f = 4990000 * exp((0.1) * logT - (5334.12705508692) * invT);
   qf[118] *= k_f;
   qr[118] *=
     k_f * (kc_fast ? (inv_ge[26] * ge[14] * ge[14] * inv_ge[2])
@@ -9055,7 +9055,7 @@ comp_qfqr(
   k_f = 50000000;
   Corr = mixture + sc[6] + (5) * sc[7] + sc[15] + (0.5) * sc[20] + sc[21] +
          (2) * sc[27];
-  redP = Corr / k_f * 8.6e+16 * exp(-4 * logT - (1522.23041405928) * invT);
+  redP = Corr / k_f * 8.6e+16 * exp(-4 * logT - (1522.23908883377) * invT);
   F = redP / (1.0 + redP);
   logPred = log10(redP);
   logFcent = log10(
@@ -9097,22 +9097,22 @@ comp_qfqr(
   qr[124] *= k_f * (kc_fast ? (ge[4] * ge[18] * inv_ge[17] * inv_ge[7])
                             : exp(-(g_RT[4] - g_RT[7] - g_RT[17] + g_RT[18])));
   // reaction 110:  CH3O + O2 <=> CH2O + HO2
-  k_f = 4.28e-19 * exp((7.6) * logT - (-1776.35483029066) * invT);
+  k_f = 4.28e-19 * exp((7.6) * logT - (-1776.36495325064) * invT);
   qf[125] *= k_f;
   qr[125] *= k_f * (kc_fast ? (ge[9] * inv_ge[5] * ge[18] * inv_ge[17])
                             : exp(-(-g_RT[5] + g_RT[9] - g_RT[17] + g_RT[18])));
   // reaction 111:  CH4 + H <=> CH3 + H2
-  k_f = 660 * exp((1.62) * logT - (5454.86865732316) * invT);
+  k_f = 660 * exp((1.62) * logT - (5454.89974312662) * invT);
   qf[126] *= k_f;
   qr[126] *= k_f * (kc_fast ? (inv_ge[6] * ge[15] * ge[2] * inv_ge[14])
                             : exp(-(g_RT[2] - g_RT[6] - g_RT[14] + g_RT[15])));
   // reaction 112:  CH4 + O <=> CH3 + OH
-  k_f = 1020 * exp((1.5) * logT - (4327.66332592059) * invT);
+  k_f = 1020 * exp((1.5) * logT - (4327.68798808939) * invT);
   qf[127] *= k_f;
   qr[127] *= k_f * (kc_fast ? (inv_ge[4] * ge[15] * ge[3] * inv_ge[14])
                             : exp(-(g_RT[3] - g_RT[4] - g_RT[14] + g_RT[15])));
   // reaction 113:  CH4 + OH <=> CH3 + H2O
-  k_f = 100 * exp((1.6) * logT - (1570.03599731073) * invT);
+  k_f = 100 * exp((1.6) * logT - (1570.04494451615) * invT);
   qf[128] *= k_f;
   qr[128] *= k_f * (kc_fast ? (ge[4] * inv_ge[14] * inv_ge[7] * ge[15])
                             : exp(-(g_RT[4] - g_RT[7] - g_RT[14] + g_RT[15])));
@@ -9123,34 +9123,34 @@ comp_qfqr(
     k_f * (kc_fast ? (inv_ge[25] * ge[15] * inv_ge[2] * ge[11])
                    : exp(-(-g_RT[2] + g_RT[11] + g_RT[15] - g_RT[25])));
   // reaction 115:  CH2 + CH4 <=> 2 CH3
-  k_f = 2.46 * exp((2) * logT - (4161.60182620503) * invT);
+  k_f = 2.46 * exp((2) * logT - (4161.62554203479) * invT);
   qf[130] *= k_f;
   qr[130] *=
     k_f * (kc_fast ? (inv_ge[14] * inv_ge[14] * ge[12] * ge[15])
                    : exp(-(g_RT[12] - 2.000000 * g_RT[14] + g_RT[15])));
   // reaction 116:  CH2* + CH4 <=> 2 CH3
-  k_f = 16000000 * exp(-(-286.83349950869) * invT);
+  k_f = 16000000 * exp(-(-286.835134094297) * invT);
   qf[131] *= k_f;
   qr[131] *=
     k_f * (kc_fast ? (inv_ge[14] * inv_ge[14] * ge[13] * ge[15])
                    : exp(-(g_RT[13] - 2.000000 * g_RT[14] + g_RT[15])));
   // reaction 117:  CH3OH + H <=> CH3O + H2
-  k_f = 4.2 * exp((2.1) * logT - (2450.66516246898) * invT);
+  k_f = 4.2 * exp((2.1) * logT - (2450.67912813899) * invT);
   qf[132] *= k_f;
   qr[132] *= k_f * (kc_fast ? (inv_ge[6] * inv_ge[18] * ge[19] * ge[2])
                             : exp(-(g_RT[2] - g_RT[6] - g_RT[18] + g_RT[19])));
   // reaction 118:  CH3OH + O <=> CH3O + OH
-  k_f = 0.13 * exp((2.5) * logT - (2516.0833290236) * invT);
+  k_f = 0.13 * exp((2.5) * logT - (2516.09766749383) * invT);
   qf[133] *= k_f;
   qr[133] *= k_f * (kc_fast ? (inv_ge[4] * inv_ge[18] * ge[19] * ge[3])
                             : exp(-(g_RT[3] - g_RT[4] - g_RT[18] + g_RT[19])));
   // reaction 119:  CH3OH + OH <=> CH3O + H2O
-  k_f = 6.3 * exp((2) * logT - (754.82499870708) * invT);
+  k_f = 6.3 * exp((2) * logT - (754.829300248149) * invT);
   qf[134] *= k_f;
   qr[134] *= k_f * (kc_fast ? (ge[4] * inv_ge[18] * ge[19] * inv_ge[7])
                             : exp(-(g_RT[4] - g_RT[7] - g_RT[18] + g_RT[19])));
   // reaction 120:  CH3 + CH3OH <=> CH3O + CH4
-  k_f = 10 * exp((1.5) * logT - (5001.97365809891) * invT);
+  k_f = 10 * exp((1.5) * logT - (5002.00216297773) * invT);
   qf[135] *= k_f;
   qr[135] *=
     k_f * (kc_fast ? (inv_ge[18] * ge[14] * ge[19] * inv_ge[15])
@@ -9169,7 +9169,7 @@ comp_qfqr(
              : exp(-(-g_RT[2] + g_RT[3] - 2.000000 * g_RT[20] + g_RT[28]))) *
     (refCinv);
   // reaction 123:  HCCO + O2 <=> 2 CO + OH
-  k_f = 1600000 * exp(-(429.747032597231) * invT);
+  k_f = 1600000 * exp(-(429.749481607946) * invT);
   qf[138] *= k_f;
   qr[138] *=
     k_f *
@@ -9197,20 +9197,20 @@ comp_qfqr(
              : exp(-(-2.000000 * g_RT[20] - g_RT[22] + 2.000000 * g_RT[28]))) *
     (refCinv);
   // reaction 127:  C2H2 (+M) <=> H2CC (+M)
-  k_f = 800000000000000 * exp((-0.52) * logT - (25538.2457895895) * invT);
+  k_f = 800000000000000 * exp((-0.52) * logT - (25538.3913250624) * invT);
   Corr = mixture + sc[6] + (5) * sc[7] + sc[15] + (0.5) * sc[20] + sc[21] +
          (1.5) * sc[22] + (1.5) * sc[25] + (2) * sc[27];
   redP =
-    Corr / k_f * 2450000000 * exp(-0.64 * logT - (25009.8682904946) * invT);
+    Corr / k_f * 2450000000 * exp(-0.64 * logT - (25010.0108148887) * invT);
   Corr = redP / (1. + redP);
   qf[26] *= Corr * k_f;
   qr[26] *= Corr * k_f *
             (kc_fast ? (ge[22] * inv_ge[23]) : exp(-(g_RT[22] - g_RT[23])));
   // reaction 128:  C2H3 (+M) <=> C2H2 + H (+M)
-  k_f = 386000000 * exp((1.62) * logT - (18643.2716780664) * invT);
+  k_f = 386000000 * exp((1.62) * logT - (18643.377920969) * invT);
   Corr = mixture + (-0.3) * sc[0] + sc[6] + (5) * sc[7] + sc[15] +
          (0.5) * sc[20] + sc[21] + (2) * sc[22] + (2) * sc[25] + (2) * sc[27];
-  redP = Corr / k_f * 2.565e+21 * exp(-3.4 * logT - (18014.5125184767) * invT);
+  redP = Corr / k_f * 2.565e+21 * exp(-3.4 * logT - (18014.6151782529) * invT);
   F = redP / (1.0 + redP);
   logPred = log10(redP);
   logFcent = log10(
@@ -9227,39 +9227,39 @@ comp_qfqr(
                      : exp(-(-g_RT[2] - g_RT[22] + g_RT[24]))) *
             (refCinv);
   // reaction 129:  C2H2 + O <=> CH2 + CO
-  k_f = 4.08 * exp((2) * logT - (956.111665028967) * invT);
+  k_f = 4.08 * exp((2) * logT - (956.117113647655) * invT);
   qf[142] *= k_f;
   qr[142] *= k_f * (kc_fast ? (inv_ge[20] * inv_ge[12] * ge[22] * ge[3])
                             : exp(-(g_RT[3] - g_RT[12] - g_RT[20] + g_RT[22])));
   // reaction 130:  C2H2 + O <=> H + HCCO
-  k_f = 16.32 * exp((2) * logT - (956.111665028967) * invT);
+  k_f = 16.32 * exp((2) * logT - (956.117113647655) * invT);
   qf[143] *= k_f;
   qr[143] *= k_f * (kc_fast ? (inv_ge[28] * ge[22] * inv_ge[2] * ge[3])
                             : exp(-(-g_RT[2] + g_RT[3] + g_RT[22] - g_RT[28])));
   // reaction 131:  C2H2 + OH <=> CH2CO + H
-  k_f = 2.18e-10 * exp((4.5) * logT - (-503.21666580472) * invT);
+  k_f = 2.18e-10 * exp((4.5) * logT - (-503.219533498766) * invT);
   qf[144] *= k_f;
   qr[144] *= k_f * (kc_fast ? (ge[4] * inv_ge[29] * inv_ge[2] * ge[22])
                             : exp(-(-g_RT[2] + g_RT[4] + g_RT[22] - g_RT[29])));
   // reaction 132:  C2H2 + OH <=> CH3 + CO
-  k_f = 4.83e-10 * exp((4) * logT - (-1006.43333160944) * invT);
+  k_f = 4.83e-10 * exp((4) * logT - (-1006.43906699753) * invT);
   qf[145] *= k_f;
   qr[145] *= k_f * (kc_fast ? (ge[4] * inv_ge[14] * inv_ge[20] * ge[22])
                             : exp(-(g_RT[4] - g_RT[14] - g_RT[20] + g_RT[22])));
   // reaction 133:  C2H2 + HCO <=> C2H3 + CO
-  k_f = 10 * exp((2) * logT - (3019.29999482832) * invT);
+  k_f = 10 * exp((2) * logT - (3019.31720099259) * invT);
   qf[146] *= k_f;
   qr[146] *=
     k_f * (kc_fast ? (ge[16] * inv_ge[20] * inv_ge[24] * ge[22])
                    : exp(-(g_RT[16] - g_RT[20] + g_RT[22] - g_RT[24])));
   // reaction 134:  C2H2 + CH3 <=> H + aC3H4
-  k_f = 5140 * exp((0.86) * logT - (11147.758797572) * invT);
+  k_f = 5140 * exp((0.86) * logT - (11147.8223255982) * invT);
   qf[147] *= k_f;
   qr[147] *=
     k_f * (kc_fast ? (ge[14] * inv_ge[32] * ge[22] * inv_ge[2])
                    : exp(-(-g_RT[2] + g_RT[14] + g_RT[22] - g_RT[32])));
   // reaction 135:  C2H2 + CH3 <=> aC3H5
-  k_f = 2.68e+47 * exp((-12.82) * logT - (17979.9314692026) * invT);
+  k_f = 2.68e+47 * exp((-12.82) * logT - (17980.0339319109) * invT);
   qf[148] *= k_f;
   qr[148] *= k_f *
              (kc_fast ? (ge[14] * inv_ge[33] * ge[22])
@@ -9281,10 +9281,10 @@ comp_qfqr(
   qr[151] *= k_f * (kc_fast ? (ge[9] * inv_ge[16] * inv_ge[16] * ge[23])
                             : exp(-(g_RT[9] - 2.000000 * g_RT[16] + g_RT[23])));
   // reaction 139:  CH2CO + H (+M) <=> CH2CHO (+M)
-  k_f = 330000000 * exp((-0.06) * logT - (4277.34165934012) * invT);
+  k_f = 330000000 * exp((-0.06) * logT - (4277.36603473951) * invT);
   Corr = mixture + (-0.3) * sc[0] + sc[6] + (5) * sc[7] + sc[15] +
          (0.5) * sc[20] + sc[21] + (2) * sc[22] + (2) * sc[25] + (2) * sc[27];
-  redP = Corr / k_f * 3.8e+29 * exp(-7.64 * logT - (5988.27832307616) * invT);
+  redP = Corr / k_f * 3.8e+29 * exp(-7.64 * logT - (5988.31244863531) * invT);
   F = redP / (1.0 + redP);
   logPred = log10(redP);
   logFcent = log10(
@@ -9301,35 +9301,35 @@ comp_qfqr(
                      : exp(-(g_RT[2] + g_RT[29] - g_RT[30]))) *
             (refC);
   // reaction 140:  CH2CO + H <=> H2 + HCCO
-  k_f = 50000000 * exp(-(4025.73332643776) * invT);
+  k_f = 50000000 * exp(-(4025.75626799013) * invT);
   qf[152] *= k_f;
   qr[152] *= k_f * (kc_fast ? (inv_ge[6] * ge[29] * ge[2] * inv_ge[28])
                             : exp(-(g_RT[2] - g_RT[6] - g_RT[28] + g_RT[29])));
   // reaction 141:  CH2CO + H <=> CH3 + CO
-  k_f = 1500 * exp((1.43) * logT - (1353.6528310147) * invT);
+  k_f = 1500 * exp((1.43) * logT - (1353.66054511168) * invT);
   qf[153] *= k_f;
   qr[153] *= k_f * (kc_fast ? (ge[29] * inv_ge[20] * inv_ge[14] * ge[2])
                             : exp(-(g_RT[2] - g_RT[14] - g_RT[20] + g_RT[29])));
   // reaction 142:  CH2CO + O <=> HCCO + OH
-  k_f = 10000000 * exp(-(4025.73332643776) * invT);
+  k_f = 10000000 * exp(-(4025.75626799013) * invT);
   qf[154] *= k_f;
   qr[154] *= k_f * (kc_fast ? (inv_ge[4] * ge[29] * ge[3] * inv_ge[28])
                             : exp(-(g_RT[3] - g_RT[4] - g_RT[28] + g_RT[29])));
   // reaction 143:  CH2CO + O <=> CH2 + CO2
-  k_f = 1750000 * exp(-(679.342498836372) * invT);
+  k_f = 1750000 * exp(-(679.346370223334) * invT);
   qf[155] *= k_f;
   qr[155] *= k_f * (kc_fast ? (ge[29] * ge[3] * inv_ge[12] * inv_ge[21])
                             : exp(-(g_RT[3] - g_RT[12] - g_RT[21] + g_RT[29])));
   // reaction 144:  CH2CO + OH <=> H2O + HCCO
-  k_f = 7500000 * exp(-(1006.43333160944) * invT);
+  k_f = 7500000 * exp(-(1006.43906699753) * invT);
   qf[156] *= k_f;
   qr[156] *= k_f * (kc_fast ? (ge[4] * inv_ge[28] * inv_ge[7] * ge[29])
                             : exp(-(g_RT[4] - g_RT[7] - g_RT[28] + g_RT[29])));
   // reaction 145:  C2H3 + H (+M) <=> C2H4 (+M)
-  k_f = 6080000 * exp((0.27) * logT - (140.900666425322) * invT);
+  k_f = 6080000 * exp((0.27) * logT - (140.901469379654) * invT);
   Corr = mixture + (-0.3) * sc[0] + sc[6] + (5) * sc[7] + sc[15] +
          (0.5) * sc[20] + sc[21] + (2) * sc[22] + (2) * sc[25] + (2) * sc[27];
-  redP = Corr / k_f * 1.4e+18 * exp(-3.86 * logT - (1670.67933047167) * invT);
+  redP = Corr / k_f * 1.4e+18 * exp(-3.86 * logT - (1670.6888512159) * invT);
   F = redP / (1.0 + redP);
   logPred = log10(redP);
   logFcent = log10(
@@ -9371,17 +9371,17 @@ comp_qfqr(
   qr[161] *= k_f * (kc_fast ? (ge[4] * inv_ge[22] * ge[24] * inv_ge[7])
                             : exp(-(g_RT[4] - g_RT[7] - g_RT[22] + g_RT[24])));
   // reaction 151:  C2H3 + O2 <=> C2H2 + HO2
-  k_f = 1.34 * exp((1.61) * logT - (-192.93326966953) * invT);
+  k_f = 1.34 * exp((1.61) * logT - (-192.934369143427) * invT);
   qf[162] *= k_f;
   qr[162] *= k_f * (kc_fast ? (ge[9] * inv_ge[5] * inv_ge[22] * ge[24])
                             : exp(-(-g_RT[5] + g_RT[9] - g_RT[22] + g_RT[24])));
   // reaction 152:  C2H3 + O2 <=> CH2CHO + O
-  k_f = 300000 * exp((0.29) * logT - (5.53538332385192) * invT);
+  k_f = 300000 * exp((0.29) * logT - (5.53541486848642) * invT);
   qf[163] *= k_f;
   qr[163] *= k_f * (kc_fast ? (ge[9] * inv_ge[30] * inv_ge[3] * ge[24])
                             : exp(-(-g_RT[3] + g_RT[9] + g_RT[24] - g_RT[30])));
   // reaction 153:  C2H3 + O2 <=> CH2O + HCO
-  k_f = 46000000000 * exp((-1.39) * logT - (508.248832462767) * invT);
+  k_f = 46000000000 * exp((-1.39) * logT - (508.251728833753) * invT);
   qf[164] *= k_f;
   qr[164] *= k_f * (kc_fast ? (ge[9] * inv_ge[16] * inv_ge[17] * ge[24])
                             : exp(-(g_RT[9] - g_RT[16] - g_RT[17] + g_RT[24])));
@@ -9391,7 +9391,7 @@ comp_qfqr(
   qr[165] *= k_f * (kc_fast ? (inv_ge[4] * ge[5] * inv_ge[30] * ge[24])
                             : exp(-(-g_RT[4] + g_RT[5] + g_RT[24] - g_RT[30])));
   // reaction 155:  C2H3 + H2O2 <=> C2H4 + HO2
-  k_f = 12100 * exp(-(-299.917132819613) * invT);
+  k_f = 12100 * exp(-(-299.918841965264) * invT);
   qf[166] *= k_f;
   qr[166] *= k_f * (kc_fast ? (inv_ge[5] * ge[8] * ge[24] * inv_ge[25])
                             : exp(-(-g_RT[5] + g_RT[8] + g_RT[24] - g_RT[25])));
@@ -9411,7 +9411,7 @@ comp_qfqr(
   k_f = 25000000;
   Corr = mixture + (-0.3) * sc[0] + sc[6] + (5) * sc[7] + sc[15] +
          (0.5) * sc[20] + sc[21] + (2) * sc[22] + (2) * sc[25] + (2) * sc[27];
-  redP = Corr / k_f * 4.27e+46 * exp(-11.94 * logT - (4916.32618157895) * invT);
+  redP = Corr / k_f * 4.27e+46 * exp(-11.94 * logT - (4916.35419837624) * invT);
   F = redP / (1.0 + redP);
   logPred = log10(redP);
   logFcent = log10(
@@ -9428,7 +9428,7 @@ comp_qfqr(
                      : exp(-(g_RT[14] + g_RT[24] - g_RT[34]))) *
             (refC);
   // reaction 159:  C2H3 + CH3 <=> H + aC3H5
-  k_f = 1.5e+18 * exp((-2.83) * logT - (9368.88788395227) * invT);
+  k_f = 1.5e+18 * exp((-2.83) * logT - (9368.94127468002) * invT);
   qf[169] *= k_f;
   qr[169] *=
     k_f * (kc_fast ? (ge[14] * inv_ge[33] * inv_ge[2] * ge[24])
@@ -9440,7 +9440,7 @@ comp_qfqr(
     k_f * (kc_fast ? (inv_ge[25] * inv_ge[22] * ge[24] * ge[24])
                    : exp(-(-g_RT[22] + 2.000000 * g_RT[24] - g_RT[25])));
   // reaction 161:  CH2CHO <=> CH3 + CO
-  k_f = 7.8e+41 * exp((-9.147) * logT - (23600.8616262414) * invT);
+  k_f = 7.8e+41 * exp((-9.147) * logT - (23600.9961210921) * invT);
   qf[171] *= k_f;
   qr[171] *= k_f *
              (kc_fast ? (ge[30] * inv_ge[20] * inv_ge[14])
@@ -9452,17 +9452,17 @@ comp_qfqr(
   qr[172] *= k_f * (kc_fast ? (inv_ge[16] * ge[30] * inv_ge[14] * ge[2])
                             : exp(-(g_RT[2] - g_RT[14] - g_RT[16] + g_RT[30])));
   // reaction 163:  CH2CHO + H <=> CH2CO + H2
-  k_f = 20000000 * exp(-(2012.86666321888) * invT);
+  k_f = 20000000 * exp(-(2012.87813399506) * invT);
   qf[173] *= k_f;
   qr[173] *= k_f * (kc_fast ? (inv_ge[6] * ge[30] * inv_ge[29] * ge[2])
                             : exp(-(g_RT[2] - g_RT[6] - g_RT[29] + g_RT[30])));
   // reaction 164:  CH2CHO + O <=> CH2CO + OH
-  k_f = 20000000 * exp(-(2012.86666321888) * invT);
+  k_f = 20000000 * exp(-(2012.87813399506) * invT);
   qf[174] *= k_f;
   qr[174] *= k_f * (kc_fast ? (inv_ge[4] * ge[30] * inv_ge[29] * ge[3])
                             : exp(-(g_RT[3] - g_RT[4] - g_RT[29] + g_RT[30])));
   // reaction 165:  CH2CHO + OH <=> CH2CO + H2O
-  k_f = 10000000 * exp(-(1006.43333160944) * invT);
+  k_f = 10000000 * exp(-(1006.43906699753) * invT);
   qf[175] *= k_f;
   qr[175] *= k_f * (kc_fast ? (ge[4] * inv_ge[29] * ge[30] * inv_ge[7])
                             : exp(-(g_RT[4] - g_RT[7] - g_RT[29] + g_RT[30])));
@@ -9480,34 +9480,34 @@ comp_qfqr(
              : exp(-(-g_RT[4] + g_RT[9] - g_RT[17] - g_RT[20] + g_RT[30]))) *
     (refCinv);
   // reaction 168:  CH2OCH2 <=> CH3 + HCO
-  k_f = 36300000000000 * exp(-(28783.99328403) * invT);
+  k_f = 36300000000000 * exp(-(28784.1573161294) * invT);
   qf[178] *= k_f;
   qr[178] *= k_f *
              (kc_fast ? (inv_ge[16] * ge[31] * inv_ge[14])
                       : exp(-(-g_RT[14] - g_RT[16] + g_RT[31]))) *
              (refCinv);
   // reaction 169:  CH2OCH2 <=> CH4 + CO
-  k_f = 12100000000000 * exp(-(28783.99328403) * invT);
+  k_f = 12100000000000 * exp(-(28784.1573161294) * invT);
   qf[179] *= k_f;
   qr[179] *= k_f *
              (kc_fast ? (ge[31] * inv_ge[15] * inv_ge[20])
                       : exp(-(-g_RT[15] - g_RT[20] + g_RT[31]))) *
              (refCinv);
   // reaction 170:  CH2OCH2 + H <=> C2H3 + H2O
-  k_f = 5000 * exp(-(2516.0833290236) * invT);
+  k_f = 5000 * exp(-(2516.09766749383) * invT);
   qf[180] *= k_f;
   qr[180] *= k_f * (kc_fast ? (ge[31] * ge[2] * inv_ge[24] * inv_ge[7])
                             : exp(-(g_RT[2] - g_RT[7] - g_RT[24] + g_RT[31])));
   // reaction 171:  CH2OCH2 + H <=> C2H4 + OH
-  k_f = 95100 * exp(-(2516.0833290236) * invT);
+  k_f = 95100 * exp(-(2516.09766749383) * invT);
   qf[181] *= k_f;
   qr[181] *= k_f * (kc_fast ? (inv_ge[4] * ge[31] * ge[2] * inv_ge[25])
                             : exp(-(g_RT[2] - g_RT[4] - g_RT[25] + g_RT[31])));
   // reaction 172:  C2H4 (+M) <=> H2 + H2CC (+M)
-  k_f = 8000000000000 * exp((0.44) * logT - (44670.543423485) * invT);
+  k_f = 8000000000000 * exp((0.44) * logT - (44670.7979886854) * invT);
   Corr = mixture + (-0.3) * sc[0] + sc[6] + (5) * sc[7] + sc[15] +
          (0.5) * sc[20] + sc[21] + (2) * sc[27];
-  redP = Corr / k_f * 7e+44 * exp(-9.31 * logT - (50251.2162472593) * invT);
+  redP = Corr / k_f * 7e+44 * exp(-9.31 * logT - (50251.5026151867) * invT);
   F = redP / (1.0 + redP);
   logPred = log10(redP);
   logFcent = log10(
@@ -9524,11 +9524,11 @@ comp_qfqr(
                      : exp(-(-g_RT[6] - g_RT[23] + g_RT[25]))) *
             (refCinv);
   // reaction 173:  C2H4 + H (+M) <=> C2H5 (+M)
-  k_f = 1367 * exp((1.463) * logT - (681.858582165395) * invT);
+  k_f = 1367 * exp((1.463) * logT - (681.862467890828) * invT);
   Corr = mixture + (-0.3) * sc[0] + sc[6] + (5) * sc[7] + sc[15] +
          (0.5) * sc[20] + sc[21] + (2) * sc[27];
   redP =
-    Corr / k_f * 2.027e+27 * exp(-6.642 * logT - (2903.05694502743) * invT);
+    Corr / k_f * 2.027e+27 * exp(-6.642 * logT - (2903.07348875438) * invT);
   F = redP / (1.0 + redP);
   logPred = log10(redP);
   logFcent = log10(
@@ -9545,32 +9545,32 @@ comp_qfqr(
                      : exp(-(g_RT[2] + g_RT[25] - g_RT[26]))) *
             (refC);
   // reaction 174:  C2H4 + H <=> C2H3 + H2
-  k_f = 50.7 * exp((1.9) * logT - (6516.65582217112) * invT);
+  k_f = 50.7 * exp((1.9) * logT - (6516.69295880902) * invT);
   qf[182] *= k_f;
   qr[182] *= k_f * (kc_fast ? (inv_ge[6] * ge[25] * inv_ge[24] * ge[2])
                             : exp(-(g_RT[2] - g_RT[6] - g_RT[24] + g_RT[25])));
   // reaction 175:  C2H4 + O <=> C2H3 + OH
-  k_f = 15.1 * exp((1.9) * logT - (1882.03033010965) * invT);
+  k_f = 15.1 * exp((1.9) * logT - (1882.04105528538) * invT);
   qf[183] *= k_f;
   qr[183] *= k_f * (kc_fast ? (inv_ge[4] * ge[25] * ge[3] * inv_ge[24])
                             : exp(-(g_RT[3] - g_RT[4] - g_RT[24] + g_RT[25])));
   // reaction 176:  C2H4 + O <=> CH3 + HCO
-  k_f = 19.2 * exp((1.83) * logT - (110.707666477038) * invT);
+  k_f = 19.2 * exp((1.83) * logT - (110.708297369728) * invT);
   qf[184] *= k_f;
   qr[184] *= k_f * (kc_fast ? (inv_ge[16] * ge[25] * inv_ge[14] * ge[3])
                             : exp(-(g_RT[3] - g_RT[14] - g_RT[16] + g_RT[25])));
   // reaction 177:  C2H4 + O <=> CH2 + CH2O
-  k_f = 0.384 * exp((1.83) * logT - (110.707666477038) * invT);
+  k_f = 0.384 * exp((1.83) * logT - (110.708297369728) * invT);
   qf[185] *= k_f;
   qr[185] *= k_f * (kc_fast ? (ge[25] * inv_ge[17] * inv_ge[12] * ge[3])
                             : exp(-(g_RT[3] - g_RT[12] - g_RT[17] + g_RT[25])));
   // reaction 178:  C2H4 + OH <=> C2H3 + H2O
-  k_f = 3.6 * exp((2) * logT - (1258.0416645118) * invT);
+  k_f = 3.6 * exp((2) * logT - (1258.04883374691) * invT);
   qf[186] *= k_f;
   qr[186] *= k_f * (kc_fast ? (ge[4] * ge[25] * inv_ge[24] * inv_ge[7])
                             : exp(-(g_RT[4] - g_RT[7] - g_RT[24] + g_RT[25])));
   // reaction 179:  C2H4 + HCO <=> C2H5 + CO
-  k_f = 10 * exp((2) * logT - (4025.73332643776) * invT);
+  k_f = 10 * exp((2) * logT - (4025.75626799013) * invT);
   qf[187] *= k_f;
   qr[187] *=
     k_f * (kc_fast ? (ge[16] * inv_ge[26] * ge[25] * inv_ge[20])
@@ -9582,7 +9582,7 @@ comp_qfqr(
     k_f * (kc_fast ? (ge[25] * inv_ge[32] * inv_ge[2] * ge[11])
                    : exp(-(-g_RT[2] + g_RT[11] + g_RT[25] - g_RT[32])));
   // reaction 181:  C2H4 + CH2 <=> H + aC3H5
-  k_f = 20000000 * exp(-(3019.29999482832) * invT);
+  k_f = 20000000 * exp(-(3019.31720099259) * invT);
   qf[189] *= k_f;
   qr[189] *=
     k_f * (kc_fast ? (ge[25] * inv_ge[33] * ge[12] * inv_ge[2])
@@ -9600,33 +9600,33 @@ comp_qfqr(
     k_f * (kc_fast ? (ge[25] * inv_ge[33] * ge[13] * inv_ge[2])
                    : exp(-(-g_RT[2] + g_RT[13] + g_RT[25] - g_RT[33])));
   // reaction 184:  C2H4 + CH3 <=> C2H3 + CH4
-  k_f = 0.227 * exp((2) * logT - (4629.59332540342) * invT);
+  k_f = 0.227 * exp((2) * logT - (4629.61970818865) * invT);
   qf[192] *= k_f;
   qr[192] *=
     k_f * (kc_fast ? (ge[25] * inv_ge[15] * inv_ge[24] * ge[14])
                    : exp(-(g_RT[14] - g_RT[15] - g_RT[24] + g_RT[25])));
   // reaction 185:  C2H4 + CH3 <=> nC3H7
-  k_f = 330000 * exp(-(3874.76832669634) * invT);
+  k_f = 330000 * exp(-(3874.7904079405) * invT);
   qf[193] *= k_f;
   qr[193] *= k_f *
              (kc_fast ? (ge[25] * inv_ge[35] * ge[14])
                       : exp(-(g_RT[14] + g_RT[25] - g_RT[35]))) *
              (refC);
   // reaction 186:  C2H4 + O2 <=> C2H3 + HO2
-  k_f = 42200000 * exp(-(30595.573280927) * invT);
+  k_f = 42200000 * exp(-(30595.747636725) * invT);
   qf[194] *= k_f;
   qr[194] *= k_f * (kc_fast ? (ge[9] * inv_ge[5] * ge[25] * inv_ge[24])
                             : exp(-(-g_RT[5] + g_RT[9] - g_RT[24] + g_RT[25])));
   // reaction 187:  C2H4 + HO2 <=> CH2OCH2 + OH
-  k_f = 2820000 * exp(-(8605.00498526071) * invT);
+  k_f = 2820000 * exp(-(8605.0540228289) * invT);
   qf[195] *= k_f;
   qr[195] *= k_f * (kc_fast ? (inv_ge[4] * ge[25] * ge[5] * inv_ge[31])
                             : exp(-(-g_RT[4] + g_RT[5] + g_RT[25] - g_RT[31])));
   // reaction 188:  C2H5 + H (+M) <=> C2H6 (+M)
-  k_f = 521000000000 * exp((-0.99) * logT - (795.082331971457) * invT);
+  k_f = 521000000000 * exp((-0.99) * logT - (795.08686292805) * invT);
   Corr = mixture + (-0.3) * sc[0] + sc[6] + (5) * sc[7] + sc[15] +
          (0.5) * sc[20] + sc[21] + (2) * sc[27];
-  redP = Corr / k_f * 1.99e+29 * exp(-7.08 * logT - (3364.00341090455) * invT);
+  redP = Corr / k_f * 1.99e+29 * exp(-7.08 * logT - (3364.02258143925) * invT);
   F = redP / (1.0 + redP);
   logPred = log10(redP);
   logFcent = log10(
@@ -9676,7 +9676,7 @@ comp_qfqr(
              : exp(-(-g_RT[4] + g_RT[5] - g_RT[14] - g_RT[17] + g_RT[26]))) *
     (refCinv);
   // reaction 195:  C2H5 + H2O2 <=> C2H6 + HO2
-  k_f = 8700 * exp(-(490.133032493797) * invT);
+  k_f = 8700 * exp(-(490.135825627798) * invT);
   qf[202] *= k_f;
   qr[202] *= k_f * (kc_fast ? (inv_ge[5] * ge[26] * ge[8] * inv_ge[27])
                             : exp(-(-g_RT[5] + g_RT[8] + g_RT[26] - g_RT[27])));
@@ -9684,7 +9684,7 @@ comp_qfqr(
   k_f = 15000000;
   Corr = mixture + (-0.3) * sc[0] + sc[6] + (5) * sc[7] + sc[15] +
          (0.5) * sc[20] + sc[21] + (2) * sc[27];
-  redP = Corr / k_f * 1.55e+44 * exp(-11.79 * logT - (4521.1501339225) * invT);
+  redP = Corr / k_f * 1.55e+44 * exp(-11.79 * logT - (4521.17589871966) * invT);
   F = redP / (1.0 + redP);
   logPred = log10(redP);
   logFcent = log10(
@@ -9701,34 +9701,34 @@ comp_qfqr(
                      : exp(-(g_RT[24] + g_RT[26] - g_RT[36]))) *
             (refC);
   // reaction 197:  C2H3 + C2H5 <=> CH3 + aC3H5
-  k_f = 3.9e+26 * exp((-5.22) * logT - (9937.0194996458) * invT);
+  k_f = 3.9e+26 * exp((-5.22) * logT - (9937.07612800013) * invT);
   qf[203] *= k_f;
   qr[203] *=
     k_f * (kc_fast ? (ge[26] * inv_ge[14] * inv_ge[33] * ge[24])
                    : exp(-(-g_RT[14] + g_RT[24] + g_RT[26] - g_RT[33])));
   // reaction 198:  C2H6 + H <=> C2H5 + H2
-  k_f = 115 * exp((1.9) * logT - (3789.22149350954) * invT);
+  k_f = 115 * exp((1.9) * logT - (3789.24308724571) * invT);
   qf[204] *= k_f;
   qr[204] *= k_f * (kc_fast ? (inv_ge[6] * ge[27] * ge[2] * inv_ge[26])
                             : exp(-(g_RT[2] - g_RT[6] - g_RT[26] + g_RT[27])));
   // reaction 199:  C2H6 + O <=> C2H5 + OH
-  k_f = 89.8 * exp((1.92) * logT - (2863.30282842885) * invT);
+  k_f = 89.8 * exp((1.92) * logT - (2863.31914560798) * invT);
   qf[205] *= k_f;
   qr[205] *= k_f * (kc_fast ? (inv_ge[4] * ge[27] * ge[3] * inv_ge[26])
                             : exp(-(g_RT[3] - g_RT[4] - g_RT[26] + g_RT[27])));
   // reaction 200:  C2H6 + OH <=> C2H5 + H2O
-  k_f = 3.54 * exp((2.12) * logT - (437.798499250106) * invT);
+  k_f = 3.54 * exp((2.12) * logT - (437.800994143926) * invT);
   qf[206] *= k_f;
   qr[206] *= k_f * (kc_fast ? (ge[4] * inv_ge[26] * ge[27] * inv_ge[7])
                             : exp(-(g_RT[4] - g_RT[7] - g_RT[26] + g_RT[27])));
   // reaction 201:  C2H6 + CH2* <=> C2H5 + CH3
-  k_f = 40000000 * exp(-(-276.769166192596) * invT);
+  k_f = 40000000 * exp(-(-276.770743424321) * invT);
   qf[207] *= k_f;
   qr[207] *=
     k_f * (kc_fast ? (inv_ge[26] * inv_ge[14] * ge[13] * ge[27])
                    : exp(-(g_RT[13] - g_RT[14] - g_RT[26] + g_RT[27])));
   // reaction 202:  C2H6 + CH3 <=> C2H5 + CH4
-  k_f = 6.14 * exp((1.74) * logT - (5258.61415765932) * invT);
+  k_f = 6.14 * exp((1.74) * logT - (5258.6441250621) * invT);
   qf[208] *= k_f;
   qr[208] *=
     k_f * (kc_fast ? (inv_ge[26] * ge[14] * ge[27] * inv_ge[15])
@@ -9751,7 +9751,7 @@ comp_qfqr(
                      : exp(-(g_RT[9] + g_RT[14] - g_RT[43]))) *
             (refC);
   // reaction 204:  CH3O2 + HO2 <=> CH2O + H2O + O2
-  k_f = 18000 * exp(-(-720.103048766554) * invT);
+  k_f = 18000 * exp(-(-720.107152436734) * invT);
   qf[209] *= k_f;
   qr[209] *=
     k_f *
@@ -9759,7 +9759,7 @@ comp_qfqr(
              : exp(-(g_RT[5] - g_RT[7] - g_RT[9] - g_RT[17] + g_RT[43]))) *
     (refCinv);
   // reaction 205:  2 CH3O2 <=> CH2O + CH3OH + O2
-  k_f = 1046 * exp(-(-1806.04461357314) * invT);
+  k_f = 1046 * exp(-(-1806.05490572707) * invT);
   qf[210] *= k_f;
   qr[210] *=
     k_f *
@@ -9767,7 +9767,7 @@ comp_qfqr(
              : exp(-(-g_RT[9] - g_RT[17] - g_RT[19] + 2.000000 * g_RT[43]))) *
     (refCinv);
   // reaction 206:  2 CH3O2 <=> 2 CH3O + O2
-  k_f = 77410 * exp(-(-30.6962166140879) * invT);
+  k_f = 77410 * exp(-(-30.6963915434247) * invT);
   qf[211] *= k_f;
   qr[211] *=
     k_f *
@@ -9775,7 +9775,7 @@ comp_qfqr(
              : exp(-(-g_RT[9] - 2.000000 * g_RT[18] + 2.000000 * g_RT[43]))) *
     (refCinv);
   // reaction 207:  CH3 + CH3O2 <=> 2 CH3O
-  k_f = 1000000 * exp(-(-710.038715450459) * invT);
+  k_f = 1000000 * exp(-(-710.042761766759) * invT);
   qf[212] *= k_f;
   qr[212] *=
     k_f * (kc_fast ? (inv_ge[18] * ge[43] * inv_ge[18] * ge[14])
@@ -9796,14 +9796,14 @@ comp_qfqr(
   qr[215] *= k_f * (kc_fast ? (inv_ge[9] * ge[43] * inv_ge[18] * ge[3])
                             : exp(-(g_RT[3] - g_RT[9] - g_RT[18] + g_RT[43])));
   // reaction 211:  H + aC3H4 <=> aC3H5
-  k_f = 1.52e+53 * exp((-13.54) * logT - (13561.1859267714) * invT);
+  k_f = 1.52e+53 * exp((-13.54) * logT - (13561.2632082582) * invT);
   qf[216] *= k_f;
   qr[216] *= k_f *
              (kc_fast ? (inv_ge[33] * ge[32] * ge[2])
                       : exp(-(g_RT[2] + g_RT[32] - g_RT[33]))) *
              (refC);
   // reaction 212:  O + aC3H4 <=> C2H4 + CO
-  k_f = 20 * exp((1.8) * logT - (503.21666580472) * invT);
+  k_f = 20 * exp((1.8) * logT - (503.219533498766) * invT);
   qf[217] *= k_f;
   qr[217] *= k_f * (kc_fast ? (inv_ge[25] * ge[32] * inv_ge[20] * ge[3])
                             : exp(-(g_RT[3] - g_RT[20] - g_RT[25] + g_RT[32])));
@@ -9811,7 +9811,7 @@ comp_qfqr(
   k_f = 200000000;
   Corr = mixture + (-0.3) * sc[0] + sc[6] + (5) * sc[7] + sc[15] +
          (0.5) * sc[20] + sc[21] + (2) * sc[27];
-  redP = Corr / k_f * 1.33e+48 * exp(-12 * logT - (3003.09641818941) * invT);
+  redP = Corr / k_f * 1.33e+48 * exp(-12 * logT - (3003.11353201393) * invT);
   F = redP / (1.0 + redP);
   logPred = log10(redP);
   logFcent = log10(
@@ -9838,7 +9838,7 @@ comp_qfqr(
   qr[219] *= k_f * (kc_fast ? (ge[4] * inv_ge[32] * ge[33] * inv_ge[7])
                             : exp(-(g_RT[4] - g_RT[7] - g_RT[32] + g_RT[33])));
   // reaction 216:  O2 + aC3H5 <=> HO2 + aC3H4
-  k_f = 4990000000 * exp((-1.4) * logT - (11286.1433806683) * invT);
+  k_f = 4990000000 * exp((-1.4) * logT - (11286.2076973103) * invT);
   qf[220] *= k_f;
   qr[220] *= k_f * (kc_fast ? (ge[9] * inv_ge[5] * ge[33] * inv_ge[32])
                             : exp(-(-g_RT[5] + g_RT[9] - g_RT[32] + g_RT[33])));
@@ -9862,10 +9862,10 @@ comp_qfqr(
     k_f * (kc_fast ? (ge[16] * inv_ge[34] * ge[33] * inv_ge[20])
                    : exp(-(g_RT[16] - g_RT[20] + g_RT[33] - g_RT[34])));
   // reaction 220:  CH3 + aC3H5 (+M) <=> C4H81 (+M)
-  k_f = 100000000 * exp((-0.32) * logT - (-131.993731440578) * invT);
+  k_f = 100000000 * exp((-0.32) * logT - (-131.994483636726) * invT);
   Corr = mixture + (-0.3) * sc[0] + sc[6] + (5) * sc[7] + sc[15] +
          (0.5) * sc[20] + sc[21] + (2) * sc[27];
-  redP = Corr / k_f * 3.91e+48 * exp(-12.81 * logT - (3145.1041612795) * invT);
+  redP = Corr / k_f * 3.91e+48 * exp(-12.81 * logT - (3145.12208436729) * invT);
   F = redP / (1.0 + redP);
   logPred = log10(redP);
   logFcent = log10(
@@ -9882,16 +9882,16 @@ comp_qfqr(
                      : exp(-(g_RT[14] + g_RT[33] - g_RT[36]))) *
             (refC);
   // reaction 221:  CH3 + aC3H5 <=> CH4 + aC3H4
-  k_f = 3000000 * exp((-0.32) * logT - (-65.9213832204183) * invT);
+  k_f = 3000000 * exp((-0.32) * logT - (-65.9217588883383) * invT);
   qf[224] *= k_f;
   qr[224] *=
     k_f * (kc_fast ? (ge[14] * inv_ge[32] * ge[33] * inv_ge[15])
                    : exp(-(g_RT[14] - g_RT[15] - g_RT[32] + g_RT[33])));
   // reaction 222:  C3H6 + H (+M) <=> nC3H7 (+M)
-  k_f = 13300000 * exp(-(1640.83858218945) * invT);
+  k_f = 13300000 * exp(-(1640.84793287943) * invT);
   Corr = mixture + (-0.3) * sc[0] + sc[6] + (5) * sc[7] + sc[15] +
          (0.5) * sc[20] + sc[21] + (2) * sc[27];
-  redP = Corr / k_f * 6.26e+26 * exp(-6.66 * logT - (3522.51666063304) * invT);
+  redP = Corr / k_f * 6.26e+26 * exp(-6.66 * logT - (3522.53673449136) * invT);
   F = redP / (1.0 + redP);
   logPred = log10(redP);
   logFcent = log10(+exp(-T * 0.000763358778625954) + exp(-48097 * invT));
@@ -9906,17 +9906,17 @@ comp_qfqr(
                      : exp(-(g_RT[2] + g_RT[34] - g_RT[35]))) *
             (refC);
   // reaction 223:  C3H6 + H <=> C2H4 + CH3
-  k_f = 8e+15 * exp((-2.39) * logT - (5625.96232369677) * invT);
+  k_f = 8e+15 * exp((-2.39) * logT - (5625.9943845162) * invT);
   qf[225] *= k_f;
   qr[225] *= k_f * (kc_fast ? (inv_ge[25] * ge[34] * inv_ge[14] * ge[2])
                             : exp(-(g_RT[2] - g_RT[14] - g_RT[25] + g_RT[34])));
   // reaction 224:  C3H6 + H <=> H2 + aC3H5
-  k_f = 0.173 * exp((2.5) * logT - (1253.00949785375) * invT);
+  k_f = 0.173 * exp((2.5) * logT - (1253.01663841193) * invT);
   qf[226] *= k_f;
   qr[226] *= k_f * (kc_fast ? (inv_ge[6] * ge[34] * inv_ge[33] * ge[2])
                             : exp(-(g_RT[2] - g_RT[6] - g_RT[33] + g_RT[34])));
   // reaction 225:  C3H6 + O <=> CH2CO + CH3 + H
-  k_f = 80 * exp((1.65) * logT - (164.551849718143) * invT);
+  k_f = 80 * exp((1.65) * logT - (164.552787454096) * invT);
   qf[227] *= k_f;
   qr[227] *=
     k_f *
@@ -9924,33 +9924,33 @@ comp_qfqr(
              : exp(-(-g_RT[2] + g_RT[3] - g_RT[14] - g_RT[29] + g_RT[34]))) *
     (refCinv);
   // reaction 226:  C3H6 + O <=> C2H5 + HCO
-  k_f = 35 * exp((1.65) * logT - (-489.126599162188) * invT);
+  k_f = 35 * exp((1.65) * logT - (-489.1293865608) * invT);
   qf[228] *= k_f;
   qr[228] *= k_f * (kc_fast ? (inv_ge[16] * ge[34] * inv_ge[26] * ge[3])
                             : exp(-(g_RT[3] - g_RT[16] - g_RT[26] + g_RT[34])));
   // reaction 227:  C3H6 + O <=> OH + aC3H5
-  k_f = 180000 * exp((0.7) * logT - (2958.91399493175) * invT);
+  k_f = 180000 * exp((0.7) * logT - (2958.93085697274) * invT);
   qf[229] *= k_f;
   qr[229] *= k_f * (kc_fast ? (inv_ge[4] * ge[34] * inv_ge[33] * ge[3])
                             : exp(-(g_RT[3] - g_RT[4] - g_RT[33] + g_RT[34])));
   // reaction 228:  C3H6 + OH <=> H2O + aC3H5
-  k_f = 3.1 * exp((2) * logT - (-149.958566409806) * invT);
+  k_f = 3.1 * exp((2) * logT - (-149.959420982632) * invT);
   qf[230] *= k_f;
   qr[230] *= k_f * (kc_fast ? (ge[4] * inv_ge[33] * ge[34] * inv_ge[7])
                             : exp(-(g_RT[4] - g_RT[7] - g_RT[33] + g_RT[34])));
   // reaction 229:  C3H6 + HO2 <=> H2O2 + aC3H5
-  k_f = 0.0096 * exp((2.6) * logT - (6999.74382134365) * invT);
+  k_f = 0.0096 * exp((2.6) * logT - (6999.78371096783) * invT);
   qf[231] *= k_f;
   qr[231] *= k_f * (kc_fast ? (ge[5] * inv_ge[8] * ge[34] * inv_ge[33])
                             : exp(-(g_RT[5] - g_RT[8] - g_RT[33] + g_RT[34])));
   // reaction 230:  C3H6 + CH3 <=> CH4 + aC3H5
-  k_f = 2.2e-06 * exp((3.5) * logT - (2855.75457844178) * invT);
+  k_f = 2.2e-06 * exp((3.5) * logT - (2855.7708526055) * invT);
   qf[232] *= k_f;
   qr[232] *=
     k_f * (kc_fast ? (ge[14] * inv_ge[33] * ge[34] * inv_ge[15])
                    : exp(-(g_RT[14] - g_RT[15] - g_RT[33] + g_RT[34])));
   // reaction 231:  H + nC3H7 <=> C2H5 + CH3
-  k_f = 3.7e+18 * exp((-2.92) * logT - (6292.72440588802) * invT);
+  k_f = 3.7e+18 * exp((-2.92) * logT - (6292.76026640207) * invT);
   qf[233] *= k_f;
   qr[233] *= k_f * (kc_fast ? (inv_ge[26] * ge[35] * inv_ge[14] * ge[2])
                             : exp(-(g_RT[2] - g_RT[14] - g_RT[26] + g_RT[35])));
@@ -9989,37 +9989,37 @@ comp_qfqr(
     k_f * (kc_fast ? (ge[14] * inv_ge[34] * ge[35] * inv_ge[15])
                    : exp(-(g_RT[14] - g_RT[15] - g_RT[34] + g_RT[35])));
   // reaction 238:  C4H81 + H <=> C2H4 + C2H5
-  k_f = 1.6e+16 * exp((-2.39) * logT - (5625.96232369677) * invT);
+  k_f = 1.6e+16 * exp((-2.39) * logT - (5625.9943845162) * invT);
   qf[240] *= k_f;
   qr[240] *= k_f * (kc_fast ? (inv_ge[25] * ge[36] * ge[2] * inv_ge[26])
                             : exp(-(g_RT[2] - g_RT[25] - g_RT[26] + g_RT[36])));
   // reaction 239:  C4H81 + H <=> C3H6 + CH3
-  k_f = 3.2e+16 * exp((-2.39) * logT - (5625.96232369677) * invT);
+  k_f = 3.2e+16 * exp((-2.39) * logT - (5625.9943845162) * invT);
   qf[241] *= k_f;
   qr[241] *= k_f * (kc_fast ? (inv_ge[14] * ge[2] * ge[36] * inv_ge[34])
                             : exp(-(g_RT[2] - g_RT[14] - g_RT[34] + g_RT[36])));
   // reaction 240:  C4H81 + O <=> HCO + nC3H7
-  k_f = 330 * exp((1.45) * logT - (-202.293099653497) * invT);
+  k_f = 330 * exp((1.45) * logT - (-202.294252466504) * invT);
   qf[242] *= k_f;
   qr[242] *= k_f * (kc_fast ? (inv_ge[16] * ge[36] * inv_ge[35] * ge[3])
                             : exp(-(g_RT[3] - g_RT[16] - g_RT[35] + g_RT[36])));
   // reaction 241:  N + NO <=> N2 + O
-  k_f = 27000000 * exp(-(178.641916360675) * invT);
+  k_f = 27000000 * exp(-(178.642934392062) * invT);
   qf[243] *= k_f;
   qr[243] *= k_f * (kc_fast ? (inv_ge[1] * ge[38] * inv_ge[3] * ge[37])
                             : exp(-(-g_RT[1] - g_RT[3] + g_RT[37] + g_RT[38])));
   // reaction 242:  N + O2 <=> NO + O
-  k_f = 9000 * exp((1) * logT - (3270.90832773068) * invT);
+  k_f = 9000 * exp((1) * logT - (3270.92696774198) * invT);
   qf[244] *= k_f;
   qr[244] *= k_f * (kc_fast ? (ge[9] * inv_ge[38] * inv_ge[3] * ge[37])
                             : exp(-(-g_RT[3] + g_RT[9] + g_RT[37] - g_RT[38])));
   // reaction 243:  N + OH <=> H + NO
-  k_f = 33600000 * exp(-(193.738416334817) * invT);
+  k_f = 33600000 * exp(-(193.739520397025) * invT);
   qf[245] *= k_f;
   qr[245] *= k_f * (kc_fast ? (ge[4] * inv_ge[38] * inv_ge[2] * ge[37])
                             : exp(-(-g_RT[2] + g_RT[4] + g_RT[37] - g_RT[38])));
   // reaction 244:  HO2 + NO <=> NO2 + OH
-  k_f = 2110000 * exp(-(-241.543999586265) * invT);
+  k_f = 2110000 * exp(-(-241.545376079408) * invT);
   qf[246] *= k_f;
   qr[246] *= k_f * (kc_fast ? (inv_ge[4] * ge[5] * inv_ge[39] * ge[38])
                             : exp(-(-g_RT[4] + g_RT[5] + g_RT[38] - g_RT[39])));
@@ -10033,12 +10033,12 @@ comp_qfqr(
                      : exp(-(g_RT[3] + g_RT[38] - g_RT[39]))) *
             (refC);
   // reaction 246:  NO2 + O <=> NO + O2
-  k_f = 3900000 * exp(-(-120.771999793133) * invT);
+  k_f = 3900000 * exp(-(-120.772688039704) * invT);
   qf[247] *= k_f;
   qr[247] *= k_f * (kc_fast ? (inv_ge[9] * ge[39] * inv_ge[38] * ge[3])
                             : exp(-(g_RT[3] - g_RT[9] - g_RT[38] + g_RT[39])));
   // reaction 247:  H + NO2 <=> NO + OH
-  k_f = 132000000 * exp(-(181.157999689699) * invT);
+  k_f = 132000000 * exp(-(181.159032059556) * invT);
   qf[248] *= k_f;
   qr[248] *= k_f * (kc_fast ? (inv_ge[4] * ge[39] * inv_ge[38] * ge[2])
                             : exp(-(g_RT[2] - g_RT[4] - g_RT[38] + g_RT[39])));
@@ -10048,7 +10048,7 @@ comp_qfqr(
   qr[249] *= k_f * (kc_fast ? (inv_ge[38] * ge[42] * inv_ge[20] * ge[3])
                             : exp(-(g_RT[3] - g_RT[20] - g_RT[38] + g_RT[42])));
   // reaction 249:  NCO + OH <=> CO + H + NO
-  k_f = 8300000 * exp((-0.1) * logT - (37986.8196682667) * invT);
+  k_f = 8300000 * exp((-0.1) * logT - (37987.0361447548) * invT);
   qf[250] *= k_f;
   qr[250] *=
     k_f *
@@ -10062,12 +10062,12 @@ comp_qfqr(
     k_f * (kc_fast ? (inv_ge[1] * ge[42] * inv_ge[20] * ge[37])
                    : exp(-(-g_RT[1] - g_RT[20] + g_RT[37] + g_RT[42])));
   // reaction 251:  NCO + O2 <=> CO2 + NO
-  k_f = 2000000 * exp(-(10064.3333160944) * invT);
+  k_f = 2000000 * exp(-(10064.3906699753) * invT);
   qf[252] *= k_f;
   qr[252] *= k_f * (kc_fast ? (ge[9] * inv_ge[38] * ge[42] * inv_ge[21])
                             : exp(-(g_RT[9] - g_RT[21] - g_RT[38] + g_RT[42])));
   // reaction 252:  NCO + M <=> CO + N + M
-  k_f = 310000000 * exp(-(27198.8607867451) * invT);
+  k_f = 310000000 * exp(-(27199.0157856083) * invT);
   Corr = mixture + (-0.3) * sc[0] + sc[6] + (5) * sc[7] + sc[15] +
          (0.5) * sc[20] + sc[21] + (2) * sc[27];
   qf[37] *= Corr * k_f;
@@ -10076,7 +10076,7 @@ comp_qfqr(
                      : exp(-(-g_RT[20] - g_RT[37] + g_RT[42]))) *
             (refCinv);
   // reaction 253:  NCO + NO <=> CO2 + N2
-  k_f = 3800000000000 * exp((-2) * logT - (402.573332643776) * invT);
+  k_f = 3800000000000 * exp((-2) * logT - (402.575626799013) * invT);
   qf[253] *= k_f;
   qr[253] *=
     k_f * (kc_fast ? (inv_ge[1] * ge[38] * ge[42] * inv_ge[21])
@@ -10100,57 +10100,57 @@ comp_qfqr(
     k_f * (kc_fast ? (ge[38] * inv_ge[16] * inv_ge[37] * ge[11])
                    : exp(-(g_RT[11] - g_RT[16] - g_RT[37] + g_RT[38])));
   // reaction 257:  CH2 + NO <=> H + HNCO
-  k_f = 310000000000 * exp((-1.38) * logT - (639.085165571994) * invT);
+  k_f = 310000000000 * exp((-1.38) * logT - (639.088807543433) * invT);
   qf[257] *= k_f;
   qr[257] *=
     k_f * (kc_fast ? (ge[38] * inv_ge[2] * inv_ge[41] * ge[12])
                    : exp(-(-g_RT[2] + g_RT[12] + g_RT[38] - g_RT[41])));
   // reaction 258:  CH2 + NO <=> H + HCNO
-  k_f = 38000000 * exp((-0.36) * logT - (291.865666166737) * invT);
+  k_f = 38000000 * exp((-0.36) * logT - (291.867329429284) * invT);
   qf[258] *= k_f;
   qr[258] *=
     k_f * (kc_fast ? (ge[38] * inv_ge[40] * inv_ge[2] * ge[12])
                    : exp(-(-g_RT[2] + g_RT[12] + g_RT[38] - g_RT[40])));
   // reaction 259:  CH2* + NO <=> H + HNCO
-  k_f = 310000000000 * exp((-1.38) * logT - (639.085165571994) * invT);
+  k_f = 310000000000 * exp((-1.38) * logT - (639.088807543433) * invT);
   qf[259] *= k_f;
   qr[259] *=
     k_f * (kc_fast ? (ge[38] * inv_ge[2] * inv_ge[41] * ge[13])
                    : exp(-(-g_RT[2] + g_RT[13] + g_RT[38] - g_RT[41])));
   // reaction 260:  CH2* + NO <=> H + HCNO
-  k_f = 38000000 * exp((-0.36) * logT - (291.865666166737) * invT);
+  k_f = 38000000 * exp((-0.36) * logT - (291.867329429284) * invT);
   qf[260] *= k_f;
   qr[260] *=
     k_f * (kc_fast ? (ge[38] * inv_ge[40] * inv_ge[2] * ge[13])
                    : exp(-(-g_RT[2] + g_RT[13] + g_RT[38] - g_RT[40])));
   // reaction 261:  HNCO + O <=> NCO + OH
-  k_f = 2.2 * exp((2.11) * logT - (24065.3306087791) * invT);
+  k_f = 2.2 * exp((2.11) * logT - (24065.4677505115) * invT);
   qf[261] *= k_f;
   qr[261] *= k_f * (kc_fast ? (inv_ge[4] * inv_ge[42] * ge[3] * ge[41])
                             : exp(-(g_RT[3] - g_RT[4] + g_RT[41] - g_RT[42])));
   // reaction 262:  H + HNCO <=> H2 + NCO
-  k_f = 90 * exp((1.7) * logT - (29266.0748498709) * invT);
+  k_f = 90 * exp((1.7) * logT - (29266.2416292212) * invT);
   qf[262] *= k_f;
   qr[262] *= k_f * (kc_fast ? (inv_ge[6] * inv_ge[42] * ge[2] * ge[41])
                             : exp(-(g_RT[2] - g_RT[6] + g_RT[41] - g_RT[42])));
   // reaction 263:  HNCO + OH <=> H2O + NCO
-  k_f = 33 * exp((1.5) * logT - (1811.57999689699) * invT);
+  k_f = 33 * exp((1.5) * logT - (1811.59032059556) * invT);
   qf[263] *= k_f;
   qr[263] *= k_f * (kc_fast ? (ge[4] * inv_ge[42] * inv_ge[7] * ge[41])
                             : exp(-(g_RT[4] - g_RT[7] + g_RT[41] - g_RT[42])));
   // reaction 264:  H + HCNO <=> H + HNCO
-  k_f = 2100000000 * exp((-0.69) * logT - (1434.16749754345) * invT);
+  k_f = 2100000000 * exp((-0.69) * logT - (1434.17567047148) * invT);
   qf[264] *= k_f;
   qr[264] *= k_f * (kc_fast ? (ge[40] * inv_ge[41])
                             : exp(-(g_RT[2] - g_RT[2] + g_RT[40] - g_RT[41])));
   // reaction 265:  HCCO + NO <=> CO + HCNO
-  k_f = 55000 * exp(-(920.886498422637) * invT);
+  k_f = 55000 * exp(-(920.891746302741) * invT);
   qf[265] *= k_f;
   qr[265] *=
     k_f * (kc_fast ? (ge[38] * inv_ge[40] * ge[28] * inv_ge[20])
                    : exp(-(-g_RT[20] + g_RT[28] + g_RT[38] - g_RT[40])));
   // reaction 266:  CO2 + N <=> CO + NO
-  k_f = 3000000 * exp(-(5686.34832359333) * invT);
+  k_f = 3000000 * exp(-(5686.38072853605) * invT);
   qf[266] *= k_f;
   qr[266] *=
     k_f * (kc_fast ? (inv_ge[38] * inv_ge[20] * ge[21] * ge[37])
@@ -10162,7 +10162,7 @@ comp_qfqr(
     k_f * (kc_fast ? (inv_ge[38] * ge[14] * ge[39] * inv_ge[18])
                    : exp(-(g_RT[14] - g_RT[18] - g_RT[38] + g_RT[39])));
   // reaction 268:  CH3O2 + NO <=> CH3O + NO2
-  k_f = 1690000 * exp(-(-286.83349950869) * invT);
+  k_f = 1690000 * exp(-(-286.835134094297) * invT);
   qf[268] *= k_f;
   qr[268] *=
     k_f * (kc_fast ? (ge[38] * inv_ge[39] * ge[43] * inv_ge[18])
@@ -10176,7 +10176,7 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
   const amrex::Real logT = log(T);
 
   // reference concentration: P_atm / (RT) in inverse mol/m^3
-  const amrex::Real refC = 101325 / 8.31446 * invT;
+  const amrex::Real refC = 101325 / 8.31446261815324 * invT;
   const amrex::Real refCinv = 1 / refC;
 
   for (int i = 0; i < 44; ++i) {
@@ -10239,7 +10239,7 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
     amrex::Real Corr = mixture + (-0.3) * sc[0] + sc[6] + (5) * sc[7] +
                        (0.75) * sc[20] + (2.6) * sc[21];
     const amrex::Real redP =
-      Corr / k_f * 201000 * exp(-0.584 * logT - -1153.87581469022 * invT);
+      Corr / k_f * 201000 * exp(-0.584 * logT - -1153.88239031267 * invT);
     const amrex::Real F = redP / (1.0 + redP);
     const amrex::Real logPred = log10(redP);
     const amrex::Real logFcent = log10(
@@ -10263,11 +10263,11 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
 
   {
     // reaction 41:  CO + H2 (+M) <=> CH2O (+M)
-    const amrex::Real k_f = 43 * exp((1.5) * logT - (40056.0465980557) * invT);
+    const amrex::Real k_f = 43 * exp((1.5) * logT - (40056.2748665018) * invT);
     amrex::Real Corr = mixture + (-0.3) * sc[0] + sc[6] + (5) * sc[7] + sc[15] +
                        (0.5) * sc[20] + sc[21] + (2) * sc[27];
     const amrex::Real redP =
-      Corr / k_f * 5.07e+15 * exp(-3.42 * logT - 42446.3257606281 * invT);
+      Corr / k_f * 5.07e+15 * exp(-3.42 * logT - 42446.5676506209 * invT);
     const amrex::Real F = redP / (1.0 + redP);
     const amrex::Real logPred = log10(redP);
     const amrex::Real logFcent = log10(
@@ -10296,7 +10296,7 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
     amrex::Real Corr = mixture + (-0.3) * sc[0] + sc[6] + (5) * sc[7] + sc[15] +
                        (0.5) * sc[20] + sc[21] + (2) * sc[27];
     const amrex::Real redP =
-      Corr / k_f * 2.69e+16 * exp(-3.74 * logT - 974.227464997937 * invT);
+      Corr / k_f * 2.69e+16 * exp(-3.74 * logT - 974.233016853611 * invT);
     const amrex::Real F = redP / (1.0 + redP);
     const amrex::Real logPred = log10(redP);
     const amrex::Real logFcent = log10(
@@ -10322,11 +10322,11 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
   {
     // reaction 52:  H + HCO (+M) <=> CH2O (+M)
     const amrex::Real k_f =
-      1090000 * exp((0.48) * logT - (-130.836333109227) * invT);
+      1090000 * exp((0.48) * logT - (-130.837078709679) * invT);
     amrex::Real Corr = mixture + (-0.3) * sc[0] + sc[6] + (5) * sc[7] + sc[15] +
                        (0.5) * sc[20] + sc[21] + (2) * sc[27];
     const amrex::Real redP =
-      Corr / k_f * 1350000000000 * exp(-2.57 * logT - 717.083748771726 * invT);
+      Corr / k_f * 1350000000000 * exp(-2.57 * logT - 717.087835235741 * invT);
     const amrex::Real F = redP / (1.0 + redP);
     const amrex::Real logPred = log10(redP);
     const amrex::Real logFcent = log10(
@@ -10355,7 +10355,7 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
     amrex::Real Corr = mixture + (-0.3) * sc[0] + sc[6] + (5) * sc[7] + sc[15] +
                        (0.5) * sc[20] + sc[21] + (2) * sc[27];
     const amrex::Real redP =
-      Corr / k_f * 3.2e+15 * exp(-3.14 * logT - 618.956498939805 * invT);
+      Corr / k_f * 3.2e+15 * exp(-3.14 * logT - 618.960026203482 * invT);
     const amrex::Real F = redP / (1.0 + redP);
     const amrex::Real logPred = log10(redP);
     const amrex::Real logFcent = log10(
@@ -10381,11 +10381,11 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
   {
     // reaction 61:  CH2 + CO (+M) <=> CH2CO (+M)
     const amrex::Real k_f =
-      810000 * exp((0.5) * logT - (2269.50716277929) * invT);
+      810000 * exp((0.5) * logT - (2269.52009607943) * invT);
     amrex::Real Corr = mixture + (-0.3) * sc[0] + sc[6] + (5) * sc[7] + sc[15] +
                        (0.5) * sc[20] + sc[21] + (2) * sc[27];
     const amrex::Real redP =
-      Corr / k_f * 2.69e+21 * exp(-5.11 * logT - 3570.32224388449 * invT);
+      Corr / k_f * 2.69e+21 * exp(-5.11 * logT - 3570.34259017374 * invT);
     const amrex::Real F = redP / (1.0 + redP);
     const amrex::Real logPred = log10(redP);
     const amrex::Real logFcent = log10(
@@ -10414,7 +10414,7 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
     amrex::Real Corr = mixture + sc[6] + (5) * sc[7] + sc[15] + (0.5) * sc[20] +
                        sc[21] + (2) * sc[27];
     const amrex::Real redP =
-      Corr / k_f * 2.7e+26 * exp(-6.3 * logT - 1559.97166399463 * invT);
+      Corr / k_f * 2.7e+26 * exp(-6.3 * logT - 1559.98055384617 * invT);
     const amrex::Real F = redP / (1.0 + redP);
     const amrex::Real logPred = log10(redP);
     const amrex::Real logFcent = log10(
@@ -10440,11 +10440,11 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
   {
     // reaction 78:  CH2O + H (+M) <=> CH3O (+M)
     const amrex::Real k_f =
-      540000 * exp((0.454) * logT - (1308.36333109227) * invT);
+      540000 * exp((0.454) * logT - (1308.37078709679) * invT);
     amrex::Real Corr = mixture + sc[6] + (5) * sc[7] + sc[15] + (0.5) * sc[20] +
                        sc[21] + (2) * sc[27];
     const amrex::Real redP =
-      Corr / k_f * 2.2e+18 * exp(-4.8 * logT - 2797.88466187424 * invT);
+      Corr / k_f * 2.2e+18 * exp(-4.8 * logT - 2797.90060625314 * invT);
     const amrex::Real F = redP / (1.0 + redP);
     const amrex::Real logPred = log10(redP);
     const amrex::Real logFcent = log10(
@@ -10470,11 +10470,11 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
   {
     // reaction 85:  CH3 + H (+M) <=> CH4 (+M)
     const amrex::Real k_f =
-      12700000000 * exp((-0.63) * logT - (192.731983003208) * invT);
+      12700000000 * exp((-0.63) * logT - (192.733081330027) * invT);
     amrex::Real Corr = mixture + (-0.3) * sc[0] + sc[6] + (5) * sc[7] + sc[15] +
                        (0.5) * sc[20] + sc[21] + (2) * sc[27];
     const amrex::Real redP =
-      Corr / k_f * 2.477e+21 * exp(-4.76 * logT - 1227.84866456352 * invT);
+      Corr / k_f * 2.477e+21 * exp(-4.76 * logT - 1227.85566173699 * invT);
     const amrex::Real F = redP / (1.0 + redP);
     const amrex::Real logPred = log10(redP);
     const amrex::Real logFcent = log10(
@@ -10503,7 +10503,7 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
     amrex::Real Corr = mixture + sc[6] + (5) * sc[7] + sc[15] + (0.5) * sc[20] +
                        sc[21] + (2) * sc[27];
     const amrex::Real redP =
-      Corr / k_f * 2.7e+26 * exp(-6.3 * logT - 1559.97166399463 * invT);
+      Corr / k_f * 2.7e+26 * exp(-6.3 * logT - 1559.98055384617 * invT);
     const amrex::Real F = redP / (1.0 + redP);
     const amrex::Real logPred = log10(redP);
     const amrex::Real logFcent = log10(
@@ -10529,11 +10529,11 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
   {
     // reaction 101:  2 CH3 (+M) <=> C2H6 (+M)
     const amrex::Real k_f =
-      21200000000 * exp((-0.97) * logT - (311.994332798926) * invT);
+      21200000000 * exp((-0.97) * logT - (311.996110769235) * invT);
     amrex::Real Corr = mixture + (-0.3) * sc[0] + sc[6] + (5) * sc[7] + sc[15] +
                        (0.5) * sc[20] + sc[21] + (2) * sc[27];
     const amrex::Real redP =
-      Corr / k_f * 1.77e+38 * exp(-9.67 * logT - 3130.00766130536 * invT);
+      Corr / k_f * 1.77e+38 * exp(-9.67 * logT - 3130.02549836232 * invT);
     const amrex::Real F = redP / (1.0 + redP);
     const amrex::Real logPred = log10(redP);
     const amrex::Real logFcent = log10(
@@ -10561,7 +10561,7 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
     amrex::Real Corr = mixture + sc[6] + (5) * sc[7] + sc[15] + (0.5) * sc[20] +
                        sc[21] + (2) * sc[27];
     const amrex::Real redP =
-      Corr / k_f * 8.6e+16 * exp(-4 * logT - 1522.23041405928 * invT);
+      Corr / k_f * 8.6e+16 * exp(-4 * logT - 1522.23908883377 * invT);
     const amrex::Real F = redP / (1.0 + redP);
     const amrex::Real logPred = log10(redP);
     const amrex::Real logFcent = log10(
@@ -10587,12 +10587,12 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
   {
     // reaction 128:  C2H3 (+M) <=> C2H2 + H (+M)
     const amrex::Real k_f =
-      386000000 * exp((1.62) * logT - (18643.2716780664) * invT);
+      386000000 * exp((1.62) * logT - (18643.377920969) * invT);
     amrex::Real Corr = mixture + (-0.3) * sc[0] + sc[6] + (5) * sc[7] + sc[15] +
                        (0.5) * sc[20] + sc[21] + (2) * sc[22] + (2) * sc[25] +
                        (2) * sc[27];
     const amrex::Real redP =
-      Corr / k_f * 2.565e+21 * exp(-3.4 * logT - 18014.5125184767 * invT);
+      Corr / k_f * 2.565e+21 * exp(-3.4 * logT - 18014.6151782529 * invT);
     const amrex::Real F = redP / (1.0 + redP);
     const amrex::Real logPred = log10(redP);
     const amrex::Real logFcent = log10(
@@ -10618,12 +10618,12 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
   {
     // reaction 139:  CH2CO + H (+M) <=> CH2CHO (+M)
     const amrex::Real k_f =
-      330000000 * exp((-0.06) * logT - (4277.34165934012) * invT);
+      330000000 * exp((-0.06) * logT - (4277.36603473951) * invT);
     amrex::Real Corr = mixture + (-0.3) * sc[0] + sc[6] + (5) * sc[7] + sc[15] +
                        (0.5) * sc[20] + sc[21] + (2) * sc[22] + (2) * sc[25] +
                        (2) * sc[27];
     const amrex::Real redP =
-      Corr / k_f * 3.8e+29 * exp(-7.64 * logT - 5988.27832307616 * invT);
+      Corr / k_f * 3.8e+29 * exp(-7.64 * logT - 5988.31244863531 * invT);
     const amrex::Real F = redP / (1.0 + redP);
     const amrex::Real logPred = log10(redP);
     const amrex::Real logFcent = log10(
@@ -10649,12 +10649,12 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
   {
     // reaction 145:  C2H3 + H (+M) <=> C2H4 (+M)
     const amrex::Real k_f =
-      6080000 * exp((0.27) * logT - (140.900666425322) * invT);
+      6080000 * exp((0.27) * logT - (140.901469379654) * invT);
     amrex::Real Corr = mixture + (-0.3) * sc[0] + sc[6] + (5) * sc[7] + sc[15] +
                        (0.5) * sc[20] + sc[21] + (2) * sc[22] + (2) * sc[25] +
                        (2) * sc[27];
     const amrex::Real redP =
-      Corr / k_f * 1.4e+18 * exp(-3.86 * logT - 1670.67933047167 * invT);
+      Corr / k_f * 1.4e+18 * exp(-3.86 * logT - 1670.6888512159 * invT);
     const amrex::Real F = redP / (1.0 + redP);
     const amrex::Real logPred = log10(redP);
     const amrex::Real logFcent = log10(
@@ -10684,7 +10684,7 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
                        (0.5) * sc[20] + sc[21] + (2) * sc[22] + (2) * sc[25] +
                        (2) * sc[27];
     const amrex::Real redP =
-      Corr / k_f * 4.27e+46 * exp(-11.94 * logT - 4916.32618157895 * invT);
+      Corr / k_f * 4.27e+46 * exp(-11.94 * logT - 4916.35419837624 * invT);
     const amrex::Real F = redP / (1.0 + redP);
     const amrex::Real logPred = log10(redP);
     const amrex::Real logFcent = log10(
@@ -10710,11 +10710,11 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
   {
     // reaction 172:  C2H4 (+M) <=> H2 + H2CC (+M)
     const amrex::Real k_f =
-      8000000000000 * exp((0.44) * logT - (44670.543423485) * invT);
+      8000000000000 * exp((0.44) * logT - (44670.7979886854) * invT);
     amrex::Real Corr = mixture + (-0.3) * sc[0] + sc[6] + (5) * sc[7] + sc[15] +
                        (0.5) * sc[20] + sc[21] + (2) * sc[27];
     const amrex::Real redP =
-      Corr / k_f * 7e+44 * exp(-9.31 * logT - 50251.2162472593 * invT);
+      Corr / k_f * 7e+44 * exp(-9.31 * logT - 50251.5026151867 * invT);
     const amrex::Real F = redP / (1.0 + redP);
     const amrex::Real logPred = log10(redP);
     const amrex::Real logFcent = log10(
@@ -10740,11 +10740,11 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
   {
     // reaction 173:  C2H4 + H (+M) <=> C2H5 (+M)
     const amrex::Real k_f =
-      1367 * exp((1.463) * logT - (681.858582165395) * invT);
+      1367 * exp((1.463) * logT - (681.862467890828) * invT);
     amrex::Real Corr = mixture + (-0.3) * sc[0] + sc[6] + (5) * sc[7] + sc[15] +
                        (0.5) * sc[20] + sc[21] + (2) * sc[27];
     const amrex::Real redP =
-      Corr / k_f * 2.027e+27 * exp(-6.642 * logT - 2903.05694502743 * invT);
+      Corr / k_f * 2.027e+27 * exp(-6.642 * logT - 2903.07348875438 * invT);
     const amrex::Real F = redP / (1.0 + redP);
     const amrex::Real logPred = log10(redP);
     const amrex::Real logFcent = log10(
@@ -10770,11 +10770,11 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
   {
     // reaction 188:  C2H5 + H (+M) <=> C2H6 (+M)
     const amrex::Real k_f =
-      521000000000 * exp((-0.99) * logT - (795.082331971457) * invT);
+      521000000000 * exp((-0.99) * logT - (795.08686292805) * invT);
     amrex::Real Corr = mixture + (-0.3) * sc[0] + sc[6] + (5) * sc[7] + sc[15] +
                        (0.5) * sc[20] + sc[21] + (2) * sc[27];
     const amrex::Real redP =
-      Corr / k_f * 1.99e+29 * exp(-7.08 * logT - 3364.00341090455 * invT);
+      Corr / k_f * 1.99e+29 * exp(-7.08 * logT - 3364.02258143925 * invT);
     const amrex::Real F = redP / (1.0 + redP);
     const amrex::Real logPred = log10(redP);
     const amrex::Real logFcent = log10(
@@ -10803,7 +10803,7 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
     amrex::Real Corr = mixture + (-0.3) * sc[0] + sc[6] + (5) * sc[7] + sc[15] +
                        (0.5) * sc[20] + sc[21] + (2) * sc[27];
     const amrex::Real redP =
-      Corr / k_f * 1.55e+44 * exp(-11.79 * logT - 4521.1501339225 * invT);
+      Corr / k_f * 1.55e+44 * exp(-11.79 * logT - 4521.17589871966 * invT);
     const amrex::Real F = redP / (1.0 + redP);
     const amrex::Real logPred = log10(redP);
     const amrex::Real logFcent = log10(
@@ -10858,7 +10858,7 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
     amrex::Real Corr = mixture + (-0.3) * sc[0] + sc[6] + (5) * sc[7] + sc[15] +
                        (0.5) * sc[20] + sc[21] + (2) * sc[27];
     const amrex::Real redP =
-      Corr / k_f * 1.33e+48 * exp(-12 * logT - 3003.09641818941 * invT);
+      Corr / k_f * 1.33e+48 * exp(-12 * logT - 3003.11353201393 * invT);
     const amrex::Real F = redP / (1.0 + redP);
     const amrex::Real logPred = log10(redP);
     const amrex::Real logFcent = log10(
@@ -10884,11 +10884,11 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
   {
     // reaction 220:  CH3 + aC3H5 (+M) <=> C4H81 (+M)
     const amrex::Real k_f =
-      100000000 * exp((-0.32) * logT - (-131.993731440578) * invT);
+      100000000 * exp((-0.32) * logT - (-131.994483636726) * invT);
     amrex::Real Corr = mixture + (-0.3) * sc[0] + sc[6] + (5) * sc[7] + sc[15] +
                        (0.5) * sc[20] + sc[21] + (2) * sc[27];
     const amrex::Real redP =
-      Corr / k_f * 3.91e+48 * exp(-12.81 * logT - 3145.1041612795 * invT);
+      Corr / k_f * 3.91e+48 * exp(-12.81 * logT - 3145.12208436729 * invT);
     const amrex::Real F = redP / (1.0 + redP);
     const amrex::Real logPred = log10(redP);
     const amrex::Real logFcent = log10(
@@ -10913,11 +10913,11 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
 
   {
     // reaction 222:  C3H6 + H (+M) <=> nC3H7 (+M)
-    const amrex::Real k_f = 13300000 * exp(-(1640.83858218945) * invT);
+    const amrex::Real k_f = 13300000 * exp(-(1640.84793287943) * invT);
     amrex::Real Corr = mixture + (-0.3) * sc[0] + sc[6] + (5) * sc[7] + sc[15] +
                        (0.5) * sc[20] + sc[21] + (2) * sc[27];
     const amrex::Real redP =
-      Corr / k_f * 6.26e+26 * exp(-6.66 * logT - 3522.51666063304 * invT);
+      Corr / k_f * 6.26e+26 * exp(-6.66 * logT - 3522.53673449136 * invT);
     const amrex::Real F = redP / (1.0 + redP);
     const amrex::Real logPred = log10(redP);
     const amrex::Real logFcent =
@@ -10941,11 +10941,11 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
 
   {
     // reaction 29:  CO + O (+M) <=> CO2 (+M)
-    const amrex::Real k_f = 13620 * exp(-(1199.66853127845) * invT);
+    const amrex::Real k_f = 13620 * exp(-(1199.67536786106) * invT);
     amrex::Real Corr = mixture + (-0.3) * sc[0] + sc[6] + (11) * sc[7] +
                        (0.75) * sc[20] + (2.6) * sc[21];
     const amrex::Real redP =
-      Corr / k_f * 1173000000000 * exp(-2.79 * logT - 2108.98104638758 * invT);
+      Corr / k_f * 1173000000000 * exp(-2.79 * logT - 2108.99306489333 * invT);
     Corr = redP / (1.0 + redP);
     const amrex::Real qf = Corr * k_f * (sc[3] * sc[20]);
     const amrex::Real qr = Corr * k_f *
@@ -10961,11 +10961,11 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
   {
     // reaction 127:  C2H2 (+M) <=> H2CC (+M)
     const amrex::Real k_f =
-      800000000000000 * exp((-0.52) * logT - (25538.2457895895) * invT);
+      800000000000000 * exp((-0.52) * logT - (25538.3913250624) * invT);
     amrex::Real Corr = mixture + sc[6] + (5) * sc[7] + sc[15] + (0.5) * sc[20] +
                        sc[21] + (1.5) * sc[22] + (1.5) * sc[25] + (2) * sc[27];
     const amrex::Real redP =
-      Corr / k_f * 2450000000 * exp(-0.64 * logT - 25009.8682904946 * invT);
+      Corr / k_f * 2450000000 * exp(-0.64 * logT - 25010.0108148887 * invT);
     Corr = redP / (1.0 + redP);
     const amrex::Real qf = Corr * k_f * (sc[22]);
     const amrex::Real qr =
@@ -11081,7 +11081,7 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
   {
     // reaction 38:  HCO + M <=> CO + H + M
     const amrex::Real k_f =
-      187000000000 * exp((-1) * logT - (8554.68331868023) * invT);
+      187000000000 * exp((-1) * logT - (8554.73206947902) * invT);
     const amrex::Real Corr =
       mixture + sc[6] + (-1) * sc[7] + (0.75) * sc[20] + (2.6) * sc[21];
     const amrex::Real qf = Corr * k_f * (sc[16]);
@@ -11098,7 +11098,7 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
   {
     // reaction 39:  HCO + H2O <=> CO + H + H2O
     const amrex::Real k_f =
-      2244000000000 * exp((-1) * logT - (8554.68331868023) * invT);
+      2244000000000 * exp((-1) * logT - (8554.73206947902) * invT);
     const amrex::Real qf = k_f * (sc[7] * sc[16]);
     const amrex::Real qr = k_f *
                            (kc_fast ? (ge[16] * inv_ge[20] * inv_ge[2])
@@ -11128,7 +11128,7 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
 
   {
     // reaction 252:  NCO + M <=> CO + N + M
-    const amrex::Real k_f = 310000000 * exp(-(27198.8607867451) * invT);
+    const amrex::Real k_f = 310000000 * exp(-(27199.0157856083) * invT);
     const amrex::Real Corr = mixture + (-0.3) * sc[0] + sc[6] + (5) * sc[7] +
                              sc[15] + (0.5) * sc[20] + sc[21] + (2) * sc[27];
     const amrex::Real qf = Corr * k_f * (sc[42]);
@@ -11145,7 +11145,7 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
   {
     // reaction 0:  H + O2 <=> O + OH
     const amrex::Real k_f =
-      26440000000 * exp((-0.6707) * logT - (8575.31520197823) * invT);
+      26440000000 * exp((-0.6707) * logT - (8575.36407035247) * invT);
     const amrex::Real qf = k_f * (sc[2] * sc[9]);
     const amrex::Real qr =
       k_f *
@@ -11162,7 +11162,7 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
   {
     // reaction 1:  H2 + O <=> H + OH
     const amrex::Real k_f =
-      0.04589 * exp((2.7) * logT - (3150.13632793755) * invT);
+      0.04589 * exp((2.7) * logT - (3150.15427970227) * invT);
     const amrex::Real qf = k_f * (sc[3] * sc[6]);
     const amrex::Real qr =
       k_f *
@@ -11179,7 +11179,7 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
   {
     // reaction 2:  H2 + OH <=> H + H2O
     const amrex::Real k_f =
-      173.4 * exp((1.51) * logT - (1726.03316371019) * invT);
+      173.4 * exp((1.51) * logT - (1726.04299990077) * invT);
     const amrex::Real qf = k_f * (sc[4] * sc[6]);
     const amrex::Real qr =
       k_f *
@@ -11196,7 +11196,7 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
   {
     // reaction 3:  2 OH <=> H2O + O
     const amrex::Real k_f =
-      0.03973 * exp((2.4) * logT - (-1061.78716484796) * invT);
+      0.03973 * exp((2.4) * logT - (-1061.7932156824) * invT);
     const amrex::Real qf = k_f * ((sc[4] * sc[4]));
     const amrex::Real qr =
       k_f *
@@ -11212,7 +11212,7 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
   {
     // reaction 12:  H2 + O2 <=> H + HO2
     const amrex::Real k_f =
-      0.5916 * exp((2.433) * logT - (26923.0980538841) * invT);
+      0.5916 * exp((2.433) * logT - (26923.251481251) * invT);
     const amrex::Real qf = k_f * (sc[6] * sc[9]);
     const amrex::Real qr =
       k_f *
@@ -11228,7 +11228,7 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
 
   {
     // reaction 14:  H + HO2 <=> H2O + O
-    const amrex::Real k_f = 3970000 * exp(-(337.658382754967) * invT);
+    const amrex::Real k_f = 3970000 * exp(-(337.660306977672) * invT);
     const amrex::Real qf = k_f * (sc[2] * sc[5]);
     const amrex::Real qr =
       k_f *
@@ -11244,7 +11244,7 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
 
   {
     // reaction 15:  H + HO2 <=> 2 OH
-    const amrex::Real k_f = 74850000 * exp(-(148.448916412392) * invT);
+    const amrex::Real k_f = 74850000 * exp(-(148.449762382136) * invT);
     const amrex::Real qf = k_f * (sc[2] * sc[5]);
     const amrex::Real qr =
       k_f *
@@ -11275,7 +11275,7 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
 
   {
     // reaction 17:  2 HO2 <=> H2O2 + O2
-    const amrex::Real k_f = 130000 * exp(-(-820.243165261693) * invT);
+    const amrex::Real k_f = 130000 * exp(-(-820.247839602988) * invT);
     const amrex::Real qf = k_f * ((sc[5] * sc[5]));
     const amrex::Real qr =
       k_f *
@@ -11290,7 +11290,7 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
 
   {
     // reaction 18:  2 HO2 <=> H2O2 + O2
-    const amrex::Real k_f = 365800000 * exp(-(6038.59998965664) * invT);
+    const amrex::Real k_f = 365800000 * exp(-(6038.63440198519) * invT);
     const amrex::Real qf = k_f * ((sc[5] * sc[5]));
     const amrex::Real qr =
       k_f *
@@ -11306,7 +11306,7 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
   {
     // reaction 19:  HO2 + OH <=> H2O + O2
     const amrex::Real k_f =
-      1410000000000 * exp((-1.76) * logT - (30.1929999482832) * invT);
+      1410000000000 * exp((-1.76) * logT - (30.1931720099259) * invT);
     const amrex::Real qf = k_f * (sc[4] * sc[5]);
     const amrex::Real qr =
       k_f *
@@ -11323,7 +11323,7 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
   {
     // reaction 20:  HO2 + OH <=> H2O + O2
     const amrex::Real k_f =
-      1.12e+79 * exp((-22.3) * logT - (13536.528310147) * invT);
+      1.12e+79 * exp((-22.3) * logT - (13536.6054511168) * invT);
     const amrex::Real qf = k_f * (sc[4] * sc[5]);
     const amrex::Real qr =
       k_f *
@@ -11340,7 +11340,7 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
   {
     // reaction 21:  HO2 + OH <=> H2O + O2
     const amrex::Real k_f =
-      5.37e+64 * exp((-16.72) * logT - (16555.8283049753) * invT);
+      5.37e+64 * exp((-16.72) * logT - (16555.9226521094) * invT);
     const amrex::Real qf = k_f * (sc[4] * sc[5]);
     const amrex::Real qr =
       k_f *
@@ -11357,7 +11357,7 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
   {
     // reaction 22:  HO2 + OH <=> H2O + O2
     const amrex::Real k_f =
-      2510000 * exp((2) * logT - (20128.6666321888) * invT);
+      2510000 * exp((2) * logT - (20128.7813399506) * invT);
     const amrex::Real qf = k_f * (sc[4] * sc[5]);
     const amrex::Real qr =
       k_f *
@@ -11374,7 +11374,7 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
   {
     // reaction 23:  HO2 + OH <=> H2O + O2
     const amrex::Real k_f =
-      1e+130 * exp((-40) * logT - (17511.9399700042) * invT);
+      1e+130 * exp((-40) * logT - (17512.0397657571) * invT);
     const amrex::Real qf = k_f * (sc[4] * sc[5]);
     const amrex::Real qr =
       k_f *
@@ -11390,7 +11390,7 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
 
   {
     // reaction 24:  H + H2O2 <=> H2 + HO2
-    const amrex::Real k_f = 6.05 * exp((2) * logT - (2616.72666218454) * invT);
+    const amrex::Real k_f = 6.05 * exp((2) * logT - (2616.74157419358) * invT);
     const amrex::Real qf = k_f * (sc[2] * sc[8]);
     const amrex::Real qr =
       k_f *
@@ -11406,7 +11406,7 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
 
   {
     // reaction 25:  H + H2O2 <=> H2O + OH
-    const amrex::Real k_f = 24100000 * exp(-(1997.77016324474) * invT);
+    const amrex::Real k_f = 24100000 * exp(-(1997.7815479901) * invT);
     const amrex::Real qf = k_f * (sc[2] * sc[8]);
     const amrex::Real qr =
       k_f *
@@ -11422,7 +11422,7 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
 
   {
     // reaction 26:  H2O2 + O <=> HO2 + OH
-    const amrex::Real k_f = 9.63 * exp((2) * logT - (1997.77016324474) * invT);
+    const amrex::Real k_f = 9.63 * exp((2) * logT - (1997.7815479901) * invT);
     const amrex::Real qf = k_f * (sc[3] * sc[8]);
     const amrex::Real qr =
       k_f *
@@ -11438,7 +11438,7 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
 
   {
     // reaction 27:  H2O2 + OH <=> H2O + HO2
-    const amrex::Real k_f = 2000000 * exp(-(214.873516298615) * invT);
+    const amrex::Real k_f = 2000000 * exp(-(214.874740803973) * invT);
     const amrex::Real qf = k_f * (sc[4] * sc[8]);
     const amrex::Real qr =
       k_f *
@@ -11455,7 +11455,7 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
   {
     // reaction 28:  H2O2 + OH <=> H2O + HO2
     const amrex::Real k_f =
-      2.67e+35 * exp((-7) * logT - (18920.9466342575) * invT);
+      2.67e+35 * exp((-7) * logT - (18921.0544595536) * invT);
     const amrex::Real qf = k_f * (sc[4] * sc[8]);
     const amrex::Real qr =
       k_f *
@@ -11472,7 +11472,7 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
   {
     // reaction 30:  CO + OH <=> CO2 + H
     const amrex::Real k_f =
-      0.07046 * exp((2.053) * logT - (-178.979071526765) * invT);
+      0.07046 * exp((2.053) * logT - (-178.980091479506) * invT);
     const amrex::Real qf = k_f * (sc[4] * sc[20]);
     const amrex::Real qr =
       k_f *
@@ -11489,7 +11489,7 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
   {
     // reaction 31:  CO + OH <=> CO2 + H
     const amrex::Real k_f =
-      5757000 * exp((-0.664) * logT - (166.98238621398) * invT);
+      5757000 * exp((-0.664) * logT - (166.983337800895) * invT);
     const amrex::Real qf = k_f * (sc[4] * sc[20]);
     const amrex::Real qr =
       k_f *
@@ -11505,7 +11505,7 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
 
   {
     // reaction 32:  CO + O2 <=> CO2 + O
-    const amrex::Real k_f = 1119000 * exp(-(24003.4349588851) * invT);
+    const amrex::Real k_f = 1119000 * exp(-(24003.5717478911) * invT);
     const amrex::Real qf = k_f * (sc[9] * sc[20]);
     const amrex::Real qr =
       k_f *
@@ -11522,7 +11522,7 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
   {
     // reaction 33:  CO + HO2 <=> CO2 + OH
     const amrex::Real k_f =
-      0.157 * exp((2.18) * logT - (9029.02038003442) * invT);
+      0.157 * exp((2.18) * logT - (9029.07183395029) * invT);
     const amrex::Real qf = k_f * (sc[5] * sc[20]);
     const amrex::Real qr =
       k_f *
@@ -11603,7 +11603,7 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
   {
     // reaction 40:  HCO + O2 <=> CO + HO2
     const amrex::Real k_f =
-      12040 * exp((0.807) * logT - (-365.838516040031) * invT);
+      12040 * exp((0.807) * logT - (-365.840600853603) * invT);
     const amrex::Real qf = k_f * (sc[9] * sc[16]);
     const amrex::Real qr =
       k_f *
@@ -11635,7 +11635,7 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
 
   {
     // reaction 43:  C + O2 <=> CO + O
-    const amrex::Real k_f = 58000000 * exp(-(289.852799503519) * invT);
+    const amrex::Real k_f = 58000000 * exp(-(289.854451295289) * invT);
     const amrex::Real qf = k_f * (sc[9] * sc[10]);
     const amrex::Real qr =
       k_f *
@@ -11700,7 +11700,7 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
   {
     // reaction 47:  CH + H2 <=> CH2 + H
     const amrex::Real k_f =
-      110.7 * exp((1.79) * logT - (840.371831893882) * invT);
+      110.7 * exp((1.79) * logT - (840.376620942939) * invT);
     const amrex::Real qf = k_f * (sc[6] * sc[11]);
     const amrex::Real qr =
       k_f *
@@ -11716,7 +11716,7 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
 
   {
     // reaction 48:  CH + H2O <=> CH2O + H
-    const amrex::Real k_f = 5710000 * exp(-(-379.928582682563) * invT);
+    const amrex::Real k_f = 5710000 * exp(-(-379.930747791568) * invT);
     const amrex::Real qf = k_f * (sc[7] * sc[11]);
     const amrex::Real qr =
       k_f *
@@ -11748,7 +11748,7 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
 
   {
     // reaction 51:  CH + CO2 <=> CO + HCO
-    const amrex::Real k_f = 3400000 * exp(-(347.219499405257) * invT);
+    const amrex::Real k_f = 3400000 * exp(-(347.221478114148) * invT);
     const amrex::Real qf = k_f * (sc[11] * sc[21]);
     const amrex::Real qr =
       k_f *
@@ -11796,7 +11796,7 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
 
   {
     // reaction 56:  CH2 + OH <=> CH + H2O
-    const amrex::Real k_f = 11.3 * exp((2) * logT - (1509.64999741416) * invT);
+    const amrex::Real k_f = 11.3 * exp((2) * logT - (1509.6586004963) * invT);
     const amrex::Real qf = k_f * (sc[4] * sc[12]);
     const amrex::Real qr =
       k_f *
@@ -11812,7 +11812,7 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
 
   {
     // reaction 57:  CH2 + H2 <=> CH3 + H
-    const amrex::Real k_f = 0.5 * exp((2) * logT - (3638.25649376812) * invT);
+    const amrex::Real k_f = 0.5 * exp((2) * logT - (3638.27722719608) * invT);
     const amrex::Real qf = k_f * (sc[6] * sc[12]);
     const amrex::Real qr =
       k_f *
@@ -11828,7 +11828,7 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
 
   {
     // reaction 58:  CH2 + O2 <=> HCO + OH
-    const amrex::Real k_f = 10600000 * exp(-(754.82499870708) * invT);
+    const amrex::Real k_f = 10600000 * exp(-(754.829300248149) * invT);
     const amrex::Real qf = k_f * (sc[9] * sc[12]);
     const amrex::Real qr =
       k_f *
@@ -11844,7 +11844,7 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
 
   {
     // reaction 59:  CH2 + O2 <=> CO2 + 2 H
-    const amrex::Real k_f = 2640000 * exp(-(754.82499870708) * invT);
+    const amrex::Real k_f = 2640000 * exp(-(754.829300248149) * invT);
     const amrex::Real qf = k_f * (sc[9] * sc[12]);
     const amrex::Real qr =
       k_f *
@@ -11907,7 +11907,7 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
 
   {
     // reaction 64:  CH2* + N2 <=> CH2 + N2
-    const amrex::Real k_f = 15000000 * exp(-(301.929999482832) * invT);
+    const amrex::Real k_f = 15000000 * exp(-(301.93172009926) * invT);
     const amrex::Real qf = k_f * (sc[1] * sc[13]);
     const amrex::Real qr =
       k_f *
@@ -11923,7 +11923,7 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
 
   {
     // reaction 65:  AR + CH2* <=> AR + CH2
-    const amrex::Real k_f = 9000000 * exp(-(301.929999482832) * invT);
+    const amrex::Real k_f = 9000000 * exp(-(301.93172009926) * invT);
     const amrex::Real qf = k_f * (sc[0] * sc[13]);
     const amrex::Real qr =
       k_f *
@@ -12117,7 +12117,7 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
   {
     // reaction 79:  CH2O + H <=> H2 + HCO
     const amrex::Real k_f =
-      23000 * exp((1.05) * logT - (1648.03458051046) * invT);
+      23000 * exp((1.05) * logT - (1648.04397220846) * invT);
     const amrex::Real qf = k_f * (sc[2] * sc[17]);
     const amrex::Real qr =
       k_f *
@@ -12133,7 +12133,7 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
 
   {
     // reaction 80:  CH2O + O <=> HCO + OH
-    const amrex::Real k_f = 39000000 * exp(-(1781.38699694871) * invT);
+    const amrex::Real k_f = 39000000 * exp(-(1781.39714858563) * invT);
     const amrex::Real qf = k_f * (sc[3] * sc[17]);
     const amrex::Real qr =
       k_f *
@@ -12150,7 +12150,7 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
   {
     // reaction 81:  CH2O + OH <=> H2O + HCO
     const amrex::Real k_f =
-      3430 * exp((1.18) * logT - (-224.93784961471) * invT);
+      3430 * exp((1.18) * logT - (-224.939131473948) * invT);
     const amrex::Real qf = k_f * (sc[4] * sc[17]);
     const amrex::Real qr =
       k_f *
@@ -12166,7 +12166,7 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
 
   {
     // reaction 82:  CH2O + O2 <=> HCO + HO2
-    const amrex::Real k_f = 100000000 * exp(-(20128.6666321888) * invT);
+    const amrex::Real k_f = 100000000 * exp(-(20128.7813399506) * invT);
     const amrex::Real qf = k_f * (sc[9] * sc[17]);
     const amrex::Real qr =
       k_f *
@@ -12182,7 +12182,7 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
 
   {
     // reaction 83:  CH2O + HO2 <=> H2O2 + HCO
-    const amrex::Real k_f = 1000000 * exp(-(4025.73332643776) * invT);
+    const amrex::Real k_f = 1000000 * exp(-(4025.75626799013) * invT);
     const amrex::Real qf = k_f * (sc[5] * sc[17]);
     const amrex::Real qr =
       k_f *
@@ -12198,7 +12198,7 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
 
   {
     // reaction 84:  CH + CH2O <=> CH2CO + H
-    const amrex::Real k_f = 94600000 * exp(-(-259.156582889431) * invT);
+    const amrex::Real k_f = 94600000 * exp(-(-259.158059751864) * invT);
     const amrex::Real qf = k_f * (sc[11] * sc[17]);
     const amrex::Real qr =
       k_f *
@@ -12230,7 +12230,7 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
 
   {
     // reaction 88:  CH3 + OH <=> CH2 + H2O
-    const amrex::Real k_f = 56 * exp((1.6) * logT - (2727.43432866158) * invT);
+    const amrex::Real k_f = 56 * exp((1.6) * logT - (2727.44987156331) * invT);
     const amrex::Real qf = k_f * (sc[4] * sc[14]);
     const amrex::Real qr =
       k_f *
@@ -12262,7 +12262,7 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
 
   {
     // reaction 90:  CH3 + O2 <=> CH3O + O
-    const amrex::Real k_f = 30830000 * exp(-(14492.6399751759) * invT);
+    const amrex::Real k_f = 30830000 * exp(-(14492.7225647645) * invT);
     const amrex::Real qf = k_f * (sc[9] * sc[14]);
     const amrex::Real qr =
       k_f *
@@ -12278,7 +12278,7 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
 
   {
     // reaction 91:  CH3 + O2 <=> CH2O + OH
-    const amrex::Real k_f = 36000 * exp(-(4498.75699229419) * invT);
+    const amrex::Real k_f = 36000 * exp(-(4498.78262947897) * invT);
     const amrex::Real qf = k_f * (sc[9] * sc[14]);
     const amrex::Real qr =
       k_f *
@@ -12327,7 +12327,7 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
   {
     // reaction 94:  CH3 + H2O2 <=> CH4 + HO2
     const amrex::Real k_f =
-      0.0245 * exp((2.47) * logT - (2606.66232886845) * invT);
+      0.0245 * exp((2.47) * logT - (2606.67718352361) * invT);
     const amrex::Real qf = k_f * (sc[8] * sc[14]);
     const amrex::Real qr =
       k_f *
@@ -12392,7 +12392,7 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
   {
     // reaction 98:  CH2O + CH3 <=> CH4 + HCO
     const amrex::Real k_f =
-      0.00332 * exp((2.81) * logT - (2948.84966161566) * invT);
+      0.00332 * exp((2.81) * logT - (2948.86646630277) * invT);
     const amrex::Real qf = k_f * (sc[14] * sc[17]);
     const amrex::Real qr =
       k_f *
@@ -12424,7 +12424,7 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
 
   {
     // reaction 100:  CH2* + CH3 <=> C2H4 + H
-    const amrex::Real k_f = 12000000 * exp(-(-286.83349950869) * invT);
+    const amrex::Real k_f = 12000000 * exp(-(-286.835134094297) * invT);
     const amrex::Real qf = k_f * (sc[13] * sc[14]);
     const amrex::Real qr =
       k_f *
@@ -12441,7 +12441,7 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
   {
     // reaction 102:  2 CH3 <=> C2H5 + H
     const amrex::Real k_f =
-      4990000 * exp((0.1) * logT - (5334.09665753003) * invT);
+      4990000 * exp((0.1) * logT - (5334.12705508692) * invT);
     const amrex::Real qf = k_f * ((sc[14] * sc[14]));
     const amrex::Real qr =
       k_f *
@@ -12553,7 +12553,7 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
   {
     // reaction 110:  CH3O + O2 <=> CH2O + HO2
     const amrex::Real k_f =
-      4.28e-19 * exp((7.6) * logT - (-1776.35483029066) * invT);
+      4.28e-19 * exp((7.6) * logT - (-1776.36495325064) * invT);
     const amrex::Real qf = k_f * (sc[9] * sc[18]);
     const amrex::Real qr =
       k_f *
@@ -12570,7 +12570,7 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
   {
     // reaction 111:  CH4 + H <=> CH3 + H2
     const amrex::Real k_f =
-      660 * exp((1.62) * logT - (5454.86865732316) * invT);
+      660 * exp((1.62) * logT - (5454.89974312662) * invT);
     const amrex::Real qf = k_f * (sc[2] * sc[15]);
     const amrex::Real qr =
       k_f *
@@ -12587,7 +12587,7 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
   {
     // reaction 112:  CH4 + O <=> CH3 + OH
     const amrex::Real k_f =
-      1020 * exp((1.5) * logT - (4327.66332592059) * invT);
+      1020 * exp((1.5) * logT - (4327.68798808939) * invT);
     const amrex::Real qf = k_f * (sc[3] * sc[15]);
     const amrex::Real qr =
       k_f *
@@ -12603,7 +12603,7 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
 
   {
     // reaction 113:  CH4 + OH <=> CH3 + H2O
-    const amrex::Real k_f = 100 * exp((1.6) * logT - (1570.03599731073) * invT);
+    const amrex::Real k_f = 100 * exp((1.6) * logT - (1570.04494451615) * invT);
     const amrex::Real qf = k_f * (sc[4] * sc[15]);
     const amrex::Real qr =
       k_f *
@@ -12635,7 +12635,7 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
 
   {
     // reaction 115:  CH2 + CH4 <=> 2 CH3
-    const amrex::Real k_f = 2.46 * exp((2) * logT - (4161.60182620503) * invT);
+    const amrex::Real k_f = 2.46 * exp((2) * logT - (4161.62554203479) * invT);
     const amrex::Real qf = k_f * (sc[12] * sc[15]);
     const amrex::Real qr =
       k_f *
@@ -12650,7 +12650,7 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
 
   {
     // reaction 116:  CH2* + CH4 <=> 2 CH3
-    const amrex::Real k_f = 16000000 * exp(-(-286.83349950869) * invT);
+    const amrex::Real k_f = 16000000 * exp(-(-286.835134094297) * invT);
     const amrex::Real qf = k_f * (sc[13] * sc[15]);
     const amrex::Real qr =
       k_f *
@@ -12665,7 +12665,7 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
 
   {
     // reaction 117:  CH3OH + H <=> CH3O + H2
-    const amrex::Real k_f = 4.2 * exp((2.1) * logT - (2450.66516246898) * invT);
+    const amrex::Real k_f = 4.2 * exp((2.1) * logT - (2450.67912813899) * invT);
     const amrex::Real qf = k_f * (sc[2] * sc[19]);
     const amrex::Real qr =
       k_f *
@@ -12681,7 +12681,8 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
 
   {
     // reaction 118:  CH3OH + O <=> CH3O + OH
-    const amrex::Real k_f = 0.13 * exp((2.5) * logT - (2516.0833290236) * invT);
+    const amrex::Real k_f =
+      0.13 * exp((2.5) * logT - (2516.09766749383) * invT);
     const amrex::Real qf = k_f * (sc[3] * sc[19]);
     const amrex::Real qr =
       k_f *
@@ -12697,7 +12698,7 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
 
   {
     // reaction 119:  CH3OH + OH <=> CH3O + H2O
-    const amrex::Real k_f = 6.3 * exp((2) * logT - (754.82499870708) * invT);
+    const amrex::Real k_f = 6.3 * exp((2) * logT - (754.829300248149) * invT);
     const amrex::Real qf = k_f * (sc[4] * sc[19]);
     const amrex::Real qr =
       k_f *
@@ -12713,7 +12714,7 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
 
   {
     // reaction 120:  CH3 + CH3OH <=> CH3O + CH4
-    const amrex::Real k_f = 10 * exp((1.5) * logT - (5001.97365809891) * invT);
+    const amrex::Real k_f = 10 * exp((1.5) * logT - (5002.00216297773) * invT);
     const amrex::Real qf = k_f * (sc[14] * sc[19]);
     const amrex::Real qr =
       k_f *
@@ -12761,7 +12762,7 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
 
   {
     // reaction 123:  HCCO + O2 <=> 2 CO + OH
-    const amrex::Real k_f = 1600000 * exp(-(429.747032597231) * invT);
+    const amrex::Real k_f = 1600000 * exp(-(429.749481607946) * invT);
     const amrex::Real qf = k_f * (sc[9] * sc[28]);
     const amrex::Real qr =
       k_f *
@@ -12825,7 +12826,7 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
 
   {
     // reaction 129:  C2H2 + O <=> CH2 + CO
-    const amrex::Real k_f = 4.08 * exp((2) * logT - (956.111665028967) * invT);
+    const amrex::Real k_f = 4.08 * exp((2) * logT - (956.117113647655) * invT);
     const amrex::Real qf = k_f * (sc[3] * sc[22]);
     const amrex::Real qr =
       k_f *
@@ -12841,7 +12842,7 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
 
   {
     // reaction 130:  C2H2 + O <=> H + HCCO
-    const amrex::Real k_f = 16.32 * exp((2) * logT - (956.111665028967) * invT);
+    const amrex::Real k_f = 16.32 * exp((2) * logT - (956.117113647655) * invT);
     const amrex::Real qf = k_f * (sc[3] * sc[22]);
     const amrex::Real qr =
       k_f *
@@ -12858,7 +12859,7 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
   {
     // reaction 131:  C2H2 + OH <=> CH2CO + H
     const amrex::Real k_f =
-      2.18e-10 * exp((4.5) * logT - (-503.21666580472) * invT);
+      2.18e-10 * exp((4.5) * logT - (-503.219533498766) * invT);
     const amrex::Real qf = k_f * (sc[4] * sc[22]);
     const amrex::Real qr =
       k_f *
@@ -12875,7 +12876,7 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
   {
     // reaction 132:  C2H2 + OH <=> CH3 + CO
     const amrex::Real k_f =
-      4.83e-10 * exp((4) * logT - (-1006.43333160944) * invT);
+      4.83e-10 * exp((4) * logT - (-1006.43906699753) * invT);
     const amrex::Real qf = k_f * (sc[4] * sc[22]);
     const amrex::Real qr =
       k_f *
@@ -12891,7 +12892,7 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
 
   {
     // reaction 133:  C2H2 + HCO <=> C2H3 + CO
-    const amrex::Real k_f = 10 * exp((2) * logT - (3019.29999482832) * invT);
+    const amrex::Real k_f = 10 * exp((2) * logT - (3019.31720099259) * invT);
     const amrex::Real qf = k_f * (sc[16] * sc[22]);
     const amrex::Real qr =
       k_f *
@@ -12908,7 +12909,7 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
   {
     // reaction 134:  C2H2 + CH3 <=> H + aC3H4
     const amrex::Real k_f =
-      5140 * exp((0.86) * logT - (11147.758797572) * invT);
+      5140 * exp((0.86) * logT - (11147.8223255982) * invT);
     const amrex::Real qf = k_f * (sc[14] * sc[22]);
     const amrex::Real qr =
       k_f *
@@ -12925,7 +12926,7 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
   {
     // reaction 135:  C2H2 + CH3 <=> aC3H5
     const amrex::Real k_f =
-      2.68e+47 * exp((-12.82) * logT - (17979.9314692026) * invT);
+      2.68e+47 * exp((-12.82) * logT - (17980.0339319109) * invT);
     const amrex::Real qf = k_f * (sc[14] * sc[22]);
     const amrex::Real qr = k_f *
                            (kc_fast ? (ge[14] * inv_ge[33] * ge[22])
@@ -12986,7 +12987,7 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
 
   {
     // reaction 140:  CH2CO + H <=> H2 + HCCO
-    const amrex::Real k_f = 50000000 * exp(-(4025.73332643776) * invT);
+    const amrex::Real k_f = 50000000 * exp(-(4025.75626799013) * invT);
     const amrex::Real qf = k_f * (sc[2] * sc[29]);
     const amrex::Real qr =
       k_f *
@@ -13003,7 +13004,7 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
   {
     // reaction 141:  CH2CO + H <=> CH3 + CO
     const amrex::Real k_f =
-      1500 * exp((1.43) * logT - (1353.6528310147) * invT);
+      1500 * exp((1.43) * logT - (1353.66054511168) * invT);
     const amrex::Real qf = k_f * (sc[2] * sc[29]);
     const amrex::Real qr =
       k_f *
@@ -13019,7 +13020,7 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
 
   {
     // reaction 142:  CH2CO + O <=> HCCO + OH
-    const amrex::Real k_f = 10000000 * exp(-(4025.73332643776) * invT);
+    const amrex::Real k_f = 10000000 * exp(-(4025.75626799013) * invT);
     const amrex::Real qf = k_f * (sc[3] * sc[29]);
     const amrex::Real qr =
       k_f *
@@ -13035,7 +13036,7 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
 
   {
     // reaction 143:  CH2CO + O <=> CH2 + CO2
-    const amrex::Real k_f = 1750000 * exp(-(679.342498836372) * invT);
+    const amrex::Real k_f = 1750000 * exp(-(679.346370223334) * invT);
     const amrex::Real qf = k_f * (sc[3] * sc[29]);
     const amrex::Real qr =
       k_f *
@@ -13051,7 +13052,7 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
 
   {
     // reaction 144:  CH2CO + OH <=> H2O + HCCO
-    const amrex::Real k_f = 7500000 * exp(-(1006.43333160944) * invT);
+    const amrex::Real k_f = 7500000 * exp(-(1006.43906699753) * invT);
     const amrex::Real qf = k_f * (sc[4] * sc[29]);
     const amrex::Real qr =
       k_f *
@@ -13148,7 +13149,7 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
   {
     // reaction 151:  C2H3 + O2 <=> C2H2 + HO2
     const amrex::Real k_f =
-      1.34 * exp((1.61) * logT - (-192.93326966953) * invT);
+      1.34 * exp((1.61) * logT - (-192.934369143427) * invT);
     const amrex::Real qf = k_f * (sc[9] * sc[24]);
     const amrex::Real qr =
       k_f *
@@ -13165,7 +13166,7 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
   {
     // reaction 152:  C2H3 + O2 <=> CH2CHO + O
     const amrex::Real k_f =
-      300000 * exp((0.29) * logT - (5.53538332385192) * invT);
+      300000 * exp((0.29) * logT - (5.53541486848642) * invT);
     const amrex::Real qf = k_f * (sc[9] * sc[24]);
     const amrex::Real qr =
       k_f *
@@ -13182,7 +13183,7 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
   {
     // reaction 153:  C2H3 + O2 <=> CH2O + HCO
     const amrex::Real k_f =
-      46000000000 * exp((-1.39) * logT - (508.248832462767) * invT);
+      46000000000 * exp((-1.39) * logT - (508.251728833753) * invT);
     const amrex::Real qf = k_f * (sc[9] * sc[24]);
     const amrex::Real qr =
       k_f *
@@ -13214,7 +13215,7 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
 
   {
     // reaction 155:  C2H3 + H2O2 <=> C2H4 + HO2
-    const amrex::Real k_f = 12100 * exp(-(-299.917132819613) * invT);
+    const amrex::Real k_f = 12100 * exp(-(-299.918841965264) * invT);
     const amrex::Real qf = k_f * (sc[8] * sc[24]);
     const amrex::Real qr =
       k_f *
@@ -13263,7 +13264,7 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
   {
     // reaction 159:  C2H3 + CH3 <=> H + aC3H5
     const amrex::Real k_f =
-      1.5e+18 * exp((-2.83) * logT - (9368.88788395227) * invT);
+      1.5e+18 * exp((-2.83) * logT - (9368.94127468002) * invT);
     const amrex::Real qf = k_f * (sc[14] * sc[24]);
     const amrex::Real qr =
       k_f *
@@ -13295,7 +13296,7 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
   {
     // reaction 161:  CH2CHO <=> CH3 + CO
     const amrex::Real k_f =
-      7.8e+41 * exp((-9.147) * logT - (23600.8616262414) * invT);
+      7.8e+41 * exp((-9.147) * logT - (23600.9961210921) * invT);
     const amrex::Real qf = k_f * (sc[30]);
     const amrex::Real qr = k_f *
                            (kc_fast ? (ge[30] * inv_ge[20] * inv_ge[14])
@@ -13325,7 +13326,7 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
 
   {
     // reaction 163:  CH2CHO + H <=> CH2CO + H2
-    const amrex::Real k_f = 20000000 * exp(-(2012.86666321888) * invT);
+    const amrex::Real k_f = 20000000 * exp(-(2012.87813399506) * invT);
     const amrex::Real qf = k_f * (sc[2] * sc[30]);
     const amrex::Real qr =
       k_f *
@@ -13341,7 +13342,7 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
 
   {
     // reaction 164:  CH2CHO + O <=> CH2CO + OH
-    const amrex::Real k_f = 20000000 * exp(-(2012.86666321888) * invT);
+    const amrex::Real k_f = 20000000 * exp(-(2012.87813399506) * invT);
     const amrex::Real qf = k_f * (sc[3] * sc[30]);
     const amrex::Real qr =
       k_f *
@@ -13357,7 +13358,7 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
 
   {
     // reaction 165:  CH2CHO + OH <=> CH2CO + H2O
-    const amrex::Real k_f = 10000000 * exp(-(1006.43333160944) * invT);
+    const amrex::Real k_f = 10000000 * exp(-(1006.43906699753) * invT);
     const amrex::Real qf = k_f * (sc[4] * sc[30]);
     const amrex::Real qr =
       k_f *
@@ -13406,7 +13407,7 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
 
   {
     // reaction 168:  CH2OCH2 <=> CH3 + HCO
-    const amrex::Real k_f = 36300000000000 * exp(-(28783.99328403) * invT);
+    const amrex::Real k_f = 36300000000000 * exp(-(28784.1573161294) * invT);
     const amrex::Real qf = k_f * (sc[31]);
     const amrex::Real qr = k_f *
                            (kc_fast ? (inv_ge[16] * ge[31] * inv_ge[14])
@@ -13420,7 +13421,7 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
 
   {
     // reaction 169:  CH2OCH2 <=> CH4 + CO
-    const amrex::Real k_f = 12100000000000 * exp(-(28783.99328403) * invT);
+    const amrex::Real k_f = 12100000000000 * exp(-(28784.1573161294) * invT);
     const amrex::Real qf = k_f * (sc[31]);
     const amrex::Real qr = k_f *
                            (kc_fast ? (ge[31] * inv_ge[15] * inv_ge[20])
@@ -13434,7 +13435,7 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
 
   {
     // reaction 170:  CH2OCH2 + H <=> C2H3 + H2O
-    const amrex::Real k_f = 5000 * exp(-(2516.0833290236) * invT);
+    const amrex::Real k_f = 5000 * exp(-(2516.09766749383) * invT);
     const amrex::Real qf = k_f * (sc[2] * sc[31]);
     const amrex::Real qr =
       k_f *
@@ -13450,7 +13451,7 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
 
   {
     // reaction 171:  CH2OCH2 + H <=> C2H4 + OH
-    const amrex::Real k_f = 95100 * exp(-(2516.0833290236) * invT);
+    const amrex::Real k_f = 95100 * exp(-(2516.09766749383) * invT);
     const amrex::Real qf = k_f * (sc[2] * sc[31]);
     const amrex::Real qr =
       k_f *
@@ -13467,7 +13468,7 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
   {
     // reaction 174:  C2H4 + H <=> C2H3 + H2
     const amrex::Real k_f =
-      50.7 * exp((1.9) * logT - (6516.65582217112) * invT);
+      50.7 * exp((1.9) * logT - (6516.69295880902) * invT);
     const amrex::Real qf = k_f * (sc[2] * sc[25]);
     const amrex::Real qr =
       k_f *
@@ -13484,7 +13485,7 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
   {
     // reaction 175:  C2H4 + O <=> C2H3 + OH
     const amrex::Real k_f =
-      15.1 * exp((1.9) * logT - (1882.03033010965) * invT);
+      15.1 * exp((1.9) * logT - (1882.04105528538) * invT);
     const amrex::Real qf = k_f * (sc[3] * sc[25]);
     const amrex::Real qr =
       k_f *
@@ -13501,7 +13502,7 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
   {
     // reaction 176:  C2H4 + O <=> CH3 + HCO
     const amrex::Real k_f =
-      19.2 * exp((1.83) * logT - (110.707666477038) * invT);
+      19.2 * exp((1.83) * logT - (110.708297369728) * invT);
     const amrex::Real qf = k_f * (sc[3] * sc[25]);
     const amrex::Real qr =
       k_f *
@@ -13518,7 +13519,7 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
   {
     // reaction 177:  C2H4 + O <=> CH2 + CH2O
     const amrex::Real k_f =
-      0.384 * exp((1.83) * logT - (110.707666477038) * invT);
+      0.384 * exp((1.83) * logT - (110.708297369728) * invT);
     const amrex::Real qf = k_f * (sc[3] * sc[25]);
     const amrex::Real qr =
       k_f *
@@ -13534,7 +13535,7 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
 
   {
     // reaction 178:  C2H4 + OH <=> C2H3 + H2O
-    const amrex::Real k_f = 3.6 * exp((2) * logT - (1258.0416645118) * invT);
+    const amrex::Real k_f = 3.6 * exp((2) * logT - (1258.04883374691) * invT);
     const amrex::Real qf = k_f * (sc[4] * sc[25]);
     const amrex::Real qr =
       k_f *
@@ -13550,7 +13551,7 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
 
   {
     // reaction 179:  C2H4 + HCO <=> C2H5 + CO
-    const amrex::Real k_f = 10 * exp((2) * logT - (4025.73332643776) * invT);
+    const amrex::Real k_f = 10 * exp((2) * logT - (4025.75626799013) * invT);
     const amrex::Real qf = k_f * (sc[16] * sc[25]);
     const amrex::Real qr =
       k_f *
@@ -13582,7 +13583,7 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
 
   {
     // reaction 181:  C2H4 + CH2 <=> H + aC3H5
-    const amrex::Real k_f = 20000000 * exp(-(3019.29999482832) * invT);
+    const amrex::Real k_f = 20000000 * exp(-(3019.31720099259) * invT);
     const amrex::Real qf = k_f * (sc[12] * sc[25]);
     const amrex::Real qr =
       k_f *
@@ -13630,7 +13631,7 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
 
   {
     // reaction 184:  C2H4 + CH3 <=> C2H3 + CH4
-    const amrex::Real k_f = 0.227 * exp((2) * logT - (4629.59332540342) * invT);
+    const amrex::Real k_f = 0.227 * exp((2) * logT - (4629.61970818865) * invT);
     const amrex::Real qf = k_f * (sc[14] * sc[25]);
     const amrex::Real qr =
       k_f *
@@ -13646,7 +13647,7 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
 
   {
     // reaction 185:  C2H4 + CH3 <=> nC3H7
-    const amrex::Real k_f = 330000 * exp(-(3874.76832669634) * invT);
+    const amrex::Real k_f = 330000 * exp(-(3874.7904079405) * invT);
     const amrex::Real qf = k_f * (sc[14] * sc[25]);
     const amrex::Real qr = k_f *
                            (kc_fast ? (ge[25] * inv_ge[35] * ge[14])
@@ -13660,7 +13661,7 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
 
   {
     // reaction 186:  C2H4 + O2 <=> C2H3 + HO2
-    const amrex::Real k_f = 42200000 * exp(-(30595.573280927) * invT);
+    const amrex::Real k_f = 42200000 * exp(-(30595.747636725) * invT);
     const amrex::Real qf = k_f * (sc[9] * sc[25]);
     const amrex::Real qr =
       k_f *
@@ -13676,7 +13677,7 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
 
   {
     // reaction 187:  C2H4 + HO2 <=> CH2OCH2 + OH
-    const amrex::Real k_f = 2820000 * exp(-(8605.00498526071) * invT);
+    const amrex::Real k_f = 2820000 * exp(-(8605.0540228289) * invT);
     const amrex::Real qf = k_f * (sc[5] * sc[25]);
     const amrex::Real qr =
       k_f *
@@ -13789,7 +13790,7 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
 
   {
     // reaction 195:  C2H5 + H2O2 <=> C2H6 + HO2
-    const amrex::Real k_f = 8700 * exp(-(490.133032493797) * invT);
+    const amrex::Real k_f = 8700 * exp(-(490.135825627798) * invT);
     const amrex::Real qf = k_f * (sc[8] * sc[26]);
     const amrex::Real qr =
       k_f *
@@ -13806,7 +13807,7 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
   {
     // reaction 197:  C2H3 + C2H5 <=> CH3 + aC3H5
     const amrex::Real k_f =
-      3.9e+26 * exp((-5.22) * logT - (9937.0194996458) * invT);
+      3.9e+26 * exp((-5.22) * logT - (9937.07612800013) * invT);
     const amrex::Real qf = k_f * (sc[24] * sc[26]);
     const amrex::Real qr =
       k_f *
@@ -13822,7 +13823,7 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
 
   {
     // reaction 198:  C2H6 + H <=> C2H5 + H2
-    const amrex::Real k_f = 115 * exp((1.9) * logT - (3789.22149350954) * invT);
+    const amrex::Real k_f = 115 * exp((1.9) * logT - (3789.24308724571) * invT);
     const amrex::Real qf = k_f * (sc[2] * sc[27]);
     const amrex::Real qr =
       k_f *
@@ -13839,7 +13840,7 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
   {
     // reaction 199:  C2H6 + O <=> C2H5 + OH
     const amrex::Real k_f =
-      89.8 * exp((1.92) * logT - (2863.30282842885) * invT);
+      89.8 * exp((1.92) * logT - (2863.31914560798) * invT);
     const amrex::Real qf = k_f * (sc[3] * sc[27]);
     const amrex::Real qr =
       k_f *
@@ -13856,7 +13857,7 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
   {
     // reaction 200:  C2H6 + OH <=> C2H5 + H2O
     const amrex::Real k_f =
-      3.54 * exp((2.12) * logT - (437.798499250106) * invT);
+      3.54 * exp((2.12) * logT - (437.800994143926) * invT);
     const amrex::Real qf = k_f * (sc[4] * sc[27]);
     const amrex::Real qr =
       k_f *
@@ -13872,7 +13873,7 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
 
   {
     // reaction 201:  C2H6 + CH2* <=> C2H5 + CH3
-    const amrex::Real k_f = 40000000 * exp(-(-276.769166192596) * invT);
+    const amrex::Real k_f = 40000000 * exp(-(-276.770743424321) * invT);
     const amrex::Real qf = k_f * (sc[13] * sc[27]);
     const amrex::Real qr =
       k_f *
@@ -13889,7 +13890,7 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
   {
     // reaction 202:  C2H6 + CH3 <=> C2H5 + CH4
     const amrex::Real k_f =
-      6.14 * exp((1.74) * logT - (5258.61415765932) * invT);
+      6.14 * exp((1.74) * logT - (5258.6441250621) * invT);
     const amrex::Real qf = k_f * (sc[14] * sc[27]);
     const amrex::Real qr =
       k_f *
@@ -13905,7 +13906,7 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
 
   {
     // reaction 204:  CH3O2 + HO2 <=> CH2O + H2O + O2
-    const amrex::Real k_f = 18000 * exp(-(-720.103048766554) * invT);
+    const amrex::Real k_f = 18000 * exp(-(-720.107152436734) * invT);
     const amrex::Real qf = k_f * (sc[5] * sc[43]);
     const amrex::Real qr =
       k_f *
@@ -13922,7 +13923,7 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
 
   {
     // reaction 205:  2 CH3O2 <=> CH2O + CH3OH + O2
-    const amrex::Real k_f = 1046 * exp(-(-1806.04461357314) * invT);
+    const amrex::Real k_f = 1046 * exp(-(-1806.05490572707) * invT);
     const amrex::Real qf = k_f * ((sc[43] * sc[43]));
     const amrex::Real qr =
       k_f *
@@ -13938,7 +13939,7 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
 
   {
     // reaction 206:  2 CH3O2 <=> 2 CH3O + O2
-    const amrex::Real k_f = 77410 * exp(-(-30.6962166140879) * invT);
+    const amrex::Real k_f = 77410 * exp(-(-30.6963915434247) * invT);
     const amrex::Real qf = k_f * ((sc[43] * sc[43]));
     const amrex::Real qr =
       k_f *
@@ -13953,7 +13954,7 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
 
   {
     // reaction 207:  CH3 + CH3O2 <=> 2 CH3O
-    const amrex::Real k_f = 1000000 * exp(-(-710.038715450459) * invT);
+    const amrex::Real k_f = 1000000 * exp(-(-710.042761766759) * invT);
     const amrex::Real qf = k_f * (sc[14] * sc[43]);
     const amrex::Real qr =
       k_f *
@@ -14017,7 +14018,7 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
   {
     // reaction 211:  H + aC3H4 <=> aC3H5
     const amrex::Real k_f =
-      1.52e+53 * exp((-13.54) * logT - (13561.1859267714) * invT);
+      1.52e+53 * exp((-13.54) * logT - (13561.2632082582) * invT);
     const amrex::Real qf = k_f * (sc[2] * sc[32]);
     const amrex::Real qr = k_f *
                            (kc_fast ? (inv_ge[33] * ge[32] * ge[2])
@@ -14031,7 +14032,7 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
 
   {
     // reaction 212:  O + aC3H4 <=> C2H4 + CO
-    const amrex::Real k_f = 20 * exp((1.8) * logT - (503.21666580472) * invT);
+    const amrex::Real k_f = 20 * exp((1.8) * logT - (503.219533498766) * invT);
     const amrex::Real qf = k_f * (sc[3] * sc[32]);
     const amrex::Real qr =
       k_f *
@@ -14080,7 +14081,7 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
   {
     // reaction 216:  O2 + aC3H5 <=> HO2 + aC3H4
     const amrex::Real k_f =
-      4990000000 * exp((-1.4) * logT - (11286.1433806683) * invT);
+      4990000000 * exp((-1.4) * logT - (11286.2076973103) * invT);
     const amrex::Real qf = k_f * (sc[9] * sc[33]);
     const amrex::Real qr =
       k_f *
@@ -14146,7 +14147,7 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
   {
     // reaction 221:  CH3 + aC3H5 <=> CH4 + aC3H4
     const amrex::Real k_f =
-      3000000 * exp((-0.32) * logT - (-65.9213832204183) * invT);
+      3000000 * exp((-0.32) * logT - (-65.9217588883383) * invT);
     const amrex::Real qf = k_f * (sc[14] * sc[33]);
     const amrex::Real qr =
       k_f *
@@ -14163,7 +14164,7 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
   {
     // reaction 223:  C3H6 + H <=> C2H4 + CH3
     const amrex::Real k_f =
-      8e+15 * exp((-2.39) * logT - (5625.96232369677) * invT);
+      8e+15 * exp((-2.39) * logT - (5625.9943845162) * invT);
     const amrex::Real qf = k_f * (sc[2] * sc[34]);
     const amrex::Real qr =
       k_f *
@@ -14180,7 +14181,7 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
   {
     // reaction 224:  C3H6 + H <=> H2 + aC3H5
     const amrex::Real k_f =
-      0.173 * exp((2.5) * logT - (1253.00949785375) * invT);
+      0.173 * exp((2.5) * logT - (1253.01663841193) * invT);
     const amrex::Real qf = k_f * (sc[2] * sc[34]);
     const amrex::Real qr =
       k_f *
@@ -14196,7 +14197,7 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
 
   {
     // reaction 225:  C3H6 + O <=> CH2CO + CH3 + H
-    const amrex::Real k_f = 80 * exp((1.65) * logT - (164.551849718143) * invT);
+    const amrex::Real k_f = 80 * exp((1.65) * logT - (164.552787454096) * invT);
     const amrex::Real qf = k_f * (sc[3] * sc[34]);
     const amrex::Real qr =
       k_f *
@@ -14213,8 +14214,7 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
 
   {
     // reaction 226:  C3H6 + O <=> C2H5 + HCO
-    const amrex::Real k_f =
-      35 * exp((1.65) * logT - (-489.126599162188) * invT);
+    const amrex::Real k_f = 35 * exp((1.65) * logT - (-489.1293865608) * invT);
     const amrex::Real qf = k_f * (sc[3] * sc[34]);
     const amrex::Real qr =
       k_f *
@@ -14231,7 +14231,7 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
   {
     // reaction 227:  C3H6 + O <=> OH + aC3H5
     const amrex::Real k_f =
-      180000 * exp((0.7) * logT - (2958.91399493175) * invT);
+      180000 * exp((0.7) * logT - (2958.93085697274) * invT);
     const amrex::Real qf = k_f * (sc[3] * sc[34]);
     const amrex::Real qr =
       k_f *
@@ -14247,7 +14247,7 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
 
   {
     // reaction 228:  C3H6 + OH <=> H2O + aC3H5
-    const amrex::Real k_f = 3.1 * exp((2) * logT - (-149.958566409806) * invT);
+    const amrex::Real k_f = 3.1 * exp((2) * logT - (-149.959420982632) * invT);
     const amrex::Real qf = k_f * (sc[4] * sc[34]);
     const amrex::Real qr =
       k_f *
@@ -14264,7 +14264,7 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
   {
     // reaction 229:  C3H6 + HO2 <=> H2O2 + aC3H5
     const amrex::Real k_f =
-      0.0096 * exp((2.6) * logT - (6999.74382134365) * invT);
+      0.0096 * exp((2.6) * logT - (6999.78371096783) * invT);
     const amrex::Real qf = k_f * (sc[5] * sc[34]);
     const amrex::Real qr =
       k_f *
@@ -14281,7 +14281,7 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
   {
     // reaction 230:  C3H6 + CH3 <=> CH4 + aC3H5
     const amrex::Real k_f =
-      2.2e-06 * exp((3.5) * logT - (2855.75457844178) * invT);
+      2.2e-06 * exp((3.5) * logT - (2855.7708526055) * invT);
     const amrex::Real qf = k_f * (sc[14] * sc[34]);
     const amrex::Real qr =
       k_f *
@@ -14298,7 +14298,7 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
   {
     // reaction 231:  H + nC3H7 <=> C2H5 + CH3
     const amrex::Real k_f =
-      3.7e+18 * exp((-2.92) * logT - (6292.72440588802) * invT);
+      3.7e+18 * exp((-2.92) * logT - (6292.76026640207) * invT);
     const amrex::Real qf = k_f * (sc[2] * sc[35]);
     const amrex::Real qr =
       k_f *
@@ -14412,7 +14412,7 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
   {
     // reaction 238:  C4H81 + H <=> C2H4 + C2H5
     const amrex::Real k_f =
-      1.6e+16 * exp((-2.39) * logT - (5625.96232369677) * invT);
+      1.6e+16 * exp((-2.39) * logT - (5625.9943845162) * invT);
     const amrex::Real qf = k_f * (sc[2] * sc[36]);
     const amrex::Real qr =
       k_f *
@@ -14429,7 +14429,7 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
   {
     // reaction 239:  C4H81 + H <=> C3H6 + CH3
     const amrex::Real k_f =
-      3.2e+16 * exp((-2.39) * logT - (5625.96232369677) * invT);
+      3.2e+16 * exp((-2.39) * logT - (5625.9943845162) * invT);
     const amrex::Real qf = k_f * (sc[2] * sc[36]);
     const amrex::Real qr =
       k_f *
@@ -14446,7 +14446,7 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
   {
     // reaction 240:  C4H81 + O <=> HCO + nC3H7
     const amrex::Real k_f =
-      330 * exp((1.45) * logT - (-202.293099653497) * invT);
+      330 * exp((1.45) * logT - (-202.294252466504) * invT);
     const amrex::Real qf = k_f * (sc[3] * sc[36]);
     const amrex::Real qr =
       k_f *
@@ -14462,7 +14462,7 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
 
   {
     // reaction 241:  N + NO <=> N2 + O
-    const amrex::Real k_f = 27000000 * exp(-(178.641916360675) * invT);
+    const amrex::Real k_f = 27000000 * exp(-(178.642934392062) * invT);
     const amrex::Real qf = k_f * (sc[37] * sc[38]);
     const amrex::Real qr =
       k_f *
@@ -14478,7 +14478,7 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
 
   {
     // reaction 242:  N + O2 <=> NO + O
-    const amrex::Real k_f = 9000 * exp((1) * logT - (3270.90832773068) * invT);
+    const amrex::Real k_f = 9000 * exp((1) * logT - (3270.92696774198) * invT);
     const amrex::Real qf = k_f * (sc[9] * sc[37]);
     const amrex::Real qr =
       k_f *
@@ -14494,7 +14494,7 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
 
   {
     // reaction 243:  N + OH <=> H + NO
-    const amrex::Real k_f = 33600000 * exp(-(193.738416334817) * invT);
+    const amrex::Real k_f = 33600000 * exp(-(193.739520397025) * invT);
     const amrex::Real qf = k_f * (sc[4] * sc[37]);
     const amrex::Real qr =
       k_f *
@@ -14510,7 +14510,7 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
 
   {
     // reaction 244:  HO2 + NO <=> NO2 + OH
-    const amrex::Real k_f = 2110000 * exp(-(-241.543999586265) * invT);
+    const amrex::Real k_f = 2110000 * exp(-(-241.545376079408) * invT);
     const amrex::Real qf = k_f * (sc[5] * sc[38]);
     const amrex::Real qr =
       k_f *
@@ -14526,7 +14526,7 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
 
   {
     // reaction 246:  NO2 + O <=> NO + O2
-    const amrex::Real k_f = 3900000 * exp(-(-120.771999793133) * invT);
+    const amrex::Real k_f = 3900000 * exp(-(-120.772688039704) * invT);
     const amrex::Real qf = k_f * (sc[3] * sc[39]);
     const amrex::Real qr =
       k_f *
@@ -14542,7 +14542,7 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
 
   {
     // reaction 247:  H + NO2 <=> NO + OH
-    const amrex::Real k_f = 132000000 * exp(-(181.157999689699) * invT);
+    const amrex::Real k_f = 132000000 * exp(-(181.159032059556) * invT);
     const amrex::Real qf = k_f * (sc[2] * sc[39]);
     const amrex::Real qr =
       k_f *
@@ -14575,7 +14575,7 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
   {
     // reaction 249:  NCO + OH <=> CO + H + NO
     const amrex::Real k_f =
-      8300000 * exp((-0.1) * logT - (37986.8196682667) * invT);
+      8300000 * exp((-0.1) * logT - (37987.0361447548) * invT);
     const amrex::Real qf = k_f * (sc[4] * sc[42]);
     const amrex::Real qr =
       k_f *
@@ -14608,7 +14608,7 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
 
   {
     // reaction 251:  NCO + O2 <=> CO2 + NO
-    const amrex::Real k_f = 2000000 * exp(-(10064.3333160944) * invT);
+    const amrex::Real k_f = 2000000 * exp(-(10064.3906699753) * invT);
     const amrex::Real qf = k_f * (sc[9] * sc[42]);
     const amrex::Real qr =
       k_f *
@@ -14625,7 +14625,7 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
   {
     // reaction 253:  NCO + NO <=> CO2 + N2
     const amrex::Real k_f =
-      3800000000000 * exp((-2) * logT - (402.573332643776) * invT);
+      3800000000000 * exp((-2) * logT - (402.575626799013) * invT);
     const amrex::Real qf = k_f * (sc[38] * sc[42]);
     const amrex::Real qr =
       k_f *
@@ -14690,7 +14690,7 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
   {
     // reaction 257:  CH2 + NO <=> H + HNCO
     const amrex::Real k_f =
-      310000000000 * exp((-1.38) * logT - (639.085165571994) * invT);
+      310000000000 * exp((-1.38) * logT - (639.088807543433) * invT);
     const amrex::Real qf = k_f * (sc[12] * sc[38]);
     const amrex::Real qr =
       k_f *
@@ -14707,7 +14707,7 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
   {
     // reaction 258:  CH2 + NO <=> H + HCNO
     const amrex::Real k_f =
-      38000000 * exp((-0.36) * logT - (291.865666166737) * invT);
+      38000000 * exp((-0.36) * logT - (291.867329429284) * invT);
     const amrex::Real qf = k_f * (sc[12] * sc[38]);
     const amrex::Real qr =
       k_f *
@@ -14724,7 +14724,7 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
   {
     // reaction 259:  CH2* + NO <=> H + HNCO
     const amrex::Real k_f =
-      310000000000 * exp((-1.38) * logT - (639.085165571994) * invT);
+      310000000000 * exp((-1.38) * logT - (639.088807543433) * invT);
     const amrex::Real qf = k_f * (sc[13] * sc[38]);
     const amrex::Real qr =
       k_f *
@@ -14741,7 +14741,7 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
   {
     // reaction 260:  CH2* + NO <=> H + HCNO
     const amrex::Real k_f =
-      38000000 * exp((-0.36) * logT - (291.865666166737) * invT);
+      38000000 * exp((-0.36) * logT - (291.867329429284) * invT);
     const amrex::Real qf = k_f * (sc[13] * sc[38]);
     const amrex::Real qr =
       k_f *
@@ -14758,7 +14758,7 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
   {
     // reaction 261:  HNCO + O <=> NCO + OH
     const amrex::Real k_f =
-      2.2 * exp((2.11) * logT - (24065.3306087791) * invT);
+      2.2 * exp((2.11) * logT - (24065.4677505115) * invT);
     const amrex::Real qf = k_f * (sc[3] * sc[41]);
     const amrex::Real qr =
       k_f *
@@ -14774,7 +14774,7 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
 
   {
     // reaction 262:  H + HNCO <=> H2 + NCO
-    const amrex::Real k_f = 90 * exp((1.7) * logT - (29266.0748498709) * invT);
+    const amrex::Real k_f = 90 * exp((1.7) * logT - (29266.2416292212) * invT);
     const amrex::Real qf = k_f * (sc[2] * sc[41]);
     const amrex::Real qr =
       k_f *
@@ -14790,7 +14790,7 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
 
   {
     // reaction 263:  HNCO + OH <=> H2O + NCO
-    const amrex::Real k_f = 33 * exp((1.5) * logT - (1811.57999689699) * invT);
+    const amrex::Real k_f = 33 * exp((1.5) * logT - (1811.59032059556) * invT);
     const amrex::Real qf = k_f * (sc[4] * sc[41]);
     const amrex::Real qr =
       k_f *
@@ -14807,7 +14807,7 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
   {
     // reaction 264:  H + HCNO <=> H + HNCO
     const amrex::Real k_f =
-      2100000000 * exp((-0.69) * logT - (1434.16749754345) * invT);
+      2100000000 * exp((-0.69) * logT - (1434.17567047148) * invT);
     const amrex::Real qf = k_f * (sc[2] * sc[40]);
     const amrex::Real qr =
       k_f *
@@ -14823,7 +14823,7 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
 
   {
     // reaction 265:  HCCO + NO <=> CO + HCNO
-    const amrex::Real k_f = 55000 * exp(-(920.886498422637) * invT);
+    const amrex::Real k_f = 55000 * exp(-(920.891746302741) * invT);
     const amrex::Real qf = k_f * (sc[28] * sc[38]);
     const amrex::Real qr =
       k_f *
@@ -14839,7 +14839,7 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
 
   {
     // reaction 266:  CO2 + N <=> CO + NO
-    const amrex::Real k_f = 3000000 * exp(-(5686.34832359333) * invT);
+    const amrex::Real k_f = 3000000 * exp(-(5686.38072853605) * invT);
     const amrex::Real qf = k_f * (sc[21] * sc[37]);
     const amrex::Real qr =
       k_f *
@@ -14871,7 +14871,7 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
 
   {
     // reaction 268:  CH3O2 + NO <=> CH3O + NO2
-    const amrex::Real k_f = 1690000 * exp(-(-286.83349950869) * invT);
+    const amrex::Real k_f = 1690000 * exp(-(-286.835134094297) * invT);
     const amrex::Real qf = k_f * (sc[38] * sc[43]);
     const amrex::Real qr =
       k_f *
@@ -15151,7 +15151,7 @@ aJacobian_precond(
   const amrex::Real logT = log(T);
 
   // reference concentration: P_atm / (RT) in inverse mol/m^3
-  amrex::Real refC = 101325 / 8.31446 / T;
+  amrex::Real refC = 101325 / 8.31446261815324 / T;
   amrex::Real refCinv = 1.0 / refC;
 
   // compute the mixture concentration
@@ -15310,10 +15310,10 @@ aJacobian_precond(
   k_f = 111000000 * exp(-0.37 * logT);
   dlnkfdT = -0.37 * invT;
   // pressure-fall-off
-  k_0 = 2.01e+17 * exp(-0.584 * logT - (-1153.87581469022) * invT);
+  k_0 = 2.01e+17 * exp(-0.584 * logT - (-1153.88239031267) * invT);
   Pr = 1e-12 * alpha / k_f * k_0;
   fPr = Pr / (1.0 + Pr);
-  dlnk0dT = -0.584 * invT + (-1153.87581469022) * invT2;
+  dlnk0dT = -0.584 * invT + (-1153.88239031267) * invT2;
   dlogPrdT = log10e * (dlnk0dT - dlnkfdT);
   dlogfPrdT = dlogPrdT / (1.0 + Pr);
   // Troe form
@@ -15415,13 +15415,13 @@ aJacobian_precond(
           (1.5 - 1) * sc[20] + sc[21] + (3 - 1) * sc[27];
   // forward
   phi_f = sc[6] * sc[20];
-  k_f = 43 * exp(1.5 * logT - (40056.0465980557) * invT);
-  dlnkfdT = 1.5 * invT + (40056.0465980557) * invT2;
+  k_f = 43 * exp(1.5 * logT - (40056.2748665018) * invT);
+  dlnkfdT = 1.5 * invT + (40056.2748665018) * invT2;
   // pressure-fall-off
-  k_0 = 5.07e+27 * exp(-3.42 * logT - (42446.3257606281) * invT);
+  k_0 = 5.07e+27 * exp(-3.42 * logT - (42446.5676506209) * invT);
   Pr = 1e-12 * alpha / k_f * k_0;
   fPr = Pr / (1.0 + Pr);
-  dlnk0dT = -3.42 * invT + (42446.3257606281) * invT2;
+  dlnk0dT = -3.42 * invT + (42446.5676506209) * invT2;
   dlogPrdT = log10e * (dlnk0dT - dlnkfdT);
   dlogfPrdT = dlogPrdT / (1.0 + Pr);
   // Troe form
@@ -15529,10 +15529,10 @@ aJacobian_precond(
   k_f = 50000000;
   dlnkfdT = 0.0;
   // pressure-fall-off
-  k_0 = 2.69e+28 * exp(-3.74 * logT - (974.227464997937) * invT);
+  k_0 = 2.69e+28 * exp(-3.74 * logT - (974.233016853611) * invT);
   Pr = 1e-12 * alpha / k_f * k_0;
   fPr = Pr / (1.0 + Pr);
-  dlnk0dT = -3.74 * invT + (974.227464997937) * invT2;
+  dlnk0dT = -3.74 * invT + (974.233016853611) * invT2;
   dlogPrdT = log10e * (dlnk0dT - dlnkfdT);
   dlogfPrdT = dlogPrdT / (1.0 + Pr);
   // Troe form
@@ -15637,13 +15637,13 @@ aJacobian_precond(
           (1.5 - 1) * sc[20] + sc[21] + (3 - 1) * sc[27];
   // forward
   phi_f = sc[2] * sc[16];
-  k_f = 1090000 * exp(0.48 * logT - (-130.836333109227) * invT);
-  dlnkfdT = 0.48 * invT + (-130.836333109227) * invT2;
+  k_f = 1090000 * exp(0.48 * logT - (-130.837078709679) * invT);
+  dlnkfdT = 0.48 * invT + (-130.837078709679) * invT2;
   // pressure-fall-off
-  k_0 = 1.35e+24 * exp(-2.57 * logT - (717.083748771726) * invT);
+  k_0 = 1.35e+24 * exp(-2.57 * logT - (717.087835235741) * invT);
   Pr = 1e-12 * alpha / k_f * k_0;
   fPr = Pr / (1.0 + Pr);
-  dlnk0dT = -2.57 * invT + (717.083748771726) * invT2;
+  dlnk0dT = -2.57 * invT + (717.087835235741) * invT2;
   dlogPrdT = log10e * (dlnk0dT - dlnkfdT);
   dlogfPrdT = dlogPrdT / (1.0 + Pr);
   // Troe form
@@ -15751,10 +15751,10 @@ aJacobian_precond(
   k_f = 25000000000 * exp(-0.8 * logT);
   dlnkfdT = -0.8 * invT;
   // pressure-fall-off
-  k_0 = 3.2e+27 * exp(-3.14 * logT - (618.956498939805) * invT);
+  k_0 = 3.2e+27 * exp(-3.14 * logT - (618.960026203482) * invT);
   Pr = 1e-12 * alpha / k_f * k_0;
   fPr = Pr / (1.0 + Pr);
-  dlnk0dT = -3.14 * invT + (618.956498939805) * invT2;
+  dlnk0dT = -3.14 * invT + (618.960026203482) * invT2;
   dlogPrdT = log10e * (dlnk0dT - dlnkfdT);
   dlogfPrdT = dlogPrdT / (1.0 + Pr);
   // Troe form
@@ -15859,13 +15859,13 @@ aJacobian_precond(
           (1.5 - 1) * sc[20] + sc[21] + (3 - 1) * sc[27];
   // forward
   phi_f = sc[12] * sc[20];
-  k_f = 810000 * exp(0.5 * logT - (2269.50716277929) * invT);
-  dlnkfdT = 0.5 * invT + (2269.50716277929) * invT2;
+  k_f = 810000 * exp(0.5 * logT - (2269.52009607943) * invT);
+  dlnkfdT = 0.5 * invT + (2269.52009607943) * invT2;
   // pressure-fall-off
-  k_0 = 2.69e+33 * exp(-5.11 * logT - (3570.32224388449) * invT);
+  k_0 = 2.69e+33 * exp(-5.11 * logT - (3570.34259017374) * invT);
   Pr = 1e-12 * alpha / k_f * k_0;
   fPr = Pr / (1.0 + Pr);
-  dlnk0dT = -5.11 * invT + (3570.32224388449) * invT2;
+  dlnk0dT = -5.11 * invT + (3570.34259017374) * invT2;
   dlogPrdT = log10e * (dlnk0dT - dlnkfdT);
   dlogfPrdT = dlogPrdT / (1.0 + Pr);
   // Troe form
@@ -15973,10 +15973,10 @@ aJacobian_precond(
   k_f = 20000000;
   dlnkfdT = 0.0;
   // pressure-fall-off
-  k_0 = 2.7e+38 * exp(-6.3 * logT - (1559.97166399463) * invT);
+  k_0 = 2.7e+38 * exp(-6.3 * logT - (1559.98055384617) * invT);
   Pr = 1e-12 * alpha / k_f * k_0;
   fPr = Pr / (1.0 + Pr);
-  dlnk0dT = -6.3 * invT + (1559.97166399463) * invT2;
+  dlnk0dT = -6.3 * invT + (1559.98055384617) * invT2;
   dlogPrdT = log10e * (dlnk0dT - dlnkfdT);
   dlogfPrdT = dlogPrdT / (1.0 + Pr);
   // Troe form
@@ -16081,13 +16081,13 @@ aJacobian_precond(
           sc[21] + (3 - 1) * sc[27];
   // forward
   phi_f = sc[2] * sc[17];
-  k_f = 540000 * exp(0.454 * logT - (1308.36333109227) * invT);
-  dlnkfdT = 0.454 * invT + (1308.36333109227) * invT2;
+  k_f = 540000 * exp(0.454 * logT - (1308.37078709679) * invT);
+  dlnkfdT = 0.454 * invT + (1308.37078709679) * invT2;
   // pressure-fall-off
-  k_0 = 2.2e+30 * exp(-4.8 * logT - (2797.88466187424) * invT);
+  k_0 = 2.2e+30 * exp(-4.8 * logT - (2797.90060625314) * invT);
   Pr = 1e-12 * alpha / k_f * k_0;
   fPr = Pr / (1.0 + Pr);
-  dlnk0dT = -4.8 * invT + (2797.88466187424) * invT2;
+  dlnk0dT = -4.8 * invT + (2797.90060625314) * invT2;
   dlogPrdT = log10e * (dlnk0dT - dlnkfdT);
   dlogfPrdT = dlogPrdT / (1.0 + Pr);
   // Troe form
@@ -16192,13 +16192,13 @@ aJacobian_precond(
           (1.5 - 1) * sc[20] + sc[21] + (3 - 1) * sc[27];
   // forward
   phi_f = sc[2] * sc[14];
-  k_f = 12700000000 * exp(-0.63 * logT - (192.731983003208) * invT);
-  dlnkfdT = -0.63 * invT + (192.731983003208) * invT2;
+  k_f = 12700000000 * exp(-0.63 * logT - (192.733081330027) * invT);
+  dlnkfdT = -0.63 * invT + (192.733081330027) * invT2;
   // pressure-fall-off
-  k_0 = 2.477e+33 * exp(-4.76 * logT - (1227.84866456352) * invT);
+  k_0 = 2.477e+33 * exp(-4.76 * logT - (1227.85566173699) * invT);
   Pr = 1e-12 * alpha / k_f * k_0;
   fPr = Pr / (1.0 + Pr);
-  dlnk0dT = -4.76 * invT + (1227.84866456352) * invT2;
+  dlnk0dT = -4.76 * invT + (1227.85566173699) * invT2;
   dlogPrdT = log10e * (dlnk0dT - dlnkfdT);
   dlogfPrdT = dlogPrdT / (1.0 + Pr);
   // Troe form
@@ -16306,10 +16306,10 @@ aJacobian_precond(
   k_f = 63000000;
   dlnkfdT = 0.0;
   // pressure-fall-off
-  k_0 = 2.7e+38 * exp(-6.3 * logT - (1559.97166399463) * invT);
+  k_0 = 2.7e+38 * exp(-6.3 * logT - (1559.98055384617) * invT);
   Pr = 1e-12 * alpha / k_f * k_0;
   fPr = Pr / (1.0 + Pr);
-  dlnk0dT = -6.3 * invT + (1559.97166399463) * invT2;
+  dlnk0dT = -6.3 * invT + (1559.98055384617) * invT2;
   dlogPrdT = log10e * (dlnk0dT - dlnkfdT);
   dlogfPrdT = dlogPrdT / (1.0 + Pr);
   // Troe form
@@ -16414,13 +16414,13 @@ aJacobian_precond(
           (1.5 - 1) * sc[20] + sc[21] + (3 - 1) * sc[27];
   // forward
   phi_f = (sc[14] * sc[14]);
-  k_f = 21200000000 * exp(-0.97 * logT - (311.994332798926) * invT);
-  dlnkfdT = -0.97 * invT + (311.994332798926) * invT2;
+  k_f = 21200000000 * exp(-0.97 * logT - (311.996110769235) * invT);
+  dlnkfdT = -0.97 * invT + (311.996110769235) * invT2;
   // pressure-fall-off
-  k_0 = 1.77e+50 * exp(-9.67 * logT - (3130.00766130536) * invT);
+  k_0 = 1.77e+50 * exp(-9.67 * logT - (3130.02549836232) * invT);
   Pr = 1e-12 * alpha / k_f * k_0;
   fPr = Pr / (1.0 + Pr);
-  dlnk0dT = -9.67 * invT + (3130.00766130536) * invT2;
+  dlnk0dT = -9.67 * invT + (3130.02549836232) * invT2;
   dlogPrdT = log10e * (dlnk0dT - dlnkfdT);
   dlogfPrdT = dlogPrdT / (1.0 + Pr);
   // Troe form
@@ -16525,10 +16525,10 @@ aJacobian_precond(
   k_f = 50000000;
   dlnkfdT = 0.0;
   // pressure-fall-off
-  k_0 = 8.6e+28 * exp(-4 * logT - (1522.23041405928) * invT);
+  k_0 = 8.6e+28 * exp(-4 * logT - (1522.23908883377) * invT);
   Pr = 1e-12 * alpha / k_f * k_0;
   fPr = Pr / (1.0 + Pr);
-  dlnk0dT = -4 * invT + (1522.23041405928) * invT2;
+  dlnk0dT = -4 * invT + (1522.23908883377) * invT2;
   dlogPrdT = log10e * (dlnk0dT - dlnkfdT);
   dlogfPrdT = dlogPrdT / (1.0 + Pr);
   // Troe form
@@ -16634,13 +16634,13 @@ aJacobian_precond(
           (3 - 1) * sc[27];
   // forward
   phi_f = sc[24];
-  k_f = 386000000 * exp(1.62 * logT - (18643.2716780664) * invT);
-  dlnkfdT = 1.62 * invT + (18643.2716780664) * invT2;
+  k_f = 386000000 * exp(1.62 * logT - (18643.377920969) * invT);
+  dlnkfdT = 1.62 * invT + (18643.377920969) * invT2;
   // pressure-fall-off
-  k_0 = 2.565e+27 * exp(-3.4 * logT - (18014.5125184767) * invT);
+  k_0 = 2.565e+27 * exp(-3.4 * logT - (18014.6151782529) * invT);
   Pr = 1e-6 * alpha / k_f * k_0;
   fPr = Pr / (1.0 + Pr);
-  dlnk0dT = -3.4 * invT + (18014.5125184767) * invT2;
+  dlnk0dT = -3.4 * invT + (18014.6151782529) * invT2;
   dlogPrdT = log10e * (dlnk0dT - dlnkfdT);
   dlogfPrdT = dlogPrdT / (1.0 + Pr);
   // Troe form
@@ -16746,13 +16746,13 @@ aJacobian_precond(
           (3 - 1) * sc[27];
   // forward
   phi_f = sc[2] * sc[29];
-  k_f = 330000000 * exp(-0.06 * logT - (4277.34165934012) * invT);
-  dlnkfdT = -0.06 * invT + (4277.34165934012) * invT2;
+  k_f = 330000000 * exp(-0.06 * logT - (4277.36603473951) * invT);
+  dlnkfdT = -0.06 * invT + (4277.36603473951) * invT2;
   // pressure-fall-off
-  k_0 = 3.8e+41 * exp(-7.64 * logT - (5988.27832307616) * invT);
+  k_0 = 3.8e+41 * exp(-7.64 * logT - (5988.31244863531) * invT);
   Pr = 1e-12 * alpha / k_f * k_0;
   fPr = Pr / (1.0 + Pr);
-  dlnk0dT = -7.64 * invT + (5988.27832307616) * invT2;
+  dlnk0dT = -7.64 * invT + (5988.31244863531) * invT2;
   dlogPrdT = log10e * (dlnk0dT - dlnkfdT);
   dlogfPrdT = dlogPrdT / (1.0 + Pr);
   // Troe form
@@ -16858,13 +16858,13 @@ aJacobian_precond(
           (3 - 1) * sc[27];
   // forward
   phi_f = sc[2] * sc[24];
-  k_f = 6080000 * exp(0.27 * logT - (140.900666425322) * invT);
-  dlnkfdT = 0.27 * invT + (140.900666425322) * invT2;
+  k_f = 6080000 * exp(0.27 * logT - (140.901469379654) * invT);
+  dlnkfdT = 0.27 * invT + (140.901469379654) * invT2;
   // pressure-fall-off
-  k_0 = 1.4e+30 * exp(-3.86 * logT - (1670.67933047167) * invT);
+  k_0 = 1.4e+30 * exp(-3.86 * logT - (1670.6888512159) * invT);
   Pr = 1e-12 * alpha / k_f * k_0;
   fPr = Pr / (1.0 + Pr);
-  dlnk0dT = -3.86 * invT + (1670.67933047167) * invT2;
+  dlnk0dT = -3.86 * invT + (1670.6888512159) * invT2;
   dlogPrdT = log10e * (dlnk0dT - dlnkfdT);
   dlogfPrdT = dlogPrdT / (1.0 + Pr);
   // Troe form
@@ -16973,10 +16973,10 @@ aJacobian_precond(
   k_f = 25000000;
   dlnkfdT = 0.0;
   // pressure-fall-off
-  k_0 = 4.27e+58 * exp(-11.94 * logT - (4916.32618157895) * invT);
+  k_0 = 4.27e+58 * exp(-11.94 * logT - (4916.35419837624) * invT);
   Pr = 1e-12 * alpha / k_f * k_0;
   fPr = Pr / (1.0 + Pr);
-  dlnk0dT = -11.94 * invT + (4916.32618157895) * invT2;
+  dlnk0dT = -11.94 * invT + (4916.35419837624) * invT2;
   dlogPrdT = log10e * (dlnk0dT - dlnkfdT);
   dlogfPrdT = dlogPrdT / (1.0 + Pr);
   // Troe form
@@ -17081,13 +17081,13 @@ aJacobian_precond(
           (1.5 - 1) * sc[20] + sc[21] + (3 - 1) * sc[27];
   // forward
   phi_f = sc[25];
-  k_f = 8000000000000 * exp(0.44 * logT - (44670.543423485) * invT);
-  dlnkfdT = 0.44 * invT + (44670.543423485) * invT2;
+  k_f = 8000000000000 * exp(0.44 * logT - (44670.7979886854) * invT);
+  dlnkfdT = 0.44 * invT + (44670.7979886854) * invT2;
   // pressure-fall-off
-  k_0 = 7e+50 * exp(-9.31 * logT - (50251.2162472593) * invT);
+  k_0 = 7e+50 * exp(-9.31 * logT - (50251.5026151867) * invT);
   Pr = 1e-6 * alpha / k_f * k_0;
   fPr = Pr / (1.0 + Pr);
-  dlnk0dT = -9.31 * invT + (50251.2162472593) * invT2;
+  dlnk0dT = -9.31 * invT + (50251.5026151867) * invT2;
   dlogPrdT = log10e * (dlnk0dT - dlnkfdT);
   dlogfPrdT = dlogPrdT / (1.0 + Pr);
   // Troe form
@@ -17192,13 +17192,13 @@ aJacobian_precond(
           (1.5 - 1) * sc[20] + sc[21] + (3 - 1) * sc[27];
   // forward
   phi_f = sc[2] * sc[25];
-  k_f = 1367 * exp(1.463 * logT - (681.858582165395) * invT);
-  dlnkfdT = 1.463 * invT + (681.858582165395) * invT2;
+  k_f = 1367 * exp(1.463 * logT - (681.862467890828) * invT);
+  dlnkfdT = 1.463 * invT + (681.862467890828) * invT2;
   // pressure-fall-off
-  k_0 = 2.027e+39 * exp(-6.642 * logT - (2903.05694502743) * invT);
+  k_0 = 2.027e+39 * exp(-6.642 * logT - (2903.07348875438) * invT);
   Pr = 1e-12 * alpha / k_f * k_0;
   fPr = Pr / (1.0 + Pr);
-  dlnk0dT = -6.642 * invT + (2903.05694502743) * invT2;
+  dlnk0dT = -6.642 * invT + (2903.07348875438) * invT2;
   dlogPrdT = log10e * (dlnk0dT - dlnkfdT);
   dlogfPrdT = dlogPrdT / (1.0 + Pr);
   // Troe form
@@ -17303,13 +17303,13 @@ aJacobian_precond(
           (1.5 - 1) * sc[20] + sc[21] + (3 - 1) * sc[27];
   // forward
   phi_f = sc[2] * sc[26];
-  k_f = 521000000000 * exp(-0.99 * logT - (795.082331971457) * invT);
-  dlnkfdT = -0.99 * invT + (795.082331971457) * invT2;
+  k_f = 521000000000 * exp(-0.99 * logT - (795.08686292805) * invT);
+  dlnkfdT = -0.99 * invT + (795.08686292805) * invT2;
   // pressure-fall-off
-  k_0 = 1.99e+41 * exp(-7.08 * logT - (3364.00341090455) * invT);
+  k_0 = 1.99e+41 * exp(-7.08 * logT - (3364.02258143925) * invT);
   Pr = 1e-12 * alpha / k_f * k_0;
   fPr = Pr / (1.0 + Pr);
-  dlnk0dT = -7.08 * invT + (3364.00341090455) * invT2;
+  dlnk0dT = -7.08 * invT + (3364.02258143925) * invT2;
   dlogPrdT = log10e * (dlnk0dT - dlnkfdT);
   dlogfPrdT = dlogPrdT / (1.0 + Pr);
   // Troe form
@@ -17417,10 +17417,10 @@ aJacobian_precond(
   k_f = 15000000;
   dlnkfdT = 0.0;
   // pressure-fall-off
-  k_0 = 1.55e+56 * exp(-11.79 * logT - (4521.1501339225) * invT);
+  k_0 = 1.55e+56 * exp(-11.79 * logT - (4521.17589871966) * invT);
   Pr = 1e-12 * alpha / k_f * k_0;
   fPr = Pr / (1.0 + Pr);
-  dlnk0dT = -11.79 * invT + (4521.1501339225) * invT2;
+  dlnk0dT = -11.79 * invT + (4521.17589871966) * invT2;
   dlogPrdT = log10e * (dlnk0dT - dlnkfdT);
   dlogfPrdT = dlogPrdT / (1.0 + Pr);
   // Troe form
@@ -17637,10 +17637,10 @@ aJacobian_precond(
   k_f = 200000000;
   dlnkfdT = 0.0;
   // pressure-fall-off
-  k_0 = 1.33e+60 * exp(-12 * logT - (3003.09641818941) * invT);
+  k_0 = 1.33e+60 * exp(-12 * logT - (3003.11353201393) * invT);
   Pr = 1e-12 * alpha / k_f * k_0;
   fPr = Pr / (1.0 + Pr);
-  dlnk0dT = -12 * invT + (3003.09641818941) * invT2;
+  dlnk0dT = -12 * invT + (3003.11353201393) * invT2;
   dlogPrdT = log10e * (dlnk0dT - dlnkfdT);
   dlogfPrdT = dlogPrdT / (1.0 + Pr);
   // Troe form
@@ -17745,13 +17745,13 @@ aJacobian_precond(
           (1.5 - 1) * sc[20] + sc[21] + (3 - 1) * sc[27];
   // forward
   phi_f = sc[14] * sc[33];
-  k_f = 100000000 * exp(-0.32 * logT - (-131.993731440578) * invT);
-  dlnkfdT = -0.32 * invT + (-131.993731440578) * invT2;
+  k_f = 100000000 * exp(-0.32 * logT - (-131.994483636726) * invT);
+  dlnkfdT = -0.32 * invT + (-131.994483636726) * invT2;
   // pressure-fall-off
-  k_0 = 3.91e+60 * exp(-12.81 * logT - (3145.1041612795) * invT);
+  k_0 = 3.91e+60 * exp(-12.81 * logT - (3145.12208436729) * invT);
   Pr = 1e-12 * alpha / k_f * k_0;
   fPr = Pr / (1.0 + Pr);
-  dlnk0dT = -12.81 * invT + (3145.1041612795) * invT2;
+  dlnk0dT = -12.81 * invT + (3145.12208436729) * invT2;
   dlogPrdT = log10e * (dlnk0dT - dlnkfdT);
   dlogfPrdT = dlogPrdT / (1.0 + Pr);
   // Troe form
@@ -17856,13 +17856,13 @@ aJacobian_precond(
           (1.5 - 1) * sc[20] + sc[21] + (3 - 1) * sc[27];
   // forward
   phi_f = sc[2] * sc[34];
-  k_f = 13300000 * exp(-(1640.83858218945) * invT);
-  dlnkfdT = (1640.83858218945) * invT2;
+  k_f = 13300000 * exp(-(1640.84793287943) * invT);
+  dlnkfdT = (1640.84793287943) * invT2;
   // pressure-fall-off
-  k_0 = 6.26e+38 * exp(-6.66 * logT - (3522.51666063304) * invT);
+  k_0 = 6.26e+38 * exp(-6.66 * logT - (3522.53673449136) * invT);
   Pr = 1e-12 * alpha / k_f * k_0;
   fPr = Pr / (1.0 + Pr);
-  dlnk0dT = -6.66 * invT + (3522.51666063304) * invT2;
+  dlnk0dT = -6.66 * invT + (3522.53673449136) * invT2;
   dlogPrdT = log10e * (dlnk0dT - dlnkfdT);
   dlogfPrdT = dlogPrdT / (1.0 + Pr);
   // Troe form
@@ -17967,13 +17967,13 @@ aJacobian_precond(
           (1.75 - 1) * sc[20] + (3.6 - 1) * sc[21];
   // forward
   phi_f = sc[3] * sc[20];
-  k_f = 13620 * exp(-(1199.66853127845) * invT);
-  dlnkfdT = (1199.66853127845) * invT2;
+  k_f = 13620 * exp(-(1199.67536786106) * invT);
+  dlnkfdT = (1199.67536786106) * invT2;
   // pressure-fall-off
-  k_0 = 1.173e+24 * exp(-2.79 * logT - (2108.98104638758) * invT);
+  k_0 = 1.173e+24 * exp(-2.79 * logT - (2108.99306489333) * invT);
   Pr = 1e-12 * alpha / k_f * k_0;
   fPr = Pr / (1.0 + Pr);
-  dlnk0dT = -2.79 * invT + (2108.98104638758) * invT2;
+  dlnk0dT = -2.79 * invT + (2108.99306489333) * invT2;
   dlogPrdT = log10e * (dlnk0dT - dlnkfdT);
   dlogfPrdT = dlogPrdT / (1.0 + Pr);
   // Lindemann form
@@ -18061,13 +18061,13 @@ aJacobian_precond(
           sc[21] + (2.5 - 1) * sc[22] + (2.5 - 1) * sc[25] + (3 - 1) * sc[27];
   // forward
   phi_f = sc[22];
-  k_f = 800000000000000 * exp(-0.52 * logT - (25538.2457895895) * invT);
-  dlnkfdT = -0.52 * invT + (25538.2457895895) * invT2;
+  k_f = 800000000000000 * exp(-0.52 * logT - (25538.3913250624) * invT);
+  dlnkfdT = -0.52 * invT + (25538.3913250624) * invT2;
   // pressure-fall-off
-  k_0 = 2.45e+15 * exp(-0.64 * logT - (25009.8682904946) * invT);
+  k_0 = 2.45e+15 * exp(-0.64 * logT - (25010.0108148887) * invT);
   Pr = 1e-6 * alpha / k_f * k_0;
   fPr = Pr / (1.0 + Pr);
-  dlnk0dT = -0.64 * invT + (25009.8682904946) * invT2;
+  dlnk0dT = -0.64 * invT + (25010.0108148887) * invT2;
   dlogPrdT = log10e * (dlnk0dT - dlnkfdT);
   dlogfPrdT = dlogPrdT / (1.0 + Pr);
   // Lindemann form
@@ -18569,8 +18569,8 @@ aJacobian_precond(
           (3.6 - 1) * sc[21];
   // forward
   phi_f = sc[16];
-  k_f = 187000000000 * exp(-1 * logT - (8554.68331868023) * invT);
-  dlnkfdT = -1 * invT + (8554.68331868023) * invT2;
+  k_f = 187000000000 * exp(-1 * logT - (8554.73206947902) * invT);
+  dlnkfdT = -1 * invT + (8554.73206947902) * invT2;
   // reverse
   phi_r = sc[2] * sc[20];
   Kc = refC * (kc_fast ? (inv_ge[16] * ge[20] * ge[2])
@@ -18646,8 +18646,8 @@ aJacobian_precond(
   // a third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[7] * sc[16];
-  k_f = 2244000000000 * exp(-1 * logT - (8554.68331868023) * invT);
-  dlnkfdT = -1 * invT + (8554.68331868023) * invT2;
+  k_f = 2244000000000 * exp(-1 * logT - (8554.73206947902) * invT);
+  dlnkfdT = -1 * invT + (8554.73206947902) * invT2;
   // reverse
   phi_r = sc[2] * sc[7] * sc[20];
   Kc = refC * (kc_fast ? (inv_ge[16] * ge[20] * ge[2])
@@ -18775,8 +18775,8 @@ aJacobian_precond(
           (1.5 - 1) * sc[20] + sc[21] + (3 - 1) * sc[27];
   // forward
   phi_f = sc[42];
-  k_f = 310000000 * exp(-(27198.8607867451) * invT);
-  dlnkfdT = (27198.8607867451) * invT2;
+  k_f = 310000000 * exp(-(27199.0157856083) * invT);
+  dlnkfdT = (27199.0157856083) * invT2;
   // reverse
   phi_r = sc[20] * sc[37];
   Kc = refC * (kc_fast ? (inv_ge[42] * ge[20] * ge[37])
@@ -18852,8 +18852,8 @@ aJacobian_precond(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[2] * sc[9];
-  k_f = 26440000000 * exp(-0.6707 * logT - (8575.31520197823) * invT);
-  dlnkfdT = -0.6707 * invT + (8575.31520197823) * invT2;
+  k_f = 26440000000 * exp(-0.6707 * logT - (8575.36407035247) * invT);
+  dlnkfdT = -0.6707 * invT + (8575.36407035247) * invT2;
   // reverse
   phi_r = sc[3] * sc[4];
   Kc =
@@ -18904,8 +18904,8 @@ aJacobian_precond(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[3] * sc[6];
-  k_f = 0.04589 * exp(2.7 * logT - (3150.13632793755) * invT);
-  dlnkfdT = 2.7 * invT + (3150.13632793755) * invT2;
+  k_f = 0.04589 * exp(2.7 * logT - (3150.15427970227) * invT);
+  dlnkfdT = 2.7 * invT + (3150.15427970227) * invT2;
   // reverse
   phi_r = sc[2] * sc[4];
   Kc =
@@ -18956,8 +18956,8 @@ aJacobian_precond(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[4] * sc[6];
-  k_f = 173.4 * exp(1.51 * logT - (1726.03316371019) * invT);
-  dlnkfdT = 1.51 * invT + (1726.03316371019) * invT2;
+  k_f = 173.4 * exp(1.51 * logT - (1726.04299990077) * invT);
+  dlnkfdT = 1.51 * invT + (1726.04299990077) * invT2;
   // reverse
   phi_r = sc[2] * sc[7];
   Kc =
@@ -19008,8 +19008,8 @@ aJacobian_precond(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = (sc[4] * sc[4]);
-  k_f = 0.03973 * exp(2.4 * logT - (-1061.78716484796) * invT);
-  dlnkfdT = 2.4 * invT + (-1061.78716484796) * invT2;
+  k_f = 0.03973 * exp(2.4 * logT - (-1061.7932156824) * invT);
+  dlnkfdT = 2.4 * invT + (-1061.7932156824) * invT2;
   // reverse
   phi_r = sc[3] * sc[7];
   Kc =
@@ -19049,8 +19049,8 @@ aJacobian_precond(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[6] * sc[9];
-  k_f = 0.5916 * exp(2.433 * logT - (26923.0980538841) * invT);
-  dlnkfdT = 2.433 * invT + (26923.0980538841) * invT2;
+  k_f = 0.5916 * exp(2.433 * logT - (26923.251481251) * invT);
+  dlnkfdT = 2.433 * invT + (26923.251481251) * invT2;
   // reverse
   phi_r = sc[2] * sc[5];
   Kc =
@@ -19101,8 +19101,8 @@ aJacobian_precond(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[2] * sc[5];
-  k_f = 3970000 * exp(-(337.658382754967) * invT);
-  dlnkfdT = (337.658382754967) * invT2;
+  k_f = 3970000 * exp(-(337.660306977672) * invT);
+  dlnkfdT = (337.660306977672) * invT2;
   // reverse
   phi_r = sc[3] * sc[7];
   Kc =
@@ -19153,8 +19153,8 @@ aJacobian_precond(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[2] * sc[5];
-  k_f = 74850000 * exp(-(148.448916412392) * invT);
-  dlnkfdT = (148.448916412392) * invT2;
+  k_f = 74850000 * exp(-(148.449762382136) * invT);
+  dlnkfdT = (148.449762382136) * invT2;
   // reverse
   phi_r = (sc[4] * sc[4]);
   Kc =
@@ -19246,8 +19246,8 @@ aJacobian_precond(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = (sc[5] * sc[5]);
-  k_f = 130000 * exp(-(-820.243165261693) * invT);
-  dlnkfdT = (-820.243165261693) * invT2;
+  k_f = 130000 * exp(-(-820.247839602988) * invT);
+  dlnkfdT = (-820.247839602988) * invT2;
   // reverse
   phi_r = sc[8] * sc[9];
   Kc =
@@ -19287,8 +19287,8 @@ aJacobian_precond(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = (sc[5] * sc[5]);
-  k_f = 365800000 * exp(-(6038.59998965664) * invT);
-  dlnkfdT = (6038.59998965664) * invT2;
+  k_f = 365800000 * exp(-(6038.63440198519) * invT);
+  dlnkfdT = (6038.63440198519) * invT2;
   // reverse
   phi_r = sc[8] * sc[9];
   Kc =
@@ -19328,8 +19328,8 @@ aJacobian_precond(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[4] * sc[5];
-  k_f = 1410000000000 * exp(-1.76 * logT - (30.1929999482832) * invT);
-  dlnkfdT = -1.76 * invT + (30.1929999482832) * invT2;
+  k_f = 1410000000000 * exp(-1.76 * logT - (30.1931720099259) * invT);
+  dlnkfdT = -1.76 * invT + (30.1931720099259) * invT2;
   // reverse
   phi_r = sc[7] * sc[9];
   Kc =
@@ -19380,8 +19380,8 @@ aJacobian_precond(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[4] * sc[5];
-  k_f = 1.12e+79 * exp(-22.3 * logT - (13536.528310147) * invT);
-  dlnkfdT = -22.3 * invT + (13536.528310147) * invT2;
+  k_f = 1.12e+79 * exp(-22.3 * logT - (13536.6054511168) * invT);
+  dlnkfdT = -22.3 * invT + (13536.6054511168) * invT2;
   // reverse
   phi_r = sc[7] * sc[9];
   Kc =
@@ -19432,8 +19432,8 @@ aJacobian_precond(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[4] * sc[5];
-  k_f = 5.37e+64 * exp(-16.72 * logT - (16555.8283049753) * invT);
-  dlnkfdT = -16.72 * invT + (16555.8283049753) * invT2;
+  k_f = 5.37e+64 * exp(-16.72 * logT - (16555.9226521094) * invT);
+  dlnkfdT = -16.72 * invT + (16555.9226521094) * invT2;
   // reverse
   phi_r = sc[7] * sc[9];
   Kc =
@@ -19484,8 +19484,8 @@ aJacobian_precond(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[4] * sc[5];
-  k_f = 2510000 * exp(2 * logT - (20128.6666321888) * invT);
-  dlnkfdT = 2 * invT + (20128.6666321888) * invT2;
+  k_f = 2510000 * exp(2 * logT - (20128.7813399506) * invT);
+  dlnkfdT = 2 * invT + (20128.7813399506) * invT2;
   // reverse
   phi_r = sc[7] * sc[9];
   Kc =
@@ -19536,8 +19536,8 @@ aJacobian_precond(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[4] * sc[5];
-  k_f = 1e+130 * exp(-40 * logT - (17511.9399700042) * invT);
-  dlnkfdT = -40 * invT + (17511.9399700042) * invT2;
+  k_f = 1e+130 * exp(-40 * logT - (17512.0397657571) * invT);
+  dlnkfdT = -40 * invT + (17512.0397657571) * invT2;
   // reverse
   phi_r = sc[7] * sc[9];
   Kc =
@@ -19588,8 +19588,8 @@ aJacobian_precond(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[2] * sc[8];
-  k_f = 6.05 * exp(2 * logT - (2616.72666218454) * invT);
-  dlnkfdT = 2 * invT + (2616.72666218454) * invT2;
+  k_f = 6.05 * exp(2 * logT - (2616.74157419358) * invT);
+  dlnkfdT = 2 * invT + (2616.74157419358) * invT2;
   // reverse
   phi_r = sc[5] * sc[6];
   Kc =
@@ -19640,8 +19640,8 @@ aJacobian_precond(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[2] * sc[8];
-  k_f = 24100000 * exp(-(1997.77016324474) * invT);
-  dlnkfdT = (1997.77016324474) * invT2;
+  k_f = 24100000 * exp(-(1997.7815479901) * invT);
+  dlnkfdT = (1997.7815479901) * invT2;
   // reverse
   phi_r = sc[4] * sc[7];
   Kc =
@@ -19692,8 +19692,8 @@ aJacobian_precond(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[3] * sc[8];
-  k_f = 9.63 * exp(2 * logT - (1997.77016324474) * invT);
-  dlnkfdT = 2 * invT + (1997.77016324474) * invT2;
+  k_f = 9.63 * exp(2 * logT - (1997.7815479901) * invT);
+  dlnkfdT = 2 * invT + (1997.7815479901) * invT2;
   // reverse
   phi_r = sc[4] * sc[5];
   Kc =
@@ -19744,8 +19744,8 @@ aJacobian_precond(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[4] * sc[8];
-  k_f = 2000000 * exp(-(214.873516298615) * invT);
-  dlnkfdT = (214.873516298615) * invT2;
+  k_f = 2000000 * exp(-(214.874740803973) * invT);
+  dlnkfdT = (214.874740803973) * invT2;
   // reverse
   phi_r = sc[5] * sc[7];
   Kc =
@@ -19796,8 +19796,8 @@ aJacobian_precond(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[4] * sc[8];
-  k_f = 2.67e+35 * exp(-7 * logT - (18920.9466342575) * invT);
-  dlnkfdT = -7 * invT + (18920.9466342575) * invT2;
+  k_f = 2.67e+35 * exp(-7 * logT - (18921.0544595536) * invT);
+  dlnkfdT = -7 * invT + (18921.0544595536) * invT2;
   // reverse
   phi_r = sc[5] * sc[7];
   Kc =
@@ -19848,8 +19848,8 @@ aJacobian_precond(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[4] * sc[20];
-  k_f = 0.07046 * exp(2.053 * logT - (-178.979071526765) * invT);
-  dlnkfdT = 2.053 * invT + (-178.979071526765) * invT2;
+  k_f = 0.07046 * exp(2.053 * logT - (-178.980091479506) * invT);
+  dlnkfdT = 2.053 * invT + (-178.980091479506) * invT2;
   // reverse
   phi_r = sc[2] * sc[21];
   Kc =
@@ -19900,8 +19900,8 @@ aJacobian_precond(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[4] * sc[20];
-  k_f = 5757000 * exp(-0.664 * logT - (166.98238621398) * invT);
-  dlnkfdT = -0.664 * invT + (166.98238621398) * invT2;
+  k_f = 5757000 * exp(-0.664 * logT - (166.983337800895) * invT);
+  dlnkfdT = -0.664 * invT + (166.983337800895) * invT2;
   // reverse
   phi_r = sc[2] * sc[21];
   Kc =
@@ -19952,8 +19952,8 @@ aJacobian_precond(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[9] * sc[20];
-  k_f = 1119000 * exp(-(24003.4349588851) * invT);
-  dlnkfdT = (24003.4349588851) * invT2;
+  k_f = 1119000 * exp(-(24003.5717478911) * invT);
+  dlnkfdT = (24003.5717478911) * invT2;
   // reverse
   phi_r = sc[3] * sc[21];
   Kc =
@@ -20004,8 +20004,8 @@ aJacobian_precond(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[5] * sc[20];
-  k_f = 0.157 * exp(2.18 * logT - (9029.02038003442) * invT);
-  dlnkfdT = 2.18 * invT + (9029.02038003442) * invT2;
+  k_f = 0.157 * exp(2.18 * logT - (9029.07183395029) * invT);
+  dlnkfdT = 2.18 * invT + (9029.07183395029) * invT2;
   // reverse
   phi_r = sc[4] * sc[21];
   Kc =
@@ -20264,8 +20264,8 @@ aJacobian_precond(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[9] * sc[16];
-  k_f = 12040 * exp(0.807 * logT - (-365.838516040031) * invT);
-  dlnkfdT = 0.807 * invT + (-365.838516040031) * invT2;
+  k_f = 12040 * exp(0.807 * logT - (-365.840600853603) * invT);
+  dlnkfdT = 0.807 * invT + (-365.840600853603) * invT2;
   // reverse
   phi_r = sc[5] * sc[20];
   Kc =
@@ -20368,8 +20368,8 @@ aJacobian_precond(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[9] * sc[10];
-  k_f = 58000000 * exp(-(289.852799503519) * invT);
-  dlnkfdT = (289.852799503519) * invT2;
+  k_f = 58000000 * exp(-(289.854451295289) * invT);
+  dlnkfdT = (289.854451295289) * invT2;
   // reverse
   phi_r = sc[3] * sc[20];
   Kc =
@@ -20576,8 +20576,8 @@ aJacobian_precond(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[6] * sc[11];
-  k_f = 110.7 * exp(1.79 * logT - (840.371831893882) * invT);
-  dlnkfdT = 1.79 * invT + (840.371831893882) * invT2;
+  k_f = 110.7 * exp(1.79 * logT - (840.376620942939) * invT);
+  dlnkfdT = 1.79 * invT + (840.376620942939) * invT2;
   // reverse
   phi_r = sc[2] * sc[12];
   Kc =
@@ -20628,8 +20628,8 @@ aJacobian_precond(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[7] * sc[11];
-  k_f = 5710000 * exp(-(-379.928582682563) * invT);
-  dlnkfdT = (-379.928582682563) * invT2;
+  k_f = 5710000 * exp(-(-379.930747791568) * invT);
+  dlnkfdT = (-379.930747791568) * invT2;
   // reverse
   phi_r = sc[2] * sc[17];
   Kc =
@@ -20732,8 +20732,8 @@ aJacobian_precond(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[11] * sc[21];
-  k_f = 3400000 * exp(-(347.219499405257) * invT);
-  dlnkfdT = (347.219499405257) * invT2;
+  k_f = 3400000 * exp(-(347.221478114148) * invT);
+  dlnkfdT = (347.221478114148) * invT2;
   // reverse
   phi_r = sc[16] * sc[20];
   Kc =
@@ -20888,8 +20888,8 @@ aJacobian_precond(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[4] * sc[12];
-  k_f = 11.3 * exp(2 * logT - (1509.64999741416) * invT);
-  dlnkfdT = 2 * invT + (1509.64999741416) * invT2;
+  k_f = 11.3 * exp(2 * logT - (1509.6586004963) * invT);
+  dlnkfdT = 2 * invT + (1509.6586004963) * invT2;
   // reverse
   phi_r = sc[7] * sc[11];
   Kc =
@@ -20940,8 +20940,8 @@ aJacobian_precond(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[6] * sc[12];
-  k_f = 0.5 * exp(2 * logT - (3638.25649376812) * invT);
-  dlnkfdT = 2 * invT + (3638.25649376812) * invT2;
+  k_f = 0.5 * exp(2 * logT - (3638.27722719608) * invT);
+  dlnkfdT = 2 * invT + (3638.27722719608) * invT2;
   // reverse
   phi_r = sc[2] * sc[14];
   Kc =
@@ -20992,8 +20992,8 @@ aJacobian_precond(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[9] * sc[12];
-  k_f = 10600000 * exp(-(754.82499870708) * invT);
-  dlnkfdT = (754.82499870708) * invT2;
+  k_f = 10600000 * exp(-(754.829300248149) * invT);
+  dlnkfdT = (754.829300248149) * invT2;
   // reverse
   phi_r = sc[4] * sc[16];
   Kc =
@@ -21044,8 +21044,8 @@ aJacobian_precond(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[9] * sc[12];
-  k_f = 2640000 * exp(-(754.82499870708) * invT);
-  dlnkfdT = (754.82499870708) * invT2;
+  k_f = 2640000 * exp(-(754.829300248149) * invT);
+  dlnkfdT = (754.829300248149) * invT2;
   // reverse
   phi_r = (sc[2] * sc[2]) * sc[21];
   Kc =
@@ -21242,8 +21242,8 @@ aJacobian_precond(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[1] * sc[13];
-  k_f = 15000000 * exp(-(301.929999482832) * invT);
-  dlnkfdT = (301.929999482832) * invT2;
+  k_f = 15000000 * exp(-(301.93172009926) * invT);
+  dlnkfdT = (301.93172009926) * invT2;
   // reverse
   phi_r = sc[1] * sc[12];
   Kc =
@@ -21278,8 +21278,8 @@ aJacobian_precond(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[0] * sc[13];
-  k_f = 9000000 * exp(-(301.929999482832) * invT);
-  dlnkfdT = (301.929999482832) * invT2;
+  k_f = 9000000 * exp(-(301.93172009926) * invT);
+  dlnkfdT = (301.93172009926) * invT2;
   // reverse
   phi_r = sc[0] * sc[12];
   Kc =
@@ -21852,8 +21852,8 @@ aJacobian_precond(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[2] * sc[17];
-  k_f = 23000 * exp(1.05 * logT - (1648.03458051046) * invT);
-  dlnkfdT = 1.05 * invT + (1648.03458051046) * invT2;
+  k_f = 23000 * exp(1.05 * logT - (1648.04397220846) * invT);
+  dlnkfdT = 1.05 * invT + (1648.04397220846) * invT2;
   // reverse
   phi_r = sc[6] * sc[16];
   Kc =
@@ -21904,8 +21904,8 @@ aJacobian_precond(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[3] * sc[17];
-  k_f = 39000000 * exp(-(1781.38699694871) * invT);
-  dlnkfdT = (1781.38699694871) * invT2;
+  k_f = 39000000 * exp(-(1781.39714858563) * invT);
+  dlnkfdT = (1781.39714858563) * invT2;
   // reverse
   phi_r = sc[4] * sc[16];
   Kc =
@@ -21956,8 +21956,8 @@ aJacobian_precond(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[4] * sc[17];
-  k_f = 3430 * exp(1.18 * logT - (-224.93784961471) * invT);
-  dlnkfdT = 1.18 * invT + (-224.93784961471) * invT2;
+  k_f = 3430 * exp(1.18 * logT - (-224.939131473948) * invT);
+  dlnkfdT = 1.18 * invT + (-224.939131473948) * invT2;
   // reverse
   phi_r = sc[7] * sc[16];
   Kc =
@@ -22008,8 +22008,8 @@ aJacobian_precond(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[9] * sc[17];
-  k_f = 100000000 * exp(-(20128.6666321888) * invT);
-  dlnkfdT = (20128.6666321888) * invT2;
+  k_f = 100000000 * exp(-(20128.7813399506) * invT);
+  dlnkfdT = (20128.7813399506) * invT2;
   // reverse
   phi_r = sc[5] * sc[16];
   Kc =
@@ -22060,8 +22060,8 @@ aJacobian_precond(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[5] * sc[17];
-  k_f = 1000000 * exp(-(4025.73332643776) * invT);
-  dlnkfdT = (4025.73332643776) * invT2;
+  k_f = 1000000 * exp(-(4025.75626799013) * invT);
+  dlnkfdT = (4025.75626799013) * invT2;
   // reverse
   phi_r = sc[8] * sc[16];
   Kc =
@@ -22112,8 +22112,8 @@ aJacobian_precond(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[11] * sc[17];
-  k_f = 94600000 * exp(-(-259.156582889431) * invT);
-  dlnkfdT = (-259.156582889431) * invT2;
+  k_f = 94600000 * exp(-(-259.158059751864) * invT);
+  dlnkfdT = (-259.158059751864) * invT2;
   // reverse
   phi_r = sc[2] * sc[29];
   Kc =
@@ -22216,8 +22216,8 @@ aJacobian_precond(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[4] * sc[14];
-  k_f = 56 * exp(1.6 * logT - (2727.43432866158) * invT);
-  dlnkfdT = 1.6 * invT + (2727.43432866158) * invT2;
+  k_f = 56 * exp(1.6 * logT - (2727.44987156331) * invT);
+  dlnkfdT = 1.6 * invT + (2727.44987156331) * invT2;
   // reverse
   phi_r = sc[7] * sc[12];
   Kc =
@@ -22320,8 +22320,8 @@ aJacobian_precond(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[9] * sc[14];
-  k_f = 30830000 * exp(-(14492.6399751759) * invT);
-  dlnkfdT = (14492.6399751759) * invT2;
+  k_f = 30830000 * exp(-(14492.7225647645) * invT);
+  dlnkfdT = (14492.7225647645) * invT2;
   // reverse
   phi_r = sc[3] * sc[18];
   Kc =
@@ -22372,8 +22372,8 @@ aJacobian_precond(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[9] * sc[14];
-  k_f = 36000 * exp(-(4498.75699229419) * invT);
-  dlnkfdT = (4498.75699229419) * invT2;
+  k_f = 36000 * exp(-(4498.78262947897) * invT);
+  dlnkfdT = (4498.78262947897) * invT2;
   // reverse
   phi_r = sc[4] * sc[17];
   Kc =
@@ -22528,8 +22528,8 @@ aJacobian_precond(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[8] * sc[14];
-  k_f = 0.0245 * exp(2.47 * logT - (2606.66232886845) * invT);
-  dlnkfdT = 2.47 * invT + (2606.66232886845) * invT2;
+  k_f = 0.0245 * exp(2.47 * logT - (2606.67718352361) * invT);
+  dlnkfdT = 2.47 * invT + (2606.67718352361) * invT2;
   // reverse
   phi_r = sc[5] * sc[15];
   Kc =
@@ -22736,8 +22736,8 @@ aJacobian_precond(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[14] * sc[17];
-  k_f = 0.00332 * exp(2.81 * logT - (2948.84966161566) * invT);
-  dlnkfdT = 2.81 * invT + (2948.84966161566) * invT2;
+  k_f = 0.00332 * exp(2.81 * logT - (2948.86646630277) * invT);
+  dlnkfdT = 2.81 * invT + (2948.86646630277) * invT2;
   // reverse
   phi_r = sc[15] * sc[16];
   Kc =
@@ -22840,8 +22840,8 @@ aJacobian_precond(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[13] * sc[14];
-  k_f = 12000000 * exp(-(-286.83349950869) * invT);
-  dlnkfdT = (-286.83349950869) * invT2;
+  k_f = 12000000 * exp(-(-286.835134094297) * invT);
+  dlnkfdT = (-286.835134094297) * invT2;
   // reverse
   phi_r = sc[2] * sc[25];
   Kc =
@@ -22892,8 +22892,8 @@ aJacobian_precond(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = (sc[14] * sc[14]);
-  k_f = 4990000 * exp(0.1 * logT - (5334.09665753003) * invT);
-  dlnkfdT = 0.1 * invT + (5334.09665753003) * invT2;
+  k_f = 4990000 * exp(0.1 * logT - (5334.12705508692) * invT);
+  dlnkfdT = 0.1 * invT + (5334.12705508692) * invT2;
   // reverse
   phi_r = sc[2] * sc[26];
   Kc =
@@ -23245,8 +23245,8 @@ aJacobian_precond(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[9] * sc[18];
-  k_f = 4.28e-19 * exp(7.6 * logT - (-1776.35483029066) * invT);
-  dlnkfdT = 7.6 * invT + (-1776.35483029066) * invT2;
+  k_f = 4.28e-19 * exp(7.6 * logT - (-1776.36495325064) * invT);
+  dlnkfdT = 7.6 * invT + (-1776.36495325064) * invT2;
   // reverse
   phi_r = sc[5] * sc[17];
   Kc =
@@ -23297,8 +23297,8 @@ aJacobian_precond(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[2] * sc[15];
-  k_f = 660 * exp(1.62 * logT - (5454.86865732316) * invT);
-  dlnkfdT = 1.62 * invT + (5454.86865732316) * invT2;
+  k_f = 660 * exp(1.62 * logT - (5454.89974312662) * invT);
+  dlnkfdT = 1.62 * invT + (5454.89974312662) * invT2;
   // reverse
   phi_r = sc[6] * sc[14];
   Kc =
@@ -23349,8 +23349,8 @@ aJacobian_precond(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[3] * sc[15];
-  k_f = 1020 * exp(1.5 * logT - (4327.66332592059) * invT);
-  dlnkfdT = 1.5 * invT + (4327.66332592059) * invT2;
+  k_f = 1020 * exp(1.5 * logT - (4327.68798808939) * invT);
+  dlnkfdT = 1.5 * invT + (4327.68798808939) * invT2;
   // reverse
   phi_r = sc[4] * sc[14];
   Kc =
@@ -23401,8 +23401,8 @@ aJacobian_precond(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[4] * sc[15];
-  k_f = 100 * exp(1.6 * logT - (1570.03599731073) * invT);
-  dlnkfdT = 1.6 * invT + (1570.03599731073) * invT2;
+  k_f = 100 * exp(1.6 * logT - (1570.04494451615) * invT);
+  dlnkfdT = 1.6 * invT + (1570.04494451615) * invT2;
   // reverse
   phi_r = sc[7] * sc[14];
   Kc =
@@ -23505,8 +23505,8 @@ aJacobian_precond(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[12] * sc[15];
-  k_f = 2.46 * exp(2 * logT - (4161.60182620503) * invT);
-  dlnkfdT = 2 * invT + (4161.60182620503) * invT2;
+  k_f = 2.46 * exp(2 * logT - (4161.62554203479) * invT);
+  dlnkfdT = 2 * invT + (4161.62554203479) * invT2;
   // reverse
   phi_r = (sc[14] * sc[14]);
   Kc =
@@ -23546,8 +23546,8 @@ aJacobian_precond(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[13] * sc[15];
-  k_f = 16000000 * exp(-(-286.83349950869) * invT);
-  dlnkfdT = (-286.83349950869) * invT2;
+  k_f = 16000000 * exp(-(-286.835134094297) * invT);
+  dlnkfdT = (-286.835134094297) * invT2;
   // reverse
   phi_r = (sc[14] * sc[14]);
   Kc =
@@ -23587,8 +23587,8 @@ aJacobian_precond(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[2] * sc[19];
-  k_f = 4.2 * exp(2.1 * logT - (2450.66516246898) * invT);
-  dlnkfdT = 2.1 * invT + (2450.66516246898) * invT2;
+  k_f = 4.2 * exp(2.1 * logT - (2450.67912813899) * invT);
+  dlnkfdT = 2.1 * invT + (2450.67912813899) * invT2;
   // reverse
   phi_r = sc[6] * sc[18];
   Kc =
@@ -23639,8 +23639,8 @@ aJacobian_precond(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[3] * sc[19];
-  k_f = 0.13 * exp(2.5 * logT - (2516.0833290236) * invT);
-  dlnkfdT = 2.5 * invT + (2516.0833290236) * invT2;
+  k_f = 0.13 * exp(2.5 * logT - (2516.09766749383) * invT);
+  dlnkfdT = 2.5 * invT + (2516.09766749383) * invT2;
   // reverse
   phi_r = sc[4] * sc[18];
   Kc =
@@ -23691,8 +23691,8 @@ aJacobian_precond(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[4] * sc[19];
-  k_f = 6.3 * exp(2 * logT - (754.82499870708) * invT);
-  dlnkfdT = 2 * invT + (754.82499870708) * invT2;
+  k_f = 6.3 * exp(2 * logT - (754.829300248149) * invT);
+  dlnkfdT = 2 * invT + (754.829300248149) * invT2;
   // reverse
   phi_r = sc[7] * sc[18];
   Kc =
@@ -23743,8 +23743,8 @@ aJacobian_precond(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[14] * sc[19];
-  k_f = 10 * exp(1.5 * logT - (5001.97365809891) * invT);
-  dlnkfdT = 1.5 * invT + (5001.97365809891) * invT2;
+  k_f = 10 * exp(1.5 * logT - (5002.00216297773) * invT);
+  dlnkfdT = 1.5 * invT + (5002.00216297773) * invT2;
   // reverse
   phi_r = sc[15] * sc[18];
   Kc =
@@ -23900,8 +23900,8 @@ aJacobian_precond(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[9] * sc[28];
-  k_f = 1600000 * exp(-(429.747032597231) * invT);
-  dlnkfdT = (429.747032597231) * invT2;
+  k_f = 1600000 * exp(-(429.749481607946) * invT);
+  dlnkfdT = (429.749481607946) * invT2;
   // reverse
   phi_r = sc[4] * (sc[20] * sc[20]);
   Kc =
@@ -24099,8 +24099,8 @@ aJacobian_precond(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[3] * sc[22];
-  k_f = 4.08 * exp(2 * logT - (956.111665028967) * invT);
-  dlnkfdT = 2 * invT + (956.111665028967) * invT2;
+  k_f = 4.08 * exp(2 * logT - (956.117113647655) * invT);
+  dlnkfdT = 2 * invT + (956.117113647655) * invT2;
   // reverse
   phi_r = sc[12] * sc[20];
   Kc =
@@ -24151,8 +24151,8 @@ aJacobian_precond(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[3] * sc[22];
-  k_f = 16.32 * exp(2 * logT - (956.111665028967) * invT);
-  dlnkfdT = 2 * invT + (956.111665028967) * invT2;
+  k_f = 16.32 * exp(2 * logT - (956.117113647655) * invT);
+  dlnkfdT = 2 * invT + (956.117113647655) * invT2;
   // reverse
   phi_r = sc[2] * sc[28];
   Kc =
@@ -24203,8 +24203,8 @@ aJacobian_precond(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[4] * sc[22];
-  k_f = 2.18e-10 * exp(4.5 * logT - (-503.21666580472) * invT);
-  dlnkfdT = 4.5 * invT + (-503.21666580472) * invT2;
+  k_f = 2.18e-10 * exp(4.5 * logT - (-503.219533498766) * invT);
+  dlnkfdT = 4.5 * invT + (-503.219533498766) * invT2;
   // reverse
   phi_r = sc[2] * sc[29];
   Kc =
@@ -24255,8 +24255,8 @@ aJacobian_precond(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[4] * sc[22];
-  k_f = 4.83e-10 * exp(4 * logT - (-1006.43333160944) * invT);
-  dlnkfdT = 4 * invT + (-1006.43333160944) * invT2;
+  k_f = 4.83e-10 * exp(4 * logT - (-1006.43906699753) * invT);
+  dlnkfdT = 4 * invT + (-1006.43906699753) * invT2;
   // reverse
   phi_r = sc[14] * sc[20];
   Kc =
@@ -24307,8 +24307,8 @@ aJacobian_precond(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[16] * sc[22];
-  k_f = 10 * exp(2 * logT - (3019.29999482832) * invT);
-  dlnkfdT = 2 * invT + (3019.29999482832) * invT2;
+  k_f = 10 * exp(2 * logT - (3019.31720099259) * invT);
+  dlnkfdT = 2 * invT + (3019.31720099259) * invT2;
   // reverse
   phi_r = sc[20] * sc[24];
   Kc =
@@ -24359,8 +24359,8 @@ aJacobian_precond(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[14] * sc[22];
-  k_f = 5140 * exp(0.86 * logT - (11147.758797572) * invT);
-  dlnkfdT = 0.86 * invT + (11147.758797572) * invT2;
+  k_f = 5140 * exp(0.86 * logT - (11147.8223255982) * invT);
+  dlnkfdT = 0.86 * invT + (11147.8223255982) * invT2;
   // reverse
   phi_r = sc[2] * sc[32];
   Kc =
@@ -24411,8 +24411,8 @@ aJacobian_precond(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[14] * sc[22];
-  k_f = 2.68e+47 * exp(-12.82 * logT - (17979.9314692026) * invT);
-  dlnkfdT = -12.82 * invT + (17979.9314692026) * invT2;
+  k_f = 2.68e+47 * exp(-12.82 * logT - (17980.0339319109) * invT);
+  dlnkfdT = -12.82 * invT + (17980.0339319109) * invT2;
   // reverse
   phi_r = sc[33];
   Kc = refCinv * (kc_fast ? (inv_ge[14] * ge[33] * inv_ge[22])
@@ -24580,8 +24580,8 @@ aJacobian_precond(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[2] * sc[29];
-  k_f = 50000000 * exp(-(4025.73332643776) * invT);
-  dlnkfdT = (4025.73332643776) * invT2;
+  k_f = 50000000 * exp(-(4025.75626799013) * invT);
+  dlnkfdT = (4025.75626799013) * invT2;
   // reverse
   phi_r = sc[6] * sc[28];
   Kc =
@@ -24632,8 +24632,8 @@ aJacobian_precond(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[2] * sc[29];
-  k_f = 1500 * exp(1.43 * logT - (1353.6528310147) * invT);
-  dlnkfdT = 1.43 * invT + (1353.6528310147) * invT2;
+  k_f = 1500 * exp(1.43 * logT - (1353.66054511168) * invT);
+  dlnkfdT = 1.43 * invT + (1353.66054511168) * invT2;
   // reverse
   phi_r = sc[14] * sc[20];
   Kc =
@@ -24684,8 +24684,8 @@ aJacobian_precond(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[3] * sc[29];
-  k_f = 10000000 * exp(-(4025.73332643776) * invT);
-  dlnkfdT = (4025.73332643776) * invT2;
+  k_f = 10000000 * exp(-(4025.75626799013) * invT);
+  dlnkfdT = (4025.75626799013) * invT2;
   // reverse
   phi_r = sc[4] * sc[28];
   Kc =
@@ -24736,8 +24736,8 @@ aJacobian_precond(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[3] * sc[29];
-  k_f = 1750000 * exp(-(679.342498836372) * invT);
-  dlnkfdT = (679.342498836372) * invT2;
+  k_f = 1750000 * exp(-(679.346370223334) * invT);
+  dlnkfdT = (679.346370223334) * invT2;
   // reverse
   phi_r = sc[12] * sc[21];
   Kc =
@@ -24788,8 +24788,8 @@ aJacobian_precond(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[4] * sc[29];
-  k_f = 7500000 * exp(-(1006.43333160944) * invT);
-  dlnkfdT = (1006.43333160944) * invT2;
+  k_f = 7500000 * exp(-(1006.43906699753) * invT);
+  dlnkfdT = (1006.43906699753) * invT2;
   // reverse
   phi_r = sc[7] * sc[28];
   Kc =
@@ -25100,8 +25100,8 @@ aJacobian_precond(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[9] * sc[24];
-  k_f = 1.34 * exp(1.61 * logT - (-192.93326966953) * invT);
-  dlnkfdT = 1.61 * invT + (-192.93326966953) * invT2;
+  k_f = 1.34 * exp(1.61 * logT - (-192.934369143427) * invT);
+  dlnkfdT = 1.61 * invT + (-192.934369143427) * invT2;
   // reverse
   phi_r = sc[5] * sc[22];
   Kc =
@@ -25152,8 +25152,8 @@ aJacobian_precond(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[9] * sc[24];
-  k_f = 300000 * exp(0.29 * logT - (5.53538332385192) * invT);
-  dlnkfdT = 0.29 * invT + (5.53538332385192) * invT2;
+  k_f = 300000 * exp(0.29 * logT - (5.53541486848642) * invT);
+  dlnkfdT = 0.29 * invT + (5.53541486848642) * invT2;
   // reverse
   phi_r = sc[3] * sc[30];
   Kc =
@@ -25204,8 +25204,8 @@ aJacobian_precond(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[9] * sc[24];
-  k_f = 46000000000 * exp(-1.39 * logT - (508.248832462767) * invT);
-  dlnkfdT = -1.39 * invT + (508.248832462767) * invT2;
+  k_f = 46000000000 * exp(-1.39 * logT - (508.251728833753) * invT);
+  dlnkfdT = -1.39 * invT + (508.251728833753) * invT2;
   // reverse
   phi_r = sc[16] * sc[17];
   Kc =
@@ -25308,8 +25308,8 @@ aJacobian_precond(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[8] * sc[24];
-  k_f = 12100 * exp(-(-299.917132819613) * invT);
-  dlnkfdT = (-299.917132819613) * invT2;
+  k_f = 12100 * exp(-(-299.918841965264) * invT);
+  dlnkfdT = (-299.918841965264) * invT2;
   // reverse
   phi_r = sc[5] * sc[25];
   Kc =
@@ -25464,8 +25464,8 @@ aJacobian_precond(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[14] * sc[24];
-  k_f = 1.5e+18 * exp(-2.83 * logT - (9368.88788395227) * invT);
-  dlnkfdT = -2.83 * invT + (9368.88788395227) * invT2;
+  k_f = 1.5e+18 * exp(-2.83 * logT - (9368.94127468002) * invT);
+  dlnkfdT = -2.83 * invT + (9368.94127468002) * invT2;
   // reverse
   phi_r = sc[2] * sc[33];
   Kc =
@@ -25557,8 +25557,8 @@ aJacobian_precond(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[30];
-  k_f = 7.8e+41 * exp(-9.147 * logT - (23600.8616262414) * invT);
-  dlnkfdT = -9.147 * invT + (23600.8616262414) * invT2;
+  k_f = 7.8e+41 * exp(-9.147 * logT - (23600.9961210921) * invT);
+  dlnkfdT = -9.147 * invT + (23600.9961210921) * invT2;
   // reverse
   phi_r = sc[14] * sc[20];
   Kc = refC * (kc_fast ? (inv_ge[30] * ge[20] * ge[14])
@@ -25649,8 +25649,8 @@ aJacobian_precond(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[2] * sc[30];
-  k_f = 20000000 * exp(-(2012.86666321888) * invT);
-  dlnkfdT = (2012.86666321888) * invT2;
+  k_f = 20000000 * exp(-(2012.87813399506) * invT);
+  dlnkfdT = (2012.87813399506) * invT2;
   // reverse
   phi_r = sc[6] * sc[29];
   Kc =
@@ -25701,8 +25701,8 @@ aJacobian_precond(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[3] * sc[30];
-  k_f = 20000000 * exp(-(2012.86666321888) * invT);
-  dlnkfdT = (2012.86666321888) * invT2;
+  k_f = 20000000 * exp(-(2012.87813399506) * invT);
+  dlnkfdT = (2012.87813399506) * invT2;
   // reverse
   phi_r = sc[4] * sc[29];
   Kc =
@@ -25753,8 +25753,8 @@ aJacobian_precond(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[4] * sc[30];
-  k_f = 10000000 * exp(-(1006.43333160944) * invT);
-  dlnkfdT = (1006.43333160944) * invT2;
+  k_f = 10000000 * exp(-(1006.43906699753) * invT);
+  dlnkfdT = (1006.43906699753) * invT2;
   // reverse
   phi_r = sc[7] * sc[29];
   Kc =
@@ -25923,8 +25923,8 @@ aJacobian_precond(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[31];
-  k_f = 36300000000000 * exp(-(28783.99328403) * invT);
-  dlnkfdT = (28783.99328403) * invT2;
+  k_f = 36300000000000 * exp(-(28784.1573161294) * invT);
+  dlnkfdT = (28784.1573161294) * invT2;
   // reverse
   phi_r = sc[14] * sc[16];
   Kc = refC * (kc_fast ? (ge[16] * inv_ge[31] * ge[14])
@@ -25963,8 +25963,8 @@ aJacobian_precond(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[31];
-  k_f = 12100000000000 * exp(-(28783.99328403) * invT);
-  dlnkfdT = (28783.99328403) * invT2;
+  k_f = 12100000000000 * exp(-(28784.1573161294) * invT);
+  dlnkfdT = (28784.1573161294) * invT2;
   // reverse
   phi_r = sc[15] * sc[20];
   Kc = refC * (kc_fast ? (inv_ge[31] * ge[15] * ge[20])
@@ -26003,8 +26003,8 @@ aJacobian_precond(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[2] * sc[31];
-  k_f = 5000 * exp(-(2516.0833290236) * invT);
-  dlnkfdT = (2516.0833290236) * invT2;
+  k_f = 5000 * exp(-(2516.09766749383) * invT);
+  dlnkfdT = (2516.09766749383) * invT2;
   // reverse
   phi_r = sc[7] * sc[24];
   Kc =
@@ -26055,8 +26055,8 @@ aJacobian_precond(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[2] * sc[31];
-  k_f = 95100 * exp(-(2516.0833290236) * invT);
-  dlnkfdT = (2516.0833290236) * invT2;
+  k_f = 95100 * exp(-(2516.09766749383) * invT);
+  dlnkfdT = (2516.09766749383) * invT2;
   // reverse
   phi_r = sc[4] * sc[25];
   Kc =
@@ -26107,8 +26107,8 @@ aJacobian_precond(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[2] * sc[25];
-  k_f = 50.7 * exp(1.9 * logT - (6516.65582217112) * invT);
-  dlnkfdT = 1.9 * invT + (6516.65582217112) * invT2;
+  k_f = 50.7 * exp(1.9 * logT - (6516.69295880902) * invT);
+  dlnkfdT = 1.9 * invT + (6516.69295880902) * invT2;
   // reverse
   phi_r = sc[6] * sc[24];
   Kc =
@@ -26159,8 +26159,8 @@ aJacobian_precond(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[3] * sc[25];
-  k_f = 15.1 * exp(1.9 * logT - (1882.03033010965) * invT);
-  dlnkfdT = 1.9 * invT + (1882.03033010965) * invT2;
+  k_f = 15.1 * exp(1.9 * logT - (1882.04105528538) * invT);
+  dlnkfdT = 1.9 * invT + (1882.04105528538) * invT2;
   // reverse
   phi_r = sc[4] * sc[24];
   Kc =
@@ -26211,8 +26211,8 @@ aJacobian_precond(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[3] * sc[25];
-  k_f = 19.2 * exp(1.83 * logT - (110.707666477038) * invT);
-  dlnkfdT = 1.83 * invT + (110.707666477038) * invT2;
+  k_f = 19.2 * exp(1.83 * logT - (110.708297369728) * invT);
+  dlnkfdT = 1.83 * invT + (110.708297369728) * invT2;
   // reverse
   phi_r = sc[14] * sc[16];
   Kc =
@@ -26263,8 +26263,8 @@ aJacobian_precond(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[3] * sc[25];
-  k_f = 0.384 * exp(1.83 * logT - (110.707666477038) * invT);
-  dlnkfdT = 1.83 * invT + (110.707666477038) * invT2;
+  k_f = 0.384 * exp(1.83 * logT - (110.708297369728) * invT);
+  dlnkfdT = 1.83 * invT + (110.708297369728) * invT2;
   // reverse
   phi_r = sc[12] * sc[17];
   Kc =
@@ -26315,8 +26315,8 @@ aJacobian_precond(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[4] * sc[25];
-  k_f = 3.6 * exp(2 * logT - (1258.0416645118) * invT);
-  dlnkfdT = 2 * invT + (1258.0416645118) * invT2;
+  k_f = 3.6 * exp(2 * logT - (1258.04883374691) * invT);
+  dlnkfdT = 2 * invT + (1258.04883374691) * invT2;
   // reverse
   phi_r = sc[7] * sc[24];
   Kc =
@@ -26367,8 +26367,8 @@ aJacobian_precond(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[16] * sc[25];
-  k_f = 10 * exp(2 * logT - (4025.73332643776) * invT);
-  dlnkfdT = 2 * invT + (4025.73332643776) * invT2;
+  k_f = 10 * exp(2 * logT - (4025.75626799013) * invT);
+  dlnkfdT = 2 * invT + (4025.75626799013) * invT2;
   // reverse
   phi_r = sc[20] * sc[26];
   Kc =
@@ -26471,8 +26471,8 @@ aJacobian_precond(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[12] * sc[25];
-  k_f = 20000000 * exp(-(3019.29999482832) * invT);
-  dlnkfdT = (3019.29999482832) * invT2;
+  k_f = 20000000 * exp(-(3019.31720099259) * invT);
+  dlnkfdT = (3019.31720099259) * invT2;
   // reverse
   phi_r = sc[2] * sc[33];
   Kc =
@@ -26627,8 +26627,8 @@ aJacobian_precond(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[14] * sc[25];
-  k_f = 0.227 * exp(2 * logT - (4629.59332540342) * invT);
-  dlnkfdT = 2 * invT + (4629.59332540342) * invT2;
+  k_f = 0.227 * exp(2 * logT - (4629.61970818865) * invT);
+  dlnkfdT = 2 * invT + (4629.61970818865) * invT2;
   // reverse
   phi_r = sc[15] * sc[24];
   Kc =
@@ -26679,8 +26679,8 @@ aJacobian_precond(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[14] * sc[25];
-  k_f = 330000 * exp(-(3874.76832669634) * invT);
-  dlnkfdT = (3874.76832669634) * invT2;
+  k_f = 330000 * exp(-(3874.7904079405) * invT);
+  dlnkfdT = (3874.7904079405) * invT2;
   // reverse
   phi_r = sc[35];
   Kc = refCinv * (kc_fast ? (inv_ge[25] * ge[35] * inv_ge[14])
@@ -26719,8 +26719,8 @@ aJacobian_precond(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[9] * sc[25];
-  k_f = 42200000 * exp(-(30595.573280927) * invT);
-  dlnkfdT = (30595.573280927) * invT2;
+  k_f = 42200000 * exp(-(30595.747636725) * invT);
+  dlnkfdT = (30595.747636725) * invT2;
   // reverse
   phi_r = sc[5] * sc[24];
   Kc =
@@ -26771,8 +26771,8 @@ aJacobian_precond(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[5] * sc[25];
-  k_f = 2820000 * exp(-(8605.00498526071) * invT);
-  dlnkfdT = (8605.00498526071) * invT2;
+  k_f = 2820000 * exp(-(8605.0540228289) * invT);
+  dlnkfdT = (8605.0540228289) * invT2;
   // reverse
   phi_r = sc[4] * sc[31];
   Kc =
@@ -27149,8 +27149,8 @@ aJacobian_precond(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[8] * sc[26];
-  k_f = 8700 * exp(-(490.133032493797) * invT);
-  dlnkfdT = (490.133032493797) * invT2;
+  k_f = 8700 * exp(-(490.135825627798) * invT);
+  dlnkfdT = (490.135825627798) * invT2;
   // reverse
   phi_r = sc[5] * sc[27];
   Kc =
@@ -27201,8 +27201,8 @@ aJacobian_precond(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[24] * sc[26];
-  k_f = 3.9e+26 * exp(-5.22 * logT - (9937.0194996458) * invT);
-  dlnkfdT = -5.22 * invT + (9937.0194996458) * invT2;
+  k_f = 3.9e+26 * exp(-5.22 * logT - (9937.07612800013) * invT);
+  dlnkfdT = -5.22 * invT + (9937.07612800013) * invT2;
   // reverse
   phi_r = sc[14] * sc[33];
   Kc =
@@ -27253,8 +27253,8 @@ aJacobian_precond(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[2] * sc[27];
-  k_f = 115 * exp(1.9 * logT - (3789.22149350954) * invT);
-  dlnkfdT = 1.9 * invT + (3789.22149350954) * invT2;
+  k_f = 115 * exp(1.9 * logT - (3789.24308724571) * invT);
+  dlnkfdT = 1.9 * invT + (3789.24308724571) * invT2;
   // reverse
   phi_r = sc[6] * sc[26];
   Kc =
@@ -27305,8 +27305,8 @@ aJacobian_precond(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[3] * sc[27];
-  k_f = 89.8 * exp(1.92 * logT - (2863.30282842885) * invT);
-  dlnkfdT = 1.92 * invT + (2863.30282842885) * invT2;
+  k_f = 89.8 * exp(1.92 * logT - (2863.31914560798) * invT);
+  dlnkfdT = 1.92 * invT + (2863.31914560798) * invT2;
   // reverse
   phi_r = sc[4] * sc[26];
   Kc =
@@ -27357,8 +27357,8 @@ aJacobian_precond(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[4] * sc[27];
-  k_f = 3.54 * exp(2.12 * logT - (437.798499250106) * invT);
-  dlnkfdT = 2.12 * invT + (437.798499250106) * invT2;
+  k_f = 3.54 * exp(2.12 * logT - (437.800994143926) * invT);
+  dlnkfdT = 2.12 * invT + (437.800994143926) * invT2;
   // reverse
   phi_r = sc[7] * sc[26];
   Kc =
@@ -27409,8 +27409,8 @@ aJacobian_precond(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[13] * sc[27];
-  k_f = 40000000 * exp(-(-276.769166192596) * invT);
-  dlnkfdT = (-276.769166192596) * invT2;
+  k_f = 40000000 * exp(-(-276.770743424321) * invT);
+  dlnkfdT = (-276.770743424321) * invT2;
   // reverse
   phi_r = sc[14] * sc[26];
   Kc =
@@ -27461,8 +27461,8 @@ aJacobian_precond(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[14] * sc[27];
-  k_f = 6.14 * exp(1.74 * logT - (5258.61415765932) * invT);
-  dlnkfdT = 1.74 * invT + (5258.61415765932) * invT2;
+  k_f = 6.14 * exp(1.74 * logT - (5258.6441250621) * invT);
+  dlnkfdT = 1.74 * invT + (5258.6441250621) * invT2;
   // reverse
   phi_r = sc[15] * sc[26];
   Kc =
@@ -27513,8 +27513,8 @@ aJacobian_precond(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[5] * sc[43];
-  k_f = 18000 * exp(-(-720.103048766554) * invT);
-  dlnkfdT = (-720.103048766554) * invT2;
+  k_f = 18000 * exp(-(-720.107152436734) * invT);
+  dlnkfdT = (-720.107152436734) * invT2;
   // reverse
   phi_r = sc[7] * sc[9] * sc[17];
   Kc =
@@ -27579,8 +27579,8 @@ aJacobian_precond(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = (sc[43] * sc[43]);
-  k_f = 1046 * exp(-(-1806.04461357314) * invT);
-  dlnkfdT = (-1806.04461357314) * invT2;
+  k_f = 1046 * exp(-(-1806.05490572707) * invT);
+  dlnkfdT = (-1806.05490572707) * invT2;
   // reverse
   phi_r = sc[9] * sc[17] * sc[19];
   Kc = refC * (kc_fast
@@ -27632,8 +27632,8 @@ aJacobian_precond(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = (sc[43] * sc[43]);
-  k_f = 77410 * exp(-(-30.6962166140879) * invT);
-  dlnkfdT = (-30.6962166140879) * invT2;
+  k_f = 77410 * exp(-(-30.6963915434247) * invT);
+  dlnkfdT = (-30.6963915434247) * invT2;
   // reverse
   phi_r = sc[9] * (sc[18] * sc[18]);
   Kc = refC * (kc_fast
@@ -27674,8 +27674,8 @@ aJacobian_precond(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[14] * sc[43];
-  k_f = 1000000 * exp(-(-710.038715450459) * invT);
-  dlnkfdT = (-710.038715450459) * invT2;
+  k_f = 1000000 * exp(-(-710.042761766759) * invT);
+  dlnkfdT = (-710.042761766759) * invT2;
   // reverse
   phi_r = (sc[18] * sc[18]);
   Kc =
@@ -27871,8 +27871,8 @@ aJacobian_precond(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[2] * sc[32];
-  k_f = 1.52e+53 * exp(-13.54 * logT - (13561.1859267714) * invT);
-  dlnkfdT = -13.54 * invT + (13561.1859267714) * invT2;
+  k_f = 1.52e+53 * exp(-13.54 * logT - (13561.2632082582) * invT);
+  dlnkfdT = -13.54 * invT + (13561.2632082582) * invT2;
   // reverse
   phi_r = sc[33];
   Kc = refCinv * (kc_fast ? (ge[33] * inv_ge[32] * inv_ge[2])
@@ -27911,8 +27911,8 @@ aJacobian_precond(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[3] * sc[32];
-  k_f = 20 * exp(1.8 * logT - (503.21666580472) * invT);
-  dlnkfdT = 1.8 * invT + (503.21666580472) * invT2;
+  k_f = 20 * exp(1.8 * logT - (503.219533498766) * invT);
+  dlnkfdT = 1.8 * invT + (503.219533498766) * invT2;
   // reverse
   phi_r = sc[20] * sc[25];
   Kc =
@@ -28067,8 +28067,8 @@ aJacobian_precond(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[9] * sc[33];
-  k_f = 4990000000 * exp(-1.4 * logT - (11286.1433806683) * invT);
-  dlnkfdT = -1.4 * invT + (11286.1433806683) * invT2;
+  k_f = 4990000000 * exp(-1.4 * logT - (11286.2076973103) * invT);
+  dlnkfdT = -1.4 * invT + (11286.2076973103) * invT2;
   // reverse
   phi_r = sc[5] * sc[32];
   Kc =
@@ -28289,8 +28289,8 @@ aJacobian_precond(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[14] * sc[33];
-  k_f = 3000000 * exp(-0.32 * logT - (-65.9213832204183) * invT);
-  dlnkfdT = -0.32 * invT + (-65.9213832204183) * invT2;
+  k_f = 3000000 * exp(-0.32 * logT - (-65.9217588883383) * invT);
+  dlnkfdT = -0.32 * invT + (-65.9217588883383) * invT2;
   // reverse
   phi_r = sc[15] * sc[32];
   Kc =
@@ -28341,8 +28341,8 @@ aJacobian_precond(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[2] * sc[34];
-  k_f = 8e+15 * exp(-2.39 * logT - (5625.96232369677) * invT);
-  dlnkfdT = -2.39 * invT + (5625.96232369677) * invT2;
+  k_f = 8e+15 * exp(-2.39 * logT - (5625.9943845162) * invT);
+  dlnkfdT = -2.39 * invT + (5625.9943845162) * invT2;
   // reverse
   phi_r = sc[14] * sc[25];
   Kc =
@@ -28393,8 +28393,8 @@ aJacobian_precond(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[2] * sc[34];
-  k_f = 0.173 * exp(2.5 * logT - (1253.00949785375) * invT);
-  dlnkfdT = 2.5 * invT + (1253.00949785375) * invT2;
+  k_f = 0.173 * exp(2.5 * logT - (1253.01663841193) * invT);
+  dlnkfdT = 2.5 * invT + (1253.01663841193) * invT2;
   // reverse
   phi_r = sc[6] * sc[33];
   Kc =
@@ -28445,8 +28445,8 @@ aJacobian_precond(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[3] * sc[34];
-  k_f = 80 * exp(1.65 * logT - (164.551849718143) * invT);
-  dlnkfdT = 1.65 * invT + (164.551849718143) * invT2;
+  k_f = 80 * exp(1.65 * logT - (164.552787454096) * invT);
+  dlnkfdT = 1.65 * invT + (164.552787454096) * invT2;
   // reverse
   phi_r = sc[2] * sc[14] * sc[29];
   Kc =
@@ -28511,8 +28511,8 @@ aJacobian_precond(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[3] * sc[34];
-  k_f = 35 * exp(1.65 * logT - (-489.126599162188) * invT);
-  dlnkfdT = 1.65 * invT + (-489.126599162188) * invT2;
+  k_f = 35 * exp(1.65 * logT - (-489.1293865608) * invT);
+  dlnkfdT = 1.65 * invT + (-489.1293865608) * invT2;
   // reverse
   phi_r = sc[16] * sc[26];
   Kc =
@@ -28563,8 +28563,8 @@ aJacobian_precond(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[3] * sc[34];
-  k_f = 180000 * exp(0.7 * logT - (2958.91399493175) * invT);
-  dlnkfdT = 0.7 * invT + (2958.91399493175) * invT2;
+  k_f = 180000 * exp(0.7 * logT - (2958.93085697274) * invT);
+  dlnkfdT = 0.7 * invT + (2958.93085697274) * invT2;
   // reverse
   phi_r = sc[4] * sc[33];
   Kc =
@@ -28615,8 +28615,8 @@ aJacobian_precond(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[4] * sc[34];
-  k_f = 3.1 * exp(2 * logT - (-149.958566409806) * invT);
-  dlnkfdT = 2 * invT + (-149.958566409806) * invT2;
+  k_f = 3.1 * exp(2 * logT - (-149.959420982632) * invT);
+  dlnkfdT = 2 * invT + (-149.959420982632) * invT2;
   // reverse
   phi_r = sc[7] * sc[33];
   Kc =
@@ -28667,8 +28667,8 @@ aJacobian_precond(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[5] * sc[34];
-  k_f = 0.0096 * exp(2.6 * logT - (6999.74382134365) * invT);
-  dlnkfdT = 2.6 * invT + (6999.74382134365) * invT2;
+  k_f = 0.0096 * exp(2.6 * logT - (6999.78371096783) * invT);
+  dlnkfdT = 2.6 * invT + (6999.78371096783) * invT2;
   // reverse
   phi_r = sc[8] * sc[33];
   Kc =
@@ -28719,8 +28719,8 @@ aJacobian_precond(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[14] * sc[34];
-  k_f = 2.2e-06 * exp(3.5 * logT - (2855.75457844178) * invT);
-  dlnkfdT = 3.5 * invT + (2855.75457844178) * invT2;
+  k_f = 2.2e-06 * exp(3.5 * logT - (2855.7708526055) * invT);
+  dlnkfdT = 3.5 * invT + (2855.7708526055) * invT2;
   // reverse
   phi_r = sc[15] * sc[33];
   Kc =
@@ -28771,8 +28771,8 @@ aJacobian_precond(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[2] * sc[35];
-  k_f = 3.7e+18 * exp(-2.92 * logT - (6292.72440588802) * invT);
-  dlnkfdT = -2.92 * invT + (6292.72440588802) * invT2;
+  k_f = 3.7e+18 * exp(-2.92 * logT - (6292.76026640207) * invT);
+  dlnkfdT = -2.92 * invT + (6292.76026640207) * invT2;
   // reverse
   phi_r = sc[14] * sc[26];
   Kc =
@@ -29149,8 +29149,8 @@ aJacobian_precond(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[2] * sc[36];
-  k_f = 1.6e+16 * exp(-2.39 * logT - (5625.96232369677) * invT);
-  dlnkfdT = -2.39 * invT + (5625.96232369677) * invT2;
+  k_f = 1.6e+16 * exp(-2.39 * logT - (5625.9943845162) * invT);
+  dlnkfdT = -2.39 * invT + (5625.9943845162) * invT2;
   // reverse
   phi_r = sc[25] * sc[26];
   Kc =
@@ -29201,8 +29201,8 @@ aJacobian_precond(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[2] * sc[36];
-  k_f = 3.2e+16 * exp(-2.39 * logT - (5625.96232369677) * invT);
-  dlnkfdT = -2.39 * invT + (5625.96232369677) * invT2;
+  k_f = 3.2e+16 * exp(-2.39 * logT - (5625.9943845162) * invT);
+  dlnkfdT = -2.39 * invT + (5625.9943845162) * invT2;
   // reverse
   phi_r = sc[14] * sc[34];
   Kc =
@@ -29253,8 +29253,8 @@ aJacobian_precond(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[3] * sc[36];
-  k_f = 330 * exp(1.45 * logT - (-202.293099653497) * invT);
-  dlnkfdT = 1.45 * invT + (-202.293099653497) * invT2;
+  k_f = 330 * exp(1.45 * logT - (-202.294252466504) * invT);
+  dlnkfdT = 1.45 * invT + (-202.294252466504) * invT2;
   // reverse
   phi_r = sc[16] * sc[35];
   Kc =
@@ -29305,8 +29305,8 @@ aJacobian_precond(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[37] * sc[38];
-  k_f = 27000000 * exp(-(178.641916360675) * invT);
-  dlnkfdT = (178.641916360675) * invT2;
+  k_f = 27000000 * exp(-(178.642934392062) * invT);
+  dlnkfdT = (178.642934392062) * invT2;
   // reverse
   phi_r = sc[1] * sc[3];
   Kc =
@@ -29357,8 +29357,8 @@ aJacobian_precond(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[9] * sc[37];
-  k_f = 9000 * exp(1 * logT - (3270.90832773068) * invT);
-  dlnkfdT = 1 * invT + (3270.90832773068) * invT2;
+  k_f = 9000 * exp(1 * logT - (3270.92696774198) * invT);
+  dlnkfdT = 1 * invT + (3270.92696774198) * invT2;
   // reverse
   phi_r = sc[3] * sc[38];
   Kc =
@@ -29409,8 +29409,8 @@ aJacobian_precond(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[4] * sc[37];
-  k_f = 33600000 * exp(-(193.738416334817) * invT);
-  dlnkfdT = (193.738416334817) * invT2;
+  k_f = 33600000 * exp(-(193.739520397025) * invT);
+  dlnkfdT = (193.739520397025) * invT2;
   // reverse
   phi_r = sc[2] * sc[38];
   Kc =
@@ -29461,8 +29461,8 @@ aJacobian_precond(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[5] * sc[38];
-  k_f = 2110000 * exp(-(-241.543999586265) * invT);
-  dlnkfdT = (-241.543999586265) * invT2;
+  k_f = 2110000 * exp(-(-241.545376079408) * invT);
+  dlnkfdT = (-241.545376079408) * invT2;
   // reverse
   phi_r = sc[4] * sc[39];
   Kc =
@@ -29513,8 +29513,8 @@ aJacobian_precond(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[3] * sc[39];
-  k_f = 3900000 * exp(-(-120.771999793133) * invT);
-  dlnkfdT = (-120.771999793133) * invT2;
+  k_f = 3900000 * exp(-(-120.772688039704) * invT);
+  dlnkfdT = (-120.772688039704) * invT2;
   // reverse
   phi_r = sc[9] * sc[38];
   Kc =
@@ -29565,8 +29565,8 @@ aJacobian_precond(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[2] * sc[39];
-  k_f = 132000000 * exp(-(181.157999689699) * invT);
-  dlnkfdT = (181.157999689699) * invT2;
+  k_f = 132000000 * exp(-(181.159032059556) * invT);
+  dlnkfdT = (181.159032059556) * invT2;
   // reverse
   phi_r = sc[4] * sc[38];
   Kc =
@@ -29669,8 +29669,8 @@ aJacobian_precond(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[4] * sc[42];
-  k_f = 8300000 * exp(-0.1 * logT - (37986.8196682667) * invT);
-  dlnkfdT = -0.1 * invT + (37986.8196682667) * invT2;
+  k_f = 8300000 * exp(-0.1 * logT - (37987.0361447548) * invT);
+  dlnkfdT = -0.1 * invT + (37987.0361447548) * invT2;
   // reverse
   phi_r = sc[2] * sc[20] * sc[38];
   Kc =
@@ -29787,8 +29787,8 @@ aJacobian_precond(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[9] * sc[42];
-  k_f = 2000000 * exp(-(10064.3333160944) * invT);
-  dlnkfdT = (10064.3333160944) * invT2;
+  k_f = 2000000 * exp(-(10064.3906699753) * invT);
+  dlnkfdT = (10064.3906699753) * invT2;
   // reverse
   phi_r = sc[21] * sc[38];
   Kc =
@@ -29839,8 +29839,8 @@ aJacobian_precond(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[38] * sc[42];
-  k_f = 3800000000000 * exp(-2 * logT - (402.573332643776) * invT);
-  dlnkfdT = -2 * invT + (402.573332643776) * invT2;
+  k_f = 3800000000000 * exp(-2 * logT - (402.575626799013) * invT);
+  dlnkfdT = -2 * invT + (402.575626799013) * invT2;
   // reverse
   phi_r = sc[1] * sc[21];
   Kc =
@@ -30047,8 +30047,8 @@ aJacobian_precond(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[12] * sc[38];
-  k_f = 310000000000 * exp(-1.38 * logT - (639.085165571994) * invT);
-  dlnkfdT = -1.38 * invT + (639.085165571994) * invT2;
+  k_f = 310000000000 * exp(-1.38 * logT - (639.088807543433) * invT);
+  dlnkfdT = -1.38 * invT + (639.088807543433) * invT2;
   // reverse
   phi_r = sc[2] * sc[41];
   Kc =
@@ -30099,8 +30099,8 @@ aJacobian_precond(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[12] * sc[38];
-  k_f = 38000000 * exp(-0.36 * logT - (291.865666166737) * invT);
-  dlnkfdT = -0.36 * invT + (291.865666166737) * invT2;
+  k_f = 38000000 * exp(-0.36 * logT - (291.867329429284) * invT);
+  dlnkfdT = -0.36 * invT + (291.867329429284) * invT2;
   // reverse
   phi_r = sc[2] * sc[40];
   Kc =
@@ -30151,8 +30151,8 @@ aJacobian_precond(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[13] * sc[38];
-  k_f = 310000000000 * exp(-1.38 * logT - (639.085165571994) * invT);
-  dlnkfdT = -1.38 * invT + (639.085165571994) * invT2;
+  k_f = 310000000000 * exp(-1.38 * logT - (639.088807543433) * invT);
+  dlnkfdT = -1.38 * invT + (639.088807543433) * invT2;
   // reverse
   phi_r = sc[2] * sc[41];
   Kc =
@@ -30203,8 +30203,8 @@ aJacobian_precond(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[13] * sc[38];
-  k_f = 38000000 * exp(-0.36 * logT - (291.865666166737) * invT);
-  dlnkfdT = -0.36 * invT + (291.865666166737) * invT2;
+  k_f = 38000000 * exp(-0.36 * logT - (291.867329429284) * invT);
+  dlnkfdT = -0.36 * invT + (291.867329429284) * invT2;
   // reverse
   phi_r = sc[2] * sc[40];
   Kc =
@@ -30255,8 +30255,8 @@ aJacobian_precond(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[3] * sc[41];
-  k_f = 2.2 * exp(2.11 * logT - (24065.3306087791) * invT);
-  dlnkfdT = 2.11 * invT + (24065.3306087791) * invT2;
+  k_f = 2.2 * exp(2.11 * logT - (24065.4677505115) * invT);
+  dlnkfdT = 2.11 * invT + (24065.4677505115) * invT2;
   // reverse
   phi_r = sc[4] * sc[42];
   Kc =
@@ -30307,8 +30307,8 @@ aJacobian_precond(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[2] * sc[41];
-  k_f = 90 * exp(1.7 * logT - (29266.0748498709) * invT);
-  dlnkfdT = 1.7 * invT + (29266.0748498709) * invT2;
+  k_f = 90 * exp(1.7 * logT - (29266.2416292212) * invT);
+  dlnkfdT = 1.7 * invT + (29266.2416292212) * invT2;
   // reverse
   phi_r = sc[6] * sc[42];
   Kc =
@@ -30359,8 +30359,8 @@ aJacobian_precond(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[4] * sc[41];
-  k_f = 33 * exp(1.5 * logT - (1811.57999689699) * invT);
-  dlnkfdT = 1.5 * invT + (1811.57999689699) * invT2;
+  k_f = 33 * exp(1.5 * logT - (1811.59032059556) * invT);
+  dlnkfdT = 1.5 * invT + (1811.59032059556) * invT2;
   // reverse
   phi_r = sc[7] * sc[42];
   Kc =
@@ -30411,8 +30411,8 @@ aJacobian_precond(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[2] * sc[40];
-  k_f = 2100000000 * exp(-0.69 * logT - (1434.16749754345) * invT);
-  dlnkfdT = -0.69 * invT + (1434.16749754345) * invT2;
+  k_f = 2100000000 * exp(-0.69 * logT - (1434.17567047148) * invT);
+  dlnkfdT = -0.69 * invT + (1434.17567047148) * invT2;
   // reverse
   phi_r = sc[2] * sc[41];
   Kc =
@@ -30447,8 +30447,8 @@ aJacobian_precond(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[28] * sc[38];
-  k_f = 55000 * exp(-(920.886498422637) * invT);
-  dlnkfdT = (920.886498422637) * invT2;
+  k_f = 55000 * exp(-(920.891746302741) * invT);
+  dlnkfdT = (920.891746302741) * invT2;
   // reverse
   phi_r = sc[20] * sc[40];
   Kc =
@@ -30499,8 +30499,8 @@ aJacobian_precond(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[21] * sc[37];
-  k_f = 3000000 * exp(-(5686.34832359333) * invT);
-  dlnkfdT = (5686.34832359333) * invT2;
+  k_f = 3000000 * exp(-(5686.38072853605) * invT);
+  dlnkfdT = (5686.38072853605) * invT2;
   // reverse
   phi_r = sc[20] * sc[38];
   Kc =
@@ -30603,8 +30603,8 @@ aJacobian_precond(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[38] * sc[43];
-  k_f = 1690000 * exp(-(-286.83349950869) * invT);
-  dlnkfdT = (-286.83349950869) * invT2;
+  k_f = 1690000 * exp(-(-286.835134094297) * invT);
+  dlnkfdT = (-286.835134094297) * invT2;
   // reverse
   phi_r = sc[18] * sc[39];
   Kc =
@@ -30734,7 +30734,7 @@ aJacobian(
   const amrex::Real logT = log(T);
 
   // reference concentration: P_atm / (RT) in inverse mol/m^3
-  amrex::Real refC = 101325 / 8.31446 / T;
+  amrex::Real refC = 101325 / 8.31446261815324 / T;
   amrex::Real refCinv = 1.0 / refC;
 
   // compute the mixture concentration
@@ -30931,10 +30931,10 @@ aJacobian(
   k_f = 111000000 * exp(-0.37 * logT);
   dlnkfdT = -0.37 * invT;
   // pressure-fall-off
-  k_0 = 2.01e+17 * exp(-0.584 * logT - (-1153.87581469022) * invT);
+  k_0 = 2.01e+17 * exp(-0.584 * logT - (-1153.88239031267) * invT);
   Pr = 1e-12 * alpha / k_f * k_0;
   fPr = Pr / (1.0 + Pr);
-  dlnk0dT = -0.584 * invT + (-1153.87581469022) * invT2;
+  dlnk0dT = -0.584 * invT + (-1153.88239031267) * invT2;
   dlogPrdT = log10e * (dlnk0dT - dlnkfdT);
   dlogfPrdT = dlogPrdT / (1.0 + Pr);
   // Troe form
@@ -31067,13 +31067,13 @@ aJacobian(
           (1.5 - 1) * sc[20] + sc[21] + (3 - 1) * sc[27];
   // forward
   phi_f = sc[6] * sc[20];
-  k_f = 43 * exp(1.5 * logT - (40056.0465980557) * invT);
-  dlnkfdT = 1.5 * invT + (40056.0465980557) * invT2;
+  k_f = 43 * exp(1.5 * logT - (40056.2748665018) * invT);
+  dlnkfdT = 1.5 * invT + (40056.2748665018) * invT2;
   // pressure-fall-off
-  k_0 = 5.07e+27 * exp(-3.42 * logT - (42446.3257606281) * invT);
+  k_0 = 5.07e+27 * exp(-3.42 * logT - (42446.5676506209) * invT);
   Pr = 1e-12 * alpha / k_f * k_0;
   fPr = Pr / (1.0 + Pr);
-  dlnk0dT = -3.42 * invT + (42446.3257606281) * invT2;
+  dlnk0dT = -3.42 * invT + (42446.5676506209) * invT2;
   dlogPrdT = log10e * (dlnk0dT - dlnkfdT);
   dlogfPrdT = dlogPrdT / (1.0 + Pr);
   // Troe form
@@ -31224,10 +31224,10 @@ aJacobian(
   k_f = 50000000;
   dlnkfdT = 0.0;
   // pressure-fall-off
-  k_0 = 2.69e+28 * exp(-3.74 * logT - (974.227464997937) * invT);
+  k_0 = 2.69e+28 * exp(-3.74 * logT - (974.233016853611) * invT);
   Pr = 1e-12 * alpha / k_f * k_0;
   fPr = Pr / (1.0 + Pr);
-  dlnk0dT = -3.74 * invT + (974.227464997937) * invT2;
+  dlnk0dT = -3.74 * invT + (974.233016853611) * invT2;
   dlogPrdT = log10e * (dlnk0dT - dlnkfdT);
   dlogfPrdT = dlogPrdT / (1.0 + Pr);
   // Troe form
@@ -31380,13 +31380,13 @@ aJacobian(
           (1.5 - 1) * sc[20] + sc[21] + (3 - 1) * sc[27];
   // forward
   phi_f = sc[2] * sc[16];
-  k_f = 1090000 * exp(0.48 * logT - (-130.836333109227) * invT);
-  dlnkfdT = 0.48 * invT + (-130.836333109227) * invT2;
+  k_f = 1090000 * exp(0.48 * logT - (-130.837078709679) * invT);
+  dlnkfdT = 0.48 * invT + (-130.837078709679) * invT2;
   // pressure-fall-off
-  k_0 = 1.35e+24 * exp(-2.57 * logT - (717.083748771726) * invT);
+  k_0 = 1.35e+24 * exp(-2.57 * logT - (717.087835235741) * invT);
   Pr = 1e-12 * alpha / k_f * k_0;
   fPr = Pr / (1.0 + Pr);
-  dlnk0dT = -2.57 * invT + (717.083748771726) * invT2;
+  dlnk0dT = -2.57 * invT + (717.087835235741) * invT2;
   dlogPrdT = log10e * (dlnk0dT - dlnkfdT);
   dlogfPrdT = dlogPrdT / (1.0 + Pr);
   // Troe form
@@ -31547,10 +31547,10 @@ aJacobian(
   k_f = 25000000000 * exp(-0.8 * logT);
   dlnkfdT = -0.8 * invT;
   // pressure-fall-off
-  k_0 = 3.2e+27 * exp(-3.14 * logT - (618.956498939805) * invT);
+  k_0 = 3.2e+27 * exp(-3.14 * logT - (618.960026203482) * invT);
   Pr = 1e-12 * alpha / k_f * k_0;
   fPr = Pr / (1.0 + Pr);
-  dlnk0dT = -3.14 * invT + (618.956498939805) * invT2;
+  dlnk0dT = -3.14 * invT + (618.960026203482) * invT2;
   dlogPrdT = log10e * (dlnk0dT - dlnkfdT);
   dlogfPrdT = dlogPrdT / (1.0 + Pr);
   // Troe form
@@ -31708,13 +31708,13 @@ aJacobian(
           (1.5 - 1) * sc[20] + sc[21] + (3 - 1) * sc[27];
   // forward
   phi_f = sc[12] * sc[20];
-  k_f = 810000 * exp(0.5 * logT - (2269.50716277929) * invT);
-  dlnkfdT = 0.5 * invT + (2269.50716277929) * invT2;
+  k_f = 810000 * exp(0.5 * logT - (2269.52009607943) * invT);
+  dlnkfdT = 0.5 * invT + (2269.52009607943) * invT2;
   // pressure-fall-off
-  k_0 = 2.69e+33 * exp(-5.11 * logT - (3570.32224388449) * invT);
+  k_0 = 2.69e+33 * exp(-5.11 * logT - (3570.34259017374) * invT);
   Pr = 1e-12 * alpha / k_f * k_0;
   fPr = Pr / (1.0 + Pr);
-  dlnk0dT = -5.11 * invT + (3570.32224388449) * invT2;
+  dlnk0dT = -5.11 * invT + (3570.34259017374) * invT2;
   dlogPrdT = log10e * (dlnk0dT - dlnkfdT);
   dlogfPrdT = dlogPrdT / (1.0 + Pr);
   // Troe form
@@ -31870,10 +31870,10 @@ aJacobian(
   k_f = 20000000;
   dlnkfdT = 0.0;
   // pressure-fall-off
-  k_0 = 2.7e+38 * exp(-6.3 * logT - (1559.97166399463) * invT);
+  k_0 = 2.7e+38 * exp(-6.3 * logT - (1559.98055384617) * invT);
   Pr = 1e-12 * alpha / k_f * k_0;
   fPr = Pr / (1.0 + Pr);
-  dlnk0dT = -6.3 * invT + (1559.97166399463) * invT2;
+  dlnk0dT = -6.3 * invT + (1559.98055384617) * invT2;
   dlogPrdT = log10e * (dlnk0dT - dlnkfdT);
   dlogfPrdT = dlogPrdT / (1.0 + Pr);
   // Troe form
@@ -32021,13 +32021,13 @@ aJacobian(
           sc[21] + (3 - 1) * sc[27];
   // forward
   phi_f = sc[2] * sc[17];
-  k_f = 540000 * exp(0.454 * logT - (1308.36333109227) * invT);
-  dlnkfdT = 0.454 * invT + (1308.36333109227) * invT2;
+  k_f = 540000 * exp(0.454 * logT - (1308.37078709679) * invT);
+  dlnkfdT = 0.454 * invT + (1308.37078709679) * invT2;
   // pressure-fall-off
-  k_0 = 2.2e+30 * exp(-4.8 * logT - (2797.88466187424) * invT);
+  k_0 = 2.2e+30 * exp(-4.8 * logT - (2797.90060625314) * invT);
   Pr = 1e-12 * alpha / k_f * k_0;
   fPr = Pr / (1.0 + Pr);
-  dlnk0dT = -4.8 * invT + (2797.88466187424) * invT2;
+  dlnk0dT = -4.8 * invT + (2797.90060625314) * invT2;
   dlogPrdT = log10e * (dlnk0dT - dlnkfdT);
   dlogfPrdT = dlogPrdT / (1.0 + Pr);
   // Troe form
@@ -32180,13 +32180,13 @@ aJacobian(
           (1.5 - 1) * sc[20] + sc[21] + (3 - 1) * sc[27];
   // forward
   phi_f = sc[2] * sc[14];
-  k_f = 12700000000 * exp(-0.63 * logT - (192.731983003208) * invT);
-  dlnkfdT = -0.63 * invT + (192.731983003208) * invT2;
+  k_f = 12700000000 * exp(-0.63 * logT - (192.733081330027) * invT);
+  dlnkfdT = -0.63 * invT + (192.733081330027) * invT2;
   // pressure-fall-off
-  k_0 = 2.477e+33 * exp(-4.76 * logT - (1227.84866456352) * invT);
+  k_0 = 2.477e+33 * exp(-4.76 * logT - (1227.85566173699) * invT);
   Pr = 1e-12 * alpha / k_f * k_0;
   fPr = Pr / (1.0 + Pr);
-  dlnk0dT = -4.76 * invT + (1227.84866456352) * invT2;
+  dlnk0dT = -4.76 * invT + (1227.85566173699) * invT2;
   dlogPrdT = log10e * (dlnk0dT - dlnkfdT);
   dlogfPrdT = dlogPrdT / (1.0 + Pr);
   // Troe form
@@ -32342,10 +32342,10 @@ aJacobian(
   k_f = 63000000;
   dlnkfdT = 0.0;
   // pressure-fall-off
-  k_0 = 2.7e+38 * exp(-6.3 * logT - (1559.97166399463) * invT);
+  k_0 = 2.7e+38 * exp(-6.3 * logT - (1559.98055384617) * invT);
   Pr = 1e-12 * alpha / k_f * k_0;
   fPr = Pr / (1.0 + Pr);
-  dlnk0dT = -6.3 * invT + (1559.97166399463) * invT2;
+  dlnk0dT = -6.3 * invT + (1559.98055384617) * invT2;
   dlogPrdT = log10e * (dlnk0dT - dlnkfdT);
   dlogfPrdT = dlogPrdT / (1.0 + Pr);
   // Troe form
@@ -32498,13 +32498,13 @@ aJacobian(
           (1.5 - 1) * sc[20] + sc[21] + (3 - 1) * sc[27];
   // forward
   phi_f = (sc[14] * sc[14]);
-  k_f = 21200000000 * exp(-0.97 * logT - (311.994332798926) * invT);
-  dlnkfdT = -0.97 * invT + (311.994332798926) * invT2;
+  k_f = 21200000000 * exp(-0.97 * logT - (311.996110769235) * invT);
+  dlnkfdT = -0.97 * invT + (311.996110769235) * invT2;
   // pressure-fall-off
-  k_0 = 1.77e+50 * exp(-9.67 * logT - (3130.00766130536) * invT);
+  k_0 = 1.77e+50 * exp(-9.67 * logT - (3130.02549836232) * invT);
   Pr = 1e-12 * alpha / k_f * k_0;
   fPr = Pr / (1.0 + Pr);
-  dlnk0dT = -9.67 * invT + (3130.00766130536) * invT2;
+  dlnk0dT = -9.67 * invT + (3130.02549836232) * invT2;
   dlogPrdT = log10e * (dlnk0dT - dlnkfdT);
   dlogfPrdT = dlogPrdT / (1.0 + Pr);
   // Troe form
@@ -32644,10 +32644,10 @@ aJacobian(
   k_f = 50000000;
   dlnkfdT = 0.0;
   // pressure-fall-off
-  k_0 = 8.6e+28 * exp(-4 * logT - (1522.23041405928) * invT);
+  k_0 = 8.6e+28 * exp(-4 * logT - (1522.23908883377) * invT);
   Pr = 1e-12 * alpha / k_f * k_0;
   fPr = Pr / (1.0 + Pr);
-  dlnk0dT = -4 * invT + (1522.23041405928) * invT2;
+  dlnk0dT = -4 * invT + (1522.23908883377) * invT2;
   dlogPrdT = log10e * (dlnk0dT - dlnkfdT);
   dlogfPrdT = dlogPrdT / (1.0 + Pr);
   // Troe form
@@ -32801,13 +32801,13 @@ aJacobian(
           (3 - 1) * sc[27];
   // forward
   phi_f = sc[24];
-  k_f = 386000000 * exp(1.62 * logT - (18643.2716780664) * invT);
-  dlnkfdT = 1.62 * invT + (18643.2716780664) * invT2;
+  k_f = 386000000 * exp(1.62 * logT - (18643.377920969) * invT);
+  dlnkfdT = 1.62 * invT + (18643.377920969) * invT2;
   // pressure-fall-off
-  k_0 = 2.565e+27 * exp(-3.4 * logT - (18014.5125184767) * invT);
+  k_0 = 2.565e+27 * exp(-3.4 * logT - (18014.6151782529) * invT);
   Pr = 1e-6 * alpha / k_f * k_0;
   fPr = Pr / (1.0 + Pr);
-  dlnk0dT = -3.4 * invT + (18014.5125184767) * invT2;
+  dlnk0dT = -3.4 * invT + (18014.6151782529) * invT2;
   dlogPrdT = log10e * (dlnk0dT - dlnkfdT);
   dlogfPrdT = dlogPrdT / (1.0 + Pr);
   // Troe form
@@ -32971,13 +32971,13 @@ aJacobian(
           (3 - 1) * sc[27];
   // forward
   phi_f = sc[2] * sc[29];
-  k_f = 330000000 * exp(-0.06 * logT - (4277.34165934012) * invT);
-  dlnkfdT = -0.06 * invT + (4277.34165934012) * invT2;
+  k_f = 330000000 * exp(-0.06 * logT - (4277.36603473951) * invT);
+  dlnkfdT = -0.06 * invT + (4277.36603473951) * invT2;
   // pressure-fall-off
-  k_0 = 3.8e+41 * exp(-7.64 * logT - (5988.27832307616) * invT);
+  k_0 = 3.8e+41 * exp(-7.64 * logT - (5988.31244863531) * invT);
   Pr = 1e-12 * alpha / k_f * k_0;
   fPr = Pr / (1.0 + Pr);
-  dlnk0dT = -7.64 * invT + (5988.27832307616) * invT2;
+  dlnk0dT = -7.64 * invT + (5988.31244863531) * invT2;
   dlogPrdT = log10e * (dlnk0dT - dlnkfdT);
   dlogfPrdT = dlogPrdT / (1.0 + Pr);
   // Troe form
@@ -33146,13 +33146,13 @@ aJacobian(
           (3 - 1) * sc[27];
   // forward
   phi_f = sc[2] * sc[24];
-  k_f = 6080000 * exp(0.27 * logT - (140.900666425322) * invT);
-  dlnkfdT = 0.27 * invT + (140.900666425322) * invT2;
+  k_f = 6080000 * exp(0.27 * logT - (140.901469379654) * invT);
+  dlnkfdT = 0.27 * invT + (140.901469379654) * invT2;
   // pressure-fall-off
-  k_0 = 1.4e+30 * exp(-3.86 * logT - (1670.67933047167) * invT);
+  k_0 = 1.4e+30 * exp(-3.86 * logT - (1670.6888512159) * invT);
   Pr = 1e-12 * alpha / k_f * k_0;
   fPr = Pr / (1.0 + Pr);
-  dlnk0dT = -3.86 * invT + (1670.67933047167) * invT2;
+  dlnk0dT = -3.86 * invT + (1670.6888512159) * invT2;
   dlogPrdT = log10e * (dlnk0dT - dlnkfdT);
   dlogfPrdT = dlogPrdT / (1.0 + Pr);
   // Troe form
@@ -33319,10 +33319,10 @@ aJacobian(
   k_f = 25000000;
   dlnkfdT = 0.0;
   // pressure-fall-off
-  k_0 = 4.27e+58 * exp(-11.94 * logT - (4916.32618157895) * invT);
+  k_0 = 4.27e+58 * exp(-11.94 * logT - (4916.35419837624) * invT);
   Pr = 1e-12 * alpha / k_f * k_0;
   fPr = Pr / (1.0 + Pr);
-  dlnk0dT = -11.94 * invT + (4916.32618157895) * invT2;
+  dlnk0dT = -11.94 * invT + (4916.35419837624) * invT2;
   dlogPrdT = log10e * (dlnk0dT - dlnkfdT);
   dlogfPrdT = dlogPrdT / (1.0 + Pr);
   // Troe form
@@ -33490,13 +33490,13 @@ aJacobian(
           (1.5 - 1) * sc[20] + sc[21] + (3 - 1) * sc[27];
   // forward
   phi_f = sc[25];
-  k_f = 8000000000000 * exp(0.44 * logT - (44670.543423485) * invT);
-  dlnkfdT = 0.44 * invT + (44670.543423485) * invT2;
+  k_f = 8000000000000 * exp(0.44 * logT - (44670.7979886854) * invT);
+  dlnkfdT = 0.44 * invT + (44670.7979886854) * invT2;
   // pressure-fall-off
-  k_0 = 7e+50 * exp(-9.31 * logT - (50251.2162472593) * invT);
+  k_0 = 7e+50 * exp(-9.31 * logT - (50251.5026151867) * invT);
   Pr = 1e-6 * alpha / k_f * k_0;
   fPr = Pr / (1.0 + Pr);
-  dlnk0dT = -9.31 * invT + (50251.2162472593) * invT2;
+  dlnk0dT = -9.31 * invT + (50251.5026151867) * invT2;
   dlogPrdT = log10e * (dlnk0dT - dlnkfdT);
   dlogfPrdT = dlogPrdT / (1.0 + Pr);
   // Troe form
@@ -33649,13 +33649,13 @@ aJacobian(
           (1.5 - 1) * sc[20] + sc[21] + (3 - 1) * sc[27];
   // forward
   phi_f = sc[2] * sc[25];
-  k_f = 1367 * exp(1.463 * logT - (681.858582165395) * invT);
-  dlnkfdT = 1.463 * invT + (681.858582165395) * invT2;
+  k_f = 1367 * exp(1.463 * logT - (681.862467890828) * invT);
+  dlnkfdT = 1.463 * invT + (681.862467890828) * invT2;
   // pressure-fall-off
-  k_0 = 2.027e+39 * exp(-6.642 * logT - (2903.05694502743) * invT);
+  k_0 = 2.027e+39 * exp(-6.642 * logT - (2903.07348875438) * invT);
   Pr = 1e-12 * alpha / k_f * k_0;
   fPr = Pr / (1.0 + Pr);
-  dlnk0dT = -6.642 * invT + (2903.05694502743) * invT2;
+  dlnk0dT = -6.642 * invT + (2903.07348875438) * invT2;
   dlogPrdT = log10e * (dlnk0dT - dlnkfdT);
   dlogfPrdT = dlogPrdT / (1.0 + Pr);
   // Troe form
@@ -33813,13 +33813,13 @@ aJacobian(
           (1.5 - 1) * sc[20] + sc[21] + (3 - 1) * sc[27];
   // forward
   phi_f = sc[2] * sc[26];
-  k_f = 521000000000 * exp(-0.99 * logT - (795.082331971457) * invT);
-  dlnkfdT = -0.99 * invT + (795.082331971457) * invT2;
+  k_f = 521000000000 * exp(-0.99 * logT - (795.08686292805) * invT);
+  dlnkfdT = -0.99 * invT + (795.08686292805) * invT2;
   // pressure-fall-off
-  k_0 = 1.99e+41 * exp(-7.08 * logT - (3364.00341090455) * invT);
+  k_0 = 1.99e+41 * exp(-7.08 * logT - (3364.02258143925) * invT);
   Pr = 1e-12 * alpha / k_f * k_0;
   fPr = Pr / (1.0 + Pr);
-  dlnk0dT = -7.08 * invT + (3364.00341090455) * invT2;
+  dlnk0dT = -7.08 * invT + (3364.02258143925) * invT2;
   dlogPrdT = log10e * (dlnk0dT - dlnkfdT);
   dlogfPrdT = dlogPrdT / (1.0 + Pr);
   // Troe form
@@ -33975,10 +33975,10 @@ aJacobian(
   k_f = 15000000;
   dlnkfdT = 0.0;
   // pressure-fall-off
-  k_0 = 1.55e+56 * exp(-11.79 * logT - (4521.1501339225) * invT);
+  k_0 = 1.55e+56 * exp(-11.79 * logT - (4521.17589871966) * invT);
   Pr = 1e-12 * alpha / k_f * k_0;
   fPr = Pr / (1.0 + Pr);
-  dlnk0dT = -11.79 * invT + (4521.1501339225) * invT2;
+  dlnk0dT = -11.79 * invT + (4521.17589871966) * invT2;
   dlogPrdT = log10e * (dlnk0dT - dlnkfdT);
   dlogfPrdT = dlogPrdT / (1.0 + Pr);
   // Troe form
@@ -34266,10 +34266,10 @@ aJacobian(
   k_f = 200000000;
   dlnkfdT = 0.0;
   // pressure-fall-off
-  k_0 = 1.33e+60 * exp(-12 * logT - (3003.09641818941) * invT);
+  k_0 = 1.33e+60 * exp(-12 * logT - (3003.11353201393) * invT);
   Pr = 1e-12 * alpha / k_f * k_0;
   fPr = Pr / (1.0 + Pr);
-  dlnk0dT = -12 * invT + (3003.09641818941) * invT2;
+  dlnk0dT = -12 * invT + (3003.11353201393) * invT2;
   dlogPrdT = log10e * (dlnk0dT - dlnkfdT);
   dlogfPrdT = dlogPrdT / (1.0 + Pr);
   // Troe form
@@ -34427,13 +34427,13 @@ aJacobian(
           (1.5 - 1) * sc[20] + sc[21] + (3 - 1) * sc[27];
   // forward
   phi_f = sc[14] * sc[33];
-  k_f = 100000000 * exp(-0.32 * logT - (-131.993731440578) * invT);
-  dlnkfdT = -0.32 * invT + (-131.993731440578) * invT2;
+  k_f = 100000000 * exp(-0.32 * logT - (-131.994483636726) * invT);
+  dlnkfdT = -0.32 * invT + (-131.994483636726) * invT2;
   // pressure-fall-off
-  k_0 = 3.91e+60 * exp(-12.81 * logT - (3145.1041612795) * invT);
+  k_0 = 3.91e+60 * exp(-12.81 * logT - (3145.12208436729) * invT);
   Pr = 1e-12 * alpha / k_f * k_0;
   fPr = Pr / (1.0 + Pr);
-  dlnk0dT = -12.81 * invT + (3145.1041612795) * invT2;
+  dlnk0dT = -12.81 * invT + (3145.12208436729) * invT2;
   dlogPrdT = log10e * (dlnk0dT - dlnkfdT);
   dlogfPrdT = dlogPrdT / (1.0 + Pr);
   // Troe form
@@ -34591,13 +34591,13 @@ aJacobian(
           (1.5 - 1) * sc[20] + sc[21] + (3 - 1) * sc[27];
   // forward
   phi_f = sc[2] * sc[34];
-  k_f = 13300000 * exp(-(1640.83858218945) * invT);
-  dlnkfdT = (1640.83858218945) * invT2;
+  k_f = 13300000 * exp(-(1640.84793287943) * invT);
+  dlnkfdT = (1640.84793287943) * invT2;
   // pressure-fall-off
-  k_0 = 6.26e+38 * exp(-6.66 * logT - (3522.51666063304) * invT);
+  k_0 = 6.26e+38 * exp(-6.66 * logT - (3522.53673449136) * invT);
   Pr = 1e-12 * alpha / k_f * k_0;
   fPr = Pr / (1.0 + Pr);
-  dlnk0dT = -6.66 * invT + (3522.51666063304) * invT2;
+  dlnk0dT = -6.66 * invT + (3522.53673449136) * invT2;
   dlogPrdT = log10e * (dlnk0dT - dlnkfdT);
   dlogfPrdT = dlogPrdT / (1.0 + Pr);
   // Troe form
@@ -34755,13 +34755,13 @@ aJacobian(
           (1.75 - 1) * sc[20] + (3.6 - 1) * sc[21];
   // forward
   phi_f = sc[3] * sc[20];
-  k_f = 13620 * exp(-(1199.66853127845) * invT);
-  dlnkfdT = (1199.66853127845) * invT2;
+  k_f = 13620 * exp(-(1199.67536786106) * invT);
+  dlnkfdT = (1199.67536786106) * invT2;
   // pressure-fall-off
-  k_0 = 1.173e+24 * exp(-2.79 * logT - (2108.98104638758) * invT);
+  k_0 = 1.173e+24 * exp(-2.79 * logT - (2108.99306489333) * invT);
   Pr = 1e-12 * alpha / k_f * k_0;
   fPr = Pr / (1.0 + Pr);
-  dlnk0dT = -2.79 * invT + (2108.98104638758) * invT2;
+  dlnk0dT = -2.79 * invT + (2108.99306489333) * invT2;
   dlogPrdT = log10e * (dlnk0dT - dlnkfdT);
   dlogfPrdT = dlogPrdT / (1.0 + Pr);
   // Lindemann form
@@ -34882,13 +34882,13 @@ aJacobian(
           sc[21] + (2.5 - 1) * sc[22] + (2.5 - 1) * sc[25] + (3 - 1) * sc[27];
   // forward
   phi_f = sc[22];
-  k_f = 800000000000000 * exp(-0.52 * logT - (25538.2457895895) * invT);
-  dlnkfdT = -0.52 * invT + (25538.2457895895) * invT2;
+  k_f = 800000000000000 * exp(-0.52 * logT - (25538.3913250624) * invT);
+  dlnkfdT = -0.52 * invT + (25538.3913250624) * invT2;
   // pressure-fall-off
-  k_0 = 2.45e+15 * exp(-0.64 * logT - (25009.8682904946) * invT);
+  k_0 = 2.45e+15 * exp(-0.64 * logT - (25010.0108148887) * invT);
   Pr = 1e-6 * alpha / k_f * k_0;
   fPr = Pr / (1.0 + Pr);
-  dlnk0dT = -0.64 * invT + (25009.8682904946) * invT2;
+  dlnk0dT = -0.64 * invT + (25010.0108148887) * invT2;
   dlogPrdT = log10e * (dlnk0dT - dlnkfdT);
   dlogfPrdT = dlogPrdT / (1.0 + Pr);
   // Lindemann form
@@ -35562,8 +35562,8 @@ aJacobian(
           (3.6 - 1) * sc[21];
   // forward
   phi_f = sc[16];
-  k_f = 187000000000 * exp(-1 * logT - (8554.68331868023) * invT);
-  dlnkfdT = -1 * invT + (8554.68331868023) * invT2;
+  k_f = 187000000000 * exp(-1 * logT - (8554.73206947902) * invT);
+  dlnkfdT = -1 * invT + (8554.73206947902) * invT2;
   // reverse
   phi_r = sc[2] * sc[20];
   Kc = refC * (kc_fast ? (inv_ge[16] * ge[20] * ge[2])
@@ -35671,8 +35671,8 @@ aJacobian(
   // a third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[7] * sc[16];
-  k_f = 2244000000000 * exp(-1 * logT - (8554.68331868023) * invT);
-  dlnkfdT = -1 * invT + (8554.68331868023) * invT2;
+  k_f = 2244000000000 * exp(-1 * logT - (8554.73206947902) * invT);
+  dlnkfdT = -1 * invT + (8554.73206947902) * invT2;
   // reverse
   phi_r = sc[2] * sc[7] * sc[20];
   Kc = refC * (kc_fast ? (inv_ge[16] * ge[20] * ge[2])
@@ -35853,8 +35853,8 @@ aJacobian(
           (1.5 - 1) * sc[20] + sc[21] + (3 - 1) * sc[27];
   // forward
   phi_f = sc[42];
-  k_f = 310000000 * exp(-(27198.8607867451) * invT);
-  dlnkfdT = (27198.8607867451) * invT2;
+  k_f = 310000000 * exp(-(27199.0157856083) * invT);
+  dlnkfdT = (27199.0157856083) * invT2;
   // reverse
   phi_r = sc[20] * sc[37];
   Kc = refC * (kc_fast ? (inv_ge[42] * ge[20] * ge[37])
@@ -35978,8 +35978,8 @@ aJacobian(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[2] * sc[9];
-  k_f = 26440000000 * exp(-0.6707 * logT - (8575.31520197823) * invT);
-  dlnkfdT = -0.6707 * invT + (8575.31520197823) * invT2;
+  k_f = 26440000000 * exp(-0.6707 * logT - (8575.36407035247) * invT);
+  dlnkfdT = -0.6707 * invT + (8575.36407035247) * invT2;
   // reverse
   phi_r = sc[3] * sc[4];
   Kc =
@@ -36030,8 +36030,8 @@ aJacobian(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[3] * sc[6];
-  k_f = 0.04589 * exp(2.7 * logT - (3150.13632793755) * invT);
-  dlnkfdT = 2.7 * invT + (3150.13632793755) * invT2;
+  k_f = 0.04589 * exp(2.7 * logT - (3150.15427970227) * invT);
+  dlnkfdT = 2.7 * invT + (3150.15427970227) * invT2;
   // reverse
   phi_r = sc[2] * sc[4];
   Kc =
@@ -36082,8 +36082,8 @@ aJacobian(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[4] * sc[6];
-  k_f = 173.4 * exp(1.51 * logT - (1726.03316371019) * invT);
-  dlnkfdT = 1.51 * invT + (1726.03316371019) * invT2;
+  k_f = 173.4 * exp(1.51 * logT - (1726.04299990077) * invT);
+  dlnkfdT = 1.51 * invT + (1726.04299990077) * invT2;
   // reverse
   phi_r = sc[2] * sc[7];
   Kc =
@@ -36134,8 +36134,8 @@ aJacobian(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = (sc[4] * sc[4]);
-  k_f = 0.03973 * exp(2.4 * logT - (-1061.78716484796) * invT);
-  dlnkfdT = 2.4 * invT + (-1061.78716484796) * invT2;
+  k_f = 0.03973 * exp(2.4 * logT - (-1061.7932156824) * invT);
+  dlnkfdT = 2.4 * invT + (-1061.7932156824) * invT2;
   // reverse
   phi_r = sc[3] * sc[7];
   Kc =
@@ -36175,8 +36175,8 @@ aJacobian(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[6] * sc[9];
-  k_f = 0.5916 * exp(2.433 * logT - (26923.0980538841) * invT);
-  dlnkfdT = 2.433 * invT + (26923.0980538841) * invT2;
+  k_f = 0.5916 * exp(2.433 * logT - (26923.251481251) * invT);
+  dlnkfdT = 2.433 * invT + (26923.251481251) * invT2;
   // reverse
   phi_r = sc[2] * sc[5];
   Kc =
@@ -36227,8 +36227,8 @@ aJacobian(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[2] * sc[5];
-  k_f = 3970000 * exp(-(337.658382754967) * invT);
-  dlnkfdT = (337.658382754967) * invT2;
+  k_f = 3970000 * exp(-(337.660306977672) * invT);
+  dlnkfdT = (337.660306977672) * invT2;
   // reverse
   phi_r = sc[3] * sc[7];
   Kc =
@@ -36279,8 +36279,8 @@ aJacobian(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[2] * sc[5];
-  k_f = 74850000 * exp(-(148.448916412392) * invT);
-  dlnkfdT = (148.448916412392) * invT2;
+  k_f = 74850000 * exp(-(148.449762382136) * invT);
+  dlnkfdT = (148.449762382136) * invT2;
   // reverse
   phi_r = (sc[4] * sc[4]);
   Kc =
@@ -36372,8 +36372,8 @@ aJacobian(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = (sc[5] * sc[5]);
-  k_f = 130000 * exp(-(-820.243165261693) * invT);
-  dlnkfdT = (-820.243165261693) * invT2;
+  k_f = 130000 * exp(-(-820.247839602988) * invT);
+  dlnkfdT = (-820.247839602988) * invT2;
   // reverse
   phi_r = sc[8] * sc[9];
   Kc =
@@ -36413,8 +36413,8 @@ aJacobian(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = (sc[5] * sc[5]);
-  k_f = 365800000 * exp(-(6038.59998965664) * invT);
-  dlnkfdT = (6038.59998965664) * invT2;
+  k_f = 365800000 * exp(-(6038.63440198519) * invT);
+  dlnkfdT = (6038.63440198519) * invT2;
   // reverse
   phi_r = sc[8] * sc[9];
   Kc =
@@ -36454,8 +36454,8 @@ aJacobian(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[4] * sc[5];
-  k_f = 1410000000000 * exp(-1.76 * logT - (30.1929999482832) * invT);
-  dlnkfdT = -1.76 * invT + (30.1929999482832) * invT2;
+  k_f = 1410000000000 * exp(-1.76 * logT - (30.1931720099259) * invT);
+  dlnkfdT = -1.76 * invT + (30.1931720099259) * invT2;
   // reverse
   phi_r = sc[7] * sc[9];
   Kc =
@@ -36506,8 +36506,8 @@ aJacobian(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[4] * sc[5];
-  k_f = 1.12e+79 * exp(-22.3 * logT - (13536.528310147) * invT);
-  dlnkfdT = -22.3 * invT + (13536.528310147) * invT2;
+  k_f = 1.12e+79 * exp(-22.3 * logT - (13536.6054511168) * invT);
+  dlnkfdT = -22.3 * invT + (13536.6054511168) * invT2;
   // reverse
   phi_r = sc[7] * sc[9];
   Kc =
@@ -36558,8 +36558,8 @@ aJacobian(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[4] * sc[5];
-  k_f = 5.37e+64 * exp(-16.72 * logT - (16555.8283049753) * invT);
-  dlnkfdT = -16.72 * invT + (16555.8283049753) * invT2;
+  k_f = 5.37e+64 * exp(-16.72 * logT - (16555.9226521094) * invT);
+  dlnkfdT = -16.72 * invT + (16555.9226521094) * invT2;
   // reverse
   phi_r = sc[7] * sc[9];
   Kc =
@@ -36610,8 +36610,8 @@ aJacobian(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[4] * sc[5];
-  k_f = 2510000 * exp(2 * logT - (20128.6666321888) * invT);
-  dlnkfdT = 2 * invT + (20128.6666321888) * invT2;
+  k_f = 2510000 * exp(2 * logT - (20128.7813399506) * invT);
+  dlnkfdT = 2 * invT + (20128.7813399506) * invT2;
   // reverse
   phi_r = sc[7] * sc[9];
   Kc =
@@ -36662,8 +36662,8 @@ aJacobian(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[4] * sc[5];
-  k_f = 1e+130 * exp(-40 * logT - (17511.9399700042) * invT);
-  dlnkfdT = -40 * invT + (17511.9399700042) * invT2;
+  k_f = 1e+130 * exp(-40 * logT - (17512.0397657571) * invT);
+  dlnkfdT = -40 * invT + (17512.0397657571) * invT2;
   // reverse
   phi_r = sc[7] * sc[9];
   Kc =
@@ -36714,8 +36714,8 @@ aJacobian(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[2] * sc[8];
-  k_f = 6.05 * exp(2 * logT - (2616.72666218454) * invT);
-  dlnkfdT = 2 * invT + (2616.72666218454) * invT2;
+  k_f = 6.05 * exp(2 * logT - (2616.74157419358) * invT);
+  dlnkfdT = 2 * invT + (2616.74157419358) * invT2;
   // reverse
   phi_r = sc[5] * sc[6];
   Kc =
@@ -36766,8 +36766,8 @@ aJacobian(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[2] * sc[8];
-  k_f = 24100000 * exp(-(1997.77016324474) * invT);
-  dlnkfdT = (1997.77016324474) * invT2;
+  k_f = 24100000 * exp(-(1997.7815479901) * invT);
+  dlnkfdT = (1997.7815479901) * invT2;
   // reverse
   phi_r = sc[4] * sc[7];
   Kc =
@@ -36818,8 +36818,8 @@ aJacobian(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[3] * sc[8];
-  k_f = 9.63 * exp(2 * logT - (1997.77016324474) * invT);
-  dlnkfdT = 2 * invT + (1997.77016324474) * invT2;
+  k_f = 9.63 * exp(2 * logT - (1997.7815479901) * invT);
+  dlnkfdT = 2 * invT + (1997.7815479901) * invT2;
   // reverse
   phi_r = sc[4] * sc[5];
   Kc =
@@ -36870,8 +36870,8 @@ aJacobian(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[4] * sc[8];
-  k_f = 2000000 * exp(-(214.873516298615) * invT);
-  dlnkfdT = (214.873516298615) * invT2;
+  k_f = 2000000 * exp(-(214.874740803973) * invT);
+  dlnkfdT = (214.874740803973) * invT2;
   // reverse
   phi_r = sc[5] * sc[7];
   Kc =
@@ -36922,8 +36922,8 @@ aJacobian(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[4] * sc[8];
-  k_f = 2.67e+35 * exp(-7 * logT - (18920.9466342575) * invT);
-  dlnkfdT = -7 * invT + (18920.9466342575) * invT2;
+  k_f = 2.67e+35 * exp(-7 * logT - (18921.0544595536) * invT);
+  dlnkfdT = -7 * invT + (18921.0544595536) * invT2;
   // reverse
   phi_r = sc[5] * sc[7];
   Kc =
@@ -36974,8 +36974,8 @@ aJacobian(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[4] * sc[20];
-  k_f = 0.07046 * exp(2.053 * logT - (-178.979071526765) * invT);
-  dlnkfdT = 2.053 * invT + (-178.979071526765) * invT2;
+  k_f = 0.07046 * exp(2.053 * logT - (-178.980091479506) * invT);
+  dlnkfdT = 2.053 * invT + (-178.980091479506) * invT2;
   // reverse
   phi_r = sc[2] * sc[21];
   Kc =
@@ -37026,8 +37026,8 @@ aJacobian(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[4] * sc[20];
-  k_f = 5757000 * exp(-0.664 * logT - (166.98238621398) * invT);
-  dlnkfdT = -0.664 * invT + (166.98238621398) * invT2;
+  k_f = 5757000 * exp(-0.664 * logT - (166.983337800895) * invT);
+  dlnkfdT = -0.664 * invT + (166.983337800895) * invT2;
   // reverse
   phi_r = sc[2] * sc[21];
   Kc =
@@ -37078,8 +37078,8 @@ aJacobian(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[9] * sc[20];
-  k_f = 1119000 * exp(-(24003.4349588851) * invT);
-  dlnkfdT = (24003.4349588851) * invT2;
+  k_f = 1119000 * exp(-(24003.5717478911) * invT);
+  dlnkfdT = (24003.5717478911) * invT2;
   // reverse
   phi_r = sc[3] * sc[21];
   Kc =
@@ -37130,8 +37130,8 @@ aJacobian(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[5] * sc[20];
-  k_f = 0.157 * exp(2.18 * logT - (9029.02038003442) * invT);
-  dlnkfdT = 2.18 * invT + (9029.02038003442) * invT2;
+  k_f = 0.157 * exp(2.18 * logT - (9029.07183395029) * invT);
+  dlnkfdT = 2.18 * invT + (9029.07183395029) * invT2;
   // reverse
   phi_r = sc[4] * sc[21];
   Kc =
@@ -37390,8 +37390,8 @@ aJacobian(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[9] * sc[16];
-  k_f = 12040 * exp(0.807 * logT - (-365.838516040031) * invT);
-  dlnkfdT = 0.807 * invT + (-365.838516040031) * invT2;
+  k_f = 12040 * exp(0.807 * logT - (-365.840600853603) * invT);
+  dlnkfdT = 0.807 * invT + (-365.840600853603) * invT2;
   // reverse
   phi_r = sc[5] * sc[20];
   Kc =
@@ -37494,8 +37494,8 @@ aJacobian(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[9] * sc[10];
-  k_f = 58000000 * exp(-(289.852799503519) * invT);
-  dlnkfdT = (289.852799503519) * invT2;
+  k_f = 58000000 * exp(-(289.854451295289) * invT);
+  dlnkfdT = (289.854451295289) * invT2;
   // reverse
   phi_r = sc[3] * sc[20];
   Kc =
@@ -37702,8 +37702,8 @@ aJacobian(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[6] * sc[11];
-  k_f = 110.7 * exp(1.79 * logT - (840.371831893882) * invT);
-  dlnkfdT = 1.79 * invT + (840.371831893882) * invT2;
+  k_f = 110.7 * exp(1.79 * logT - (840.376620942939) * invT);
+  dlnkfdT = 1.79 * invT + (840.376620942939) * invT2;
   // reverse
   phi_r = sc[2] * sc[12];
   Kc =
@@ -37754,8 +37754,8 @@ aJacobian(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[7] * sc[11];
-  k_f = 5710000 * exp(-(-379.928582682563) * invT);
-  dlnkfdT = (-379.928582682563) * invT2;
+  k_f = 5710000 * exp(-(-379.930747791568) * invT);
+  dlnkfdT = (-379.930747791568) * invT2;
   // reverse
   phi_r = sc[2] * sc[17];
   Kc =
@@ -37858,8 +37858,8 @@ aJacobian(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[11] * sc[21];
-  k_f = 3400000 * exp(-(347.219499405257) * invT);
-  dlnkfdT = (347.219499405257) * invT2;
+  k_f = 3400000 * exp(-(347.221478114148) * invT);
+  dlnkfdT = (347.221478114148) * invT2;
   // reverse
   phi_r = sc[16] * sc[20];
   Kc =
@@ -38014,8 +38014,8 @@ aJacobian(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[4] * sc[12];
-  k_f = 11.3 * exp(2 * logT - (1509.64999741416) * invT);
-  dlnkfdT = 2 * invT + (1509.64999741416) * invT2;
+  k_f = 11.3 * exp(2 * logT - (1509.6586004963) * invT);
+  dlnkfdT = 2 * invT + (1509.6586004963) * invT2;
   // reverse
   phi_r = sc[7] * sc[11];
   Kc =
@@ -38066,8 +38066,8 @@ aJacobian(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[6] * sc[12];
-  k_f = 0.5 * exp(2 * logT - (3638.25649376812) * invT);
-  dlnkfdT = 2 * invT + (3638.25649376812) * invT2;
+  k_f = 0.5 * exp(2 * logT - (3638.27722719608) * invT);
+  dlnkfdT = 2 * invT + (3638.27722719608) * invT2;
   // reverse
   phi_r = sc[2] * sc[14];
   Kc =
@@ -38118,8 +38118,8 @@ aJacobian(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[9] * sc[12];
-  k_f = 10600000 * exp(-(754.82499870708) * invT);
-  dlnkfdT = (754.82499870708) * invT2;
+  k_f = 10600000 * exp(-(754.829300248149) * invT);
+  dlnkfdT = (754.829300248149) * invT2;
   // reverse
   phi_r = sc[4] * sc[16];
   Kc =
@@ -38170,8 +38170,8 @@ aJacobian(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[9] * sc[12];
-  k_f = 2640000 * exp(-(754.82499870708) * invT);
-  dlnkfdT = (754.82499870708) * invT2;
+  k_f = 2640000 * exp(-(754.829300248149) * invT);
+  dlnkfdT = (754.829300248149) * invT2;
   // reverse
   phi_r = (sc[2] * sc[2]) * sc[21];
   Kc =
@@ -38368,8 +38368,8 @@ aJacobian(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[1] * sc[13];
-  k_f = 15000000 * exp(-(301.929999482832) * invT);
-  dlnkfdT = (301.929999482832) * invT2;
+  k_f = 15000000 * exp(-(301.93172009926) * invT);
+  dlnkfdT = (301.93172009926) * invT2;
   // reverse
   phi_r = sc[1] * sc[12];
   Kc =
@@ -38404,8 +38404,8 @@ aJacobian(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[0] * sc[13];
-  k_f = 9000000 * exp(-(301.929999482832) * invT);
-  dlnkfdT = (301.929999482832) * invT2;
+  k_f = 9000000 * exp(-(301.93172009926) * invT);
+  dlnkfdT = (301.93172009926) * invT2;
   // reverse
   phi_r = sc[0] * sc[12];
   Kc =
@@ -38978,8 +38978,8 @@ aJacobian(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[2] * sc[17];
-  k_f = 23000 * exp(1.05 * logT - (1648.03458051046) * invT);
-  dlnkfdT = 1.05 * invT + (1648.03458051046) * invT2;
+  k_f = 23000 * exp(1.05 * logT - (1648.04397220846) * invT);
+  dlnkfdT = 1.05 * invT + (1648.04397220846) * invT2;
   // reverse
   phi_r = sc[6] * sc[16];
   Kc =
@@ -39030,8 +39030,8 @@ aJacobian(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[3] * sc[17];
-  k_f = 39000000 * exp(-(1781.38699694871) * invT);
-  dlnkfdT = (1781.38699694871) * invT2;
+  k_f = 39000000 * exp(-(1781.39714858563) * invT);
+  dlnkfdT = (1781.39714858563) * invT2;
   // reverse
   phi_r = sc[4] * sc[16];
   Kc =
@@ -39082,8 +39082,8 @@ aJacobian(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[4] * sc[17];
-  k_f = 3430 * exp(1.18 * logT - (-224.93784961471) * invT);
-  dlnkfdT = 1.18 * invT + (-224.93784961471) * invT2;
+  k_f = 3430 * exp(1.18 * logT - (-224.939131473948) * invT);
+  dlnkfdT = 1.18 * invT + (-224.939131473948) * invT2;
   // reverse
   phi_r = sc[7] * sc[16];
   Kc =
@@ -39134,8 +39134,8 @@ aJacobian(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[9] * sc[17];
-  k_f = 100000000 * exp(-(20128.6666321888) * invT);
-  dlnkfdT = (20128.6666321888) * invT2;
+  k_f = 100000000 * exp(-(20128.7813399506) * invT);
+  dlnkfdT = (20128.7813399506) * invT2;
   // reverse
   phi_r = sc[5] * sc[16];
   Kc =
@@ -39186,8 +39186,8 @@ aJacobian(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[5] * sc[17];
-  k_f = 1000000 * exp(-(4025.73332643776) * invT);
-  dlnkfdT = (4025.73332643776) * invT2;
+  k_f = 1000000 * exp(-(4025.75626799013) * invT);
+  dlnkfdT = (4025.75626799013) * invT2;
   // reverse
   phi_r = sc[8] * sc[16];
   Kc =
@@ -39238,8 +39238,8 @@ aJacobian(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[11] * sc[17];
-  k_f = 94600000 * exp(-(-259.156582889431) * invT);
-  dlnkfdT = (-259.156582889431) * invT2;
+  k_f = 94600000 * exp(-(-259.158059751864) * invT);
+  dlnkfdT = (-259.158059751864) * invT2;
   // reverse
   phi_r = sc[2] * sc[29];
   Kc =
@@ -39342,8 +39342,8 @@ aJacobian(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[4] * sc[14];
-  k_f = 56 * exp(1.6 * logT - (2727.43432866158) * invT);
-  dlnkfdT = 1.6 * invT + (2727.43432866158) * invT2;
+  k_f = 56 * exp(1.6 * logT - (2727.44987156331) * invT);
+  dlnkfdT = 1.6 * invT + (2727.44987156331) * invT2;
   // reverse
   phi_r = sc[7] * sc[12];
   Kc =
@@ -39446,8 +39446,8 @@ aJacobian(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[9] * sc[14];
-  k_f = 30830000 * exp(-(14492.6399751759) * invT);
-  dlnkfdT = (14492.6399751759) * invT2;
+  k_f = 30830000 * exp(-(14492.7225647645) * invT);
+  dlnkfdT = (14492.7225647645) * invT2;
   // reverse
   phi_r = sc[3] * sc[18];
   Kc =
@@ -39498,8 +39498,8 @@ aJacobian(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[9] * sc[14];
-  k_f = 36000 * exp(-(4498.75699229419) * invT);
-  dlnkfdT = (4498.75699229419) * invT2;
+  k_f = 36000 * exp(-(4498.78262947897) * invT);
+  dlnkfdT = (4498.78262947897) * invT2;
   // reverse
   phi_r = sc[4] * sc[17];
   Kc =
@@ -39654,8 +39654,8 @@ aJacobian(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[8] * sc[14];
-  k_f = 0.0245 * exp(2.47 * logT - (2606.66232886845) * invT);
-  dlnkfdT = 2.47 * invT + (2606.66232886845) * invT2;
+  k_f = 0.0245 * exp(2.47 * logT - (2606.67718352361) * invT);
+  dlnkfdT = 2.47 * invT + (2606.67718352361) * invT2;
   // reverse
   phi_r = sc[5] * sc[15];
   Kc =
@@ -39862,8 +39862,8 @@ aJacobian(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[14] * sc[17];
-  k_f = 0.00332 * exp(2.81 * logT - (2948.84966161566) * invT);
-  dlnkfdT = 2.81 * invT + (2948.84966161566) * invT2;
+  k_f = 0.00332 * exp(2.81 * logT - (2948.86646630277) * invT);
+  dlnkfdT = 2.81 * invT + (2948.86646630277) * invT2;
   // reverse
   phi_r = sc[15] * sc[16];
   Kc =
@@ -39966,8 +39966,8 @@ aJacobian(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[13] * sc[14];
-  k_f = 12000000 * exp(-(-286.83349950869) * invT);
-  dlnkfdT = (-286.83349950869) * invT2;
+  k_f = 12000000 * exp(-(-286.835134094297) * invT);
+  dlnkfdT = (-286.835134094297) * invT2;
   // reverse
   phi_r = sc[2] * sc[25];
   Kc =
@@ -40018,8 +40018,8 @@ aJacobian(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = (sc[14] * sc[14]);
-  k_f = 4990000 * exp(0.1 * logT - (5334.09665753003) * invT);
-  dlnkfdT = 0.1 * invT + (5334.09665753003) * invT2;
+  k_f = 4990000 * exp(0.1 * logT - (5334.12705508692) * invT);
+  dlnkfdT = 0.1 * invT + (5334.12705508692) * invT2;
   // reverse
   phi_r = sc[2] * sc[26];
   Kc =
@@ -40371,8 +40371,8 @@ aJacobian(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[9] * sc[18];
-  k_f = 4.28e-19 * exp(7.6 * logT - (-1776.35483029066) * invT);
-  dlnkfdT = 7.6 * invT + (-1776.35483029066) * invT2;
+  k_f = 4.28e-19 * exp(7.6 * logT - (-1776.36495325064) * invT);
+  dlnkfdT = 7.6 * invT + (-1776.36495325064) * invT2;
   // reverse
   phi_r = sc[5] * sc[17];
   Kc =
@@ -40423,8 +40423,8 @@ aJacobian(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[2] * sc[15];
-  k_f = 660 * exp(1.62 * logT - (5454.86865732316) * invT);
-  dlnkfdT = 1.62 * invT + (5454.86865732316) * invT2;
+  k_f = 660 * exp(1.62 * logT - (5454.89974312662) * invT);
+  dlnkfdT = 1.62 * invT + (5454.89974312662) * invT2;
   // reverse
   phi_r = sc[6] * sc[14];
   Kc =
@@ -40475,8 +40475,8 @@ aJacobian(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[3] * sc[15];
-  k_f = 1020 * exp(1.5 * logT - (4327.66332592059) * invT);
-  dlnkfdT = 1.5 * invT + (4327.66332592059) * invT2;
+  k_f = 1020 * exp(1.5 * logT - (4327.68798808939) * invT);
+  dlnkfdT = 1.5 * invT + (4327.68798808939) * invT2;
   // reverse
   phi_r = sc[4] * sc[14];
   Kc =
@@ -40527,8 +40527,8 @@ aJacobian(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[4] * sc[15];
-  k_f = 100 * exp(1.6 * logT - (1570.03599731073) * invT);
-  dlnkfdT = 1.6 * invT + (1570.03599731073) * invT2;
+  k_f = 100 * exp(1.6 * logT - (1570.04494451615) * invT);
+  dlnkfdT = 1.6 * invT + (1570.04494451615) * invT2;
   // reverse
   phi_r = sc[7] * sc[14];
   Kc =
@@ -40631,8 +40631,8 @@ aJacobian(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[12] * sc[15];
-  k_f = 2.46 * exp(2 * logT - (4161.60182620503) * invT);
-  dlnkfdT = 2 * invT + (4161.60182620503) * invT2;
+  k_f = 2.46 * exp(2 * logT - (4161.62554203479) * invT);
+  dlnkfdT = 2 * invT + (4161.62554203479) * invT2;
   // reverse
   phi_r = (sc[14] * sc[14]);
   Kc =
@@ -40672,8 +40672,8 @@ aJacobian(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[13] * sc[15];
-  k_f = 16000000 * exp(-(-286.83349950869) * invT);
-  dlnkfdT = (-286.83349950869) * invT2;
+  k_f = 16000000 * exp(-(-286.835134094297) * invT);
+  dlnkfdT = (-286.835134094297) * invT2;
   // reverse
   phi_r = (sc[14] * sc[14]);
   Kc =
@@ -40713,8 +40713,8 @@ aJacobian(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[2] * sc[19];
-  k_f = 4.2 * exp(2.1 * logT - (2450.66516246898) * invT);
-  dlnkfdT = 2.1 * invT + (2450.66516246898) * invT2;
+  k_f = 4.2 * exp(2.1 * logT - (2450.67912813899) * invT);
+  dlnkfdT = 2.1 * invT + (2450.67912813899) * invT2;
   // reverse
   phi_r = sc[6] * sc[18];
   Kc =
@@ -40765,8 +40765,8 @@ aJacobian(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[3] * sc[19];
-  k_f = 0.13 * exp(2.5 * logT - (2516.0833290236) * invT);
-  dlnkfdT = 2.5 * invT + (2516.0833290236) * invT2;
+  k_f = 0.13 * exp(2.5 * logT - (2516.09766749383) * invT);
+  dlnkfdT = 2.5 * invT + (2516.09766749383) * invT2;
   // reverse
   phi_r = sc[4] * sc[18];
   Kc =
@@ -40817,8 +40817,8 @@ aJacobian(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[4] * sc[19];
-  k_f = 6.3 * exp(2 * logT - (754.82499870708) * invT);
-  dlnkfdT = 2 * invT + (754.82499870708) * invT2;
+  k_f = 6.3 * exp(2 * logT - (754.829300248149) * invT);
+  dlnkfdT = 2 * invT + (754.829300248149) * invT2;
   // reverse
   phi_r = sc[7] * sc[18];
   Kc =
@@ -40869,8 +40869,8 @@ aJacobian(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[14] * sc[19];
-  k_f = 10 * exp(1.5 * logT - (5001.97365809891) * invT);
-  dlnkfdT = 1.5 * invT + (5001.97365809891) * invT2;
+  k_f = 10 * exp(1.5 * logT - (5002.00216297773) * invT);
+  dlnkfdT = 1.5 * invT + (5002.00216297773) * invT2;
   // reverse
   phi_r = sc[15] * sc[18];
   Kc =
@@ -41026,8 +41026,8 @@ aJacobian(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[9] * sc[28];
-  k_f = 1600000 * exp(-(429.747032597231) * invT);
-  dlnkfdT = (429.747032597231) * invT2;
+  k_f = 1600000 * exp(-(429.749481607946) * invT);
+  dlnkfdT = (429.749481607946) * invT2;
   // reverse
   phi_r = sc[4] * (sc[20] * sc[20]);
   Kc =
@@ -41225,8 +41225,8 @@ aJacobian(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[3] * sc[22];
-  k_f = 4.08 * exp(2 * logT - (956.111665028967) * invT);
-  dlnkfdT = 2 * invT + (956.111665028967) * invT2;
+  k_f = 4.08 * exp(2 * logT - (956.117113647655) * invT);
+  dlnkfdT = 2 * invT + (956.117113647655) * invT2;
   // reverse
   phi_r = sc[12] * sc[20];
   Kc =
@@ -41277,8 +41277,8 @@ aJacobian(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[3] * sc[22];
-  k_f = 16.32 * exp(2 * logT - (956.111665028967) * invT);
-  dlnkfdT = 2 * invT + (956.111665028967) * invT2;
+  k_f = 16.32 * exp(2 * logT - (956.117113647655) * invT);
+  dlnkfdT = 2 * invT + (956.117113647655) * invT2;
   // reverse
   phi_r = sc[2] * sc[28];
   Kc =
@@ -41329,8 +41329,8 @@ aJacobian(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[4] * sc[22];
-  k_f = 2.18e-10 * exp(4.5 * logT - (-503.21666580472) * invT);
-  dlnkfdT = 4.5 * invT + (-503.21666580472) * invT2;
+  k_f = 2.18e-10 * exp(4.5 * logT - (-503.219533498766) * invT);
+  dlnkfdT = 4.5 * invT + (-503.219533498766) * invT2;
   // reverse
   phi_r = sc[2] * sc[29];
   Kc =
@@ -41381,8 +41381,8 @@ aJacobian(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[4] * sc[22];
-  k_f = 4.83e-10 * exp(4 * logT - (-1006.43333160944) * invT);
-  dlnkfdT = 4 * invT + (-1006.43333160944) * invT2;
+  k_f = 4.83e-10 * exp(4 * logT - (-1006.43906699753) * invT);
+  dlnkfdT = 4 * invT + (-1006.43906699753) * invT2;
   // reverse
   phi_r = sc[14] * sc[20];
   Kc =
@@ -41433,8 +41433,8 @@ aJacobian(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[16] * sc[22];
-  k_f = 10 * exp(2 * logT - (3019.29999482832) * invT);
-  dlnkfdT = 2 * invT + (3019.29999482832) * invT2;
+  k_f = 10 * exp(2 * logT - (3019.31720099259) * invT);
+  dlnkfdT = 2 * invT + (3019.31720099259) * invT2;
   // reverse
   phi_r = sc[20] * sc[24];
   Kc =
@@ -41485,8 +41485,8 @@ aJacobian(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[14] * sc[22];
-  k_f = 5140 * exp(0.86 * logT - (11147.758797572) * invT);
-  dlnkfdT = 0.86 * invT + (11147.758797572) * invT2;
+  k_f = 5140 * exp(0.86 * logT - (11147.8223255982) * invT);
+  dlnkfdT = 0.86 * invT + (11147.8223255982) * invT2;
   // reverse
   phi_r = sc[2] * sc[32];
   Kc =
@@ -41537,8 +41537,8 @@ aJacobian(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[14] * sc[22];
-  k_f = 2.68e+47 * exp(-12.82 * logT - (17979.9314692026) * invT);
-  dlnkfdT = -12.82 * invT + (17979.9314692026) * invT2;
+  k_f = 2.68e+47 * exp(-12.82 * logT - (17980.0339319109) * invT);
+  dlnkfdT = -12.82 * invT + (17980.0339319109) * invT2;
   // reverse
   phi_r = sc[33];
   Kc = refCinv * (kc_fast ? (inv_ge[14] * ge[33] * inv_ge[22])
@@ -41706,8 +41706,8 @@ aJacobian(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[2] * sc[29];
-  k_f = 50000000 * exp(-(4025.73332643776) * invT);
-  dlnkfdT = (4025.73332643776) * invT2;
+  k_f = 50000000 * exp(-(4025.75626799013) * invT);
+  dlnkfdT = (4025.75626799013) * invT2;
   // reverse
   phi_r = sc[6] * sc[28];
   Kc =
@@ -41758,8 +41758,8 @@ aJacobian(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[2] * sc[29];
-  k_f = 1500 * exp(1.43 * logT - (1353.6528310147) * invT);
-  dlnkfdT = 1.43 * invT + (1353.6528310147) * invT2;
+  k_f = 1500 * exp(1.43 * logT - (1353.66054511168) * invT);
+  dlnkfdT = 1.43 * invT + (1353.66054511168) * invT2;
   // reverse
   phi_r = sc[14] * sc[20];
   Kc =
@@ -41810,8 +41810,8 @@ aJacobian(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[3] * sc[29];
-  k_f = 10000000 * exp(-(4025.73332643776) * invT);
-  dlnkfdT = (4025.73332643776) * invT2;
+  k_f = 10000000 * exp(-(4025.75626799013) * invT);
+  dlnkfdT = (4025.75626799013) * invT2;
   // reverse
   phi_r = sc[4] * sc[28];
   Kc =
@@ -41862,8 +41862,8 @@ aJacobian(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[3] * sc[29];
-  k_f = 1750000 * exp(-(679.342498836372) * invT);
-  dlnkfdT = (679.342498836372) * invT2;
+  k_f = 1750000 * exp(-(679.346370223334) * invT);
+  dlnkfdT = (679.346370223334) * invT2;
   // reverse
   phi_r = sc[12] * sc[21];
   Kc =
@@ -41914,8 +41914,8 @@ aJacobian(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[4] * sc[29];
-  k_f = 7500000 * exp(-(1006.43333160944) * invT);
-  dlnkfdT = (1006.43333160944) * invT2;
+  k_f = 7500000 * exp(-(1006.43906699753) * invT);
+  dlnkfdT = (1006.43906699753) * invT2;
   // reverse
   phi_r = sc[7] * sc[28];
   Kc =
@@ -42226,8 +42226,8 @@ aJacobian(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[9] * sc[24];
-  k_f = 1.34 * exp(1.61 * logT - (-192.93326966953) * invT);
-  dlnkfdT = 1.61 * invT + (-192.93326966953) * invT2;
+  k_f = 1.34 * exp(1.61 * logT - (-192.934369143427) * invT);
+  dlnkfdT = 1.61 * invT + (-192.934369143427) * invT2;
   // reverse
   phi_r = sc[5] * sc[22];
   Kc =
@@ -42278,8 +42278,8 @@ aJacobian(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[9] * sc[24];
-  k_f = 300000 * exp(0.29 * logT - (5.53538332385192) * invT);
-  dlnkfdT = 0.29 * invT + (5.53538332385192) * invT2;
+  k_f = 300000 * exp(0.29 * logT - (5.53541486848642) * invT);
+  dlnkfdT = 0.29 * invT + (5.53541486848642) * invT2;
   // reverse
   phi_r = sc[3] * sc[30];
   Kc =
@@ -42330,8 +42330,8 @@ aJacobian(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[9] * sc[24];
-  k_f = 46000000000 * exp(-1.39 * logT - (508.248832462767) * invT);
-  dlnkfdT = -1.39 * invT + (508.248832462767) * invT2;
+  k_f = 46000000000 * exp(-1.39 * logT - (508.251728833753) * invT);
+  dlnkfdT = -1.39 * invT + (508.251728833753) * invT2;
   // reverse
   phi_r = sc[16] * sc[17];
   Kc =
@@ -42434,8 +42434,8 @@ aJacobian(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[8] * sc[24];
-  k_f = 12100 * exp(-(-299.917132819613) * invT);
-  dlnkfdT = (-299.917132819613) * invT2;
+  k_f = 12100 * exp(-(-299.918841965264) * invT);
+  dlnkfdT = (-299.918841965264) * invT2;
   // reverse
   phi_r = sc[5] * sc[25];
   Kc =
@@ -42590,8 +42590,8 @@ aJacobian(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[14] * sc[24];
-  k_f = 1.5e+18 * exp(-2.83 * logT - (9368.88788395227) * invT);
-  dlnkfdT = -2.83 * invT + (9368.88788395227) * invT2;
+  k_f = 1.5e+18 * exp(-2.83 * logT - (9368.94127468002) * invT);
+  dlnkfdT = -2.83 * invT + (9368.94127468002) * invT2;
   // reverse
   phi_r = sc[2] * sc[33];
   Kc =
@@ -42683,8 +42683,8 @@ aJacobian(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[30];
-  k_f = 7.8e+41 * exp(-9.147 * logT - (23600.8616262414) * invT);
-  dlnkfdT = -9.147 * invT + (23600.8616262414) * invT2;
+  k_f = 7.8e+41 * exp(-9.147 * logT - (23600.9961210921) * invT);
+  dlnkfdT = -9.147 * invT + (23600.9961210921) * invT2;
   // reverse
   phi_r = sc[14] * sc[20];
   Kc = refC * (kc_fast ? (inv_ge[30] * ge[20] * ge[14])
@@ -42775,8 +42775,8 @@ aJacobian(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[2] * sc[30];
-  k_f = 20000000 * exp(-(2012.86666321888) * invT);
-  dlnkfdT = (2012.86666321888) * invT2;
+  k_f = 20000000 * exp(-(2012.87813399506) * invT);
+  dlnkfdT = (2012.87813399506) * invT2;
   // reverse
   phi_r = sc[6] * sc[29];
   Kc =
@@ -42827,8 +42827,8 @@ aJacobian(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[3] * sc[30];
-  k_f = 20000000 * exp(-(2012.86666321888) * invT);
-  dlnkfdT = (2012.86666321888) * invT2;
+  k_f = 20000000 * exp(-(2012.87813399506) * invT);
+  dlnkfdT = (2012.87813399506) * invT2;
   // reverse
   phi_r = sc[4] * sc[29];
   Kc =
@@ -42879,8 +42879,8 @@ aJacobian(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[4] * sc[30];
-  k_f = 10000000 * exp(-(1006.43333160944) * invT);
-  dlnkfdT = (1006.43333160944) * invT2;
+  k_f = 10000000 * exp(-(1006.43906699753) * invT);
+  dlnkfdT = (1006.43906699753) * invT2;
   // reverse
   phi_r = sc[7] * sc[29];
   Kc =
@@ -43049,8 +43049,8 @@ aJacobian(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[31];
-  k_f = 36300000000000 * exp(-(28783.99328403) * invT);
-  dlnkfdT = (28783.99328403) * invT2;
+  k_f = 36300000000000 * exp(-(28784.1573161294) * invT);
+  dlnkfdT = (28784.1573161294) * invT2;
   // reverse
   phi_r = sc[14] * sc[16];
   Kc = refC * (kc_fast ? (ge[16] * inv_ge[31] * ge[14])
@@ -43089,8 +43089,8 @@ aJacobian(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[31];
-  k_f = 12100000000000 * exp(-(28783.99328403) * invT);
-  dlnkfdT = (28783.99328403) * invT2;
+  k_f = 12100000000000 * exp(-(28784.1573161294) * invT);
+  dlnkfdT = (28784.1573161294) * invT2;
   // reverse
   phi_r = sc[15] * sc[20];
   Kc = refC * (kc_fast ? (inv_ge[31] * ge[15] * ge[20])
@@ -43129,8 +43129,8 @@ aJacobian(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[2] * sc[31];
-  k_f = 5000 * exp(-(2516.0833290236) * invT);
-  dlnkfdT = (2516.0833290236) * invT2;
+  k_f = 5000 * exp(-(2516.09766749383) * invT);
+  dlnkfdT = (2516.09766749383) * invT2;
   // reverse
   phi_r = sc[7] * sc[24];
   Kc =
@@ -43181,8 +43181,8 @@ aJacobian(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[2] * sc[31];
-  k_f = 95100 * exp(-(2516.0833290236) * invT);
-  dlnkfdT = (2516.0833290236) * invT2;
+  k_f = 95100 * exp(-(2516.09766749383) * invT);
+  dlnkfdT = (2516.09766749383) * invT2;
   // reverse
   phi_r = sc[4] * sc[25];
   Kc =
@@ -43233,8 +43233,8 @@ aJacobian(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[2] * sc[25];
-  k_f = 50.7 * exp(1.9 * logT - (6516.65582217112) * invT);
-  dlnkfdT = 1.9 * invT + (6516.65582217112) * invT2;
+  k_f = 50.7 * exp(1.9 * logT - (6516.69295880902) * invT);
+  dlnkfdT = 1.9 * invT + (6516.69295880902) * invT2;
   // reverse
   phi_r = sc[6] * sc[24];
   Kc =
@@ -43285,8 +43285,8 @@ aJacobian(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[3] * sc[25];
-  k_f = 15.1 * exp(1.9 * logT - (1882.03033010965) * invT);
-  dlnkfdT = 1.9 * invT + (1882.03033010965) * invT2;
+  k_f = 15.1 * exp(1.9 * logT - (1882.04105528538) * invT);
+  dlnkfdT = 1.9 * invT + (1882.04105528538) * invT2;
   // reverse
   phi_r = sc[4] * sc[24];
   Kc =
@@ -43337,8 +43337,8 @@ aJacobian(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[3] * sc[25];
-  k_f = 19.2 * exp(1.83 * logT - (110.707666477038) * invT);
-  dlnkfdT = 1.83 * invT + (110.707666477038) * invT2;
+  k_f = 19.2 * exp(1.83 * logT - (110.708297369728) * invT);
+  dlnkfdT = 1.83 * invT + (110.708297369728) * invT2;
   // reverse
   phi_r = sc[14] * sc[16];
   Kc =
@@ -43389,8 +43389,8 @@ aJacobian(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[3] * sc[25];
-  k_f = 0.384 * exp(1.83 * logT - (110.707666477038) * invT);
-  dlnkfdT = 1.83 * invT + (110.707666477038) * invT2;
+  k_f = 0.384 * exp(1.83 * logT - (110.708297369728) * invT);
+  dlnkfdT = 1.83 * invT + (110.708297369728) * invT2;
   // reverse
   phi_r = sc[12] * sc[17];
   Kc =
@@ -43441,8 +43441,8 @@ aJacobian(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[4] * sc[25];
-  k_f = 3.6 * exp(2 * logT - (1258.0416645118) * invT);
-  dlnkfdT = 2 * invT + (1258.0416645118) * invT2;
+  k_f = 3.6 * exp(2 * logT - (1258.04883374691) * invT);
+  dlnkfdT = 2 * invT + (1258.04883374691) * invT2;
   // reverse
   phi_r = sc[7] * sc[24];
   Kc =
@@ -43493,8 +43493,8 @@ aJacobian(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[16] * sc[25];
-  k_f = 10 * exp(2 * logT - (4025.73332643776) * invT);
-  dlnkfdT = 2 * invT + (4025.73332643776) * invT2;
+  k_f = 10 * exp(2 * logT - (4025.75626799013) * invT);
+  dlnkfdT = 2 * invT + (4025.75626799013) * invT2;
   // reverse
   phi_r = sc[20] * sc[26];
   Kc =
@@ -43597,8 +43597,8 @@ aJacobian(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[12] * sc[25];
-  k_f = 20000000 * exp(-(3019.29999482832) * invT);
-  dlnkfdT = (3019.29999482832) * invT2;
+  k_f = 20000000 * exp(-(3019.31720099259) * invT);
+  dlnkfdT = (3019.31720099259) * invT2;
   // reverse
   phi_r = sc[2] * sc[33];
   Kc =
@@ -43753,8 +43753,8 @@ aJacobian(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[14] * sc[25];
-  k_f = 0.227 * exp(2 * logT - (4629.59332540342) * invT);
-  dlnkfdT = 2 * invT + (4629.59332540342) * invT2;
+  k_f = 0.227 * exp(2 * logT - (4629.61970818865) * invT);
+  dlnkfdT = 2 * invT + (4629.61970818865) * invT2;
   // reverse
   phi_r = sc[15] * sc[24];
   Kc =
@@ -43805,8 +43805,8 @@ aJacobian(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[14] * sc[25];
-  k_f = 330000 * exp(-(3874.76832669634) * invT);
-  dlnkfdT = (3874.76832669634) * invT2;
+  k_f = 330000 * exp(-(3874.7904079405) * invT);
+  dlnkfdT = (3874.7904079405) * invT2;
   // reverse
   phi_r = sc[35];
   Kc = refCinv * (kc_fast ? (inv_ge[25] * ge[35] * inv_ge[14])
@@ -43845,8 +43845,8 @@ aJacobian(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[9] * sc[25];
-  k_f = 42200000 * exp(-(30595.573280927) * invT);
-  dlnkfdT = (30595.573280927) * invT2;
+  k_f = 42200000 * exp(-(30595.747636725) * invT);
+  dlnkfdT = (30595.747636725) * invT2;
   // reverse
   phi_r = sc[5] * sc[24];
   Kc =
@@ -43897,8 +43897,8 @@ aJacobian(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[5] * sc[25];
-  k_f = 2820000 * exp(-(8605.00498526071) * invT);
-  dlnkfdT = (8605.00498526071) * invT2;
+  k_f = 2820000 * exp(-(8605.0540228289) * invT);
+  dlnkfdT = (8605.0540228289) * invT2;
   // reverse
   phi_r = sc[4] * sc[31];
   Kc =
@@ -44275,8 +44275,8 @@ aJacobian(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[8] * sc[26];
-  k_f = 8700 * exp(-(490.133032493797) * invT);
-  dlnkfdT = (490.133032493797) * invT2;
+  k_f = 8700 * exp(-(490.135825627798) * invT);
+  dlnkfdT = (490.135825627798) * invT2;
   // reverse
   phi_r = sc[5] * sc[27];
   Kc =
@@ -44327,8 +44327,8 @@ aJacobian(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[24] * sc[26];
-  k_f = 3.9e+26 * exp(-5.22 * logT - (9937.0194996458) * invT);
-  dlnkfdT = -5.22 * invT + (9937.0194996458) * invT2;
+  k_f = 3.9e+26 * exp(-5.22 * logT - (9937.07612800013) * invT);
+  dlnkfdT = -5.22 * invT + (9937.07612800013) * invT2;
   // reverse
   phi_r = sc[14] * sc[33];
   Kc =
@@ -44379,8 +44379,8 @@ aJacobian(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[2] * sc[27];
-  k_f = 115 * exp(1.9 * logT - (3789.22149350954) * invT);
-  dlnkfdT = 1.9 * invT + (3789.22149350954) * invT2;
+  k_f = 115 * exp(1.9 * logT - (3789.24308724571) * invT);
+  dlnkfdT = 1.9 * invT + (3789.24308724571) * invT2;
   // reverse
   phi_r = sc[6] * sc[26];
   Kc =
@@ -44431,8 +44431,8 @@ aJacobian(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[3] * sc[27];
-  k_f = 89.8 * exp(1.92 * logT - (2863.30282842885) * invT);
-  dlnkfdT = 1.92 * invT + (2863.30282842885) * invT2;
+  k_f = 89.8 * exp(1.92 * logT - (2863.31914560798) * invT);
+  dlnkfdT = 1.92 * invT + (2863.31914560798) * invT2;
   // reverse
   phi_r = sc[4] * sc[26];
   Kc =
@@ -44483,8 +44483,8 @@ aJacobian(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[4] * sc[27];
-  k_f = 3.54 * exp(2.12 * logT - (437.798499250106) * invT);
-  dlnkfdT = 2.12 * invT + (437.798499250106) * invT2;
+  k_f = 3.54 * exp(2.12 * logT - (437.800994143926) * invT);
+  dlnkfdT = 2.12 * invT + (437.800994143926) * invT2;
   // reverse
   phi_r = sc[7] * sc[26];
   Kc =
@@ -44535,8 +44535,8 @@ aJacobian(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[13] * sc[27];
-  k_f = 40000000 * exp(-(-276.769166192596) * invT);
-  dlnkfdT = (-276.769166192596) * invT2;
+  k_f = 40000000 * exp(-(-276.770743424321) * invT);
+  dlnkfdT = (-276.770743424321) * invT2;
   // reverse
   phi_r = sc[14] * sc[26];
   Kc =
@@ -44587,8 +44587,8 @@ aJacobian(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[14] * sc[27];
-  k_f = 6.14 * exp(1.74 * logT - (5258.61415765932) * invT);
-  dlnkfdT = 1.74 * invT + (5258.61415765932) * invT2;
+  k_f = 6.14 * exp(1.74 * logT - (5258.6441250621) * invT);
+  dlnkfdT = 1.74 * invT + (5258.6441250621) * invT2;
   // reverse
   phi_r = sc[15] * sc[26];
   Kc =
@@ -44639,8 +44639,8 @@ aJacobian(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[5] * sc[43];
-  k_f = 18000 * exp(-(-720.103048766554) * invT);
-  dlnkfdT = (-720.103048766554) * invT2;
+  k_f = 18000 * exp(-(-720.107152436734) * invT);
+  dlnkfdT = (-720.107152436734) * invT2;
   // reverse
   phi_r = sc[7] * sc[9] * sc[17];
   Kc =
@@ -44705,8 +44705,8 @@ aJacobian(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = (sc[43] * sc[43]);
-  k_f = 1046 * exp(-(-1806.04461357314) * invT);
-  dlnkfdT = (-1806.04461357314) * invT2;
+  k_f = 1046 * exp(-(-1806.05490572707) * invT);
+  dlnkfdT = (-1806.05490572707) * invT2;
   // reverse
   phi_r = sc[9] * sc[17] * sc[19];
   Kc = refC * (kc_fast
@@ -44758,8 +44758,8 @@ aJacobian(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = (sc[43] * sc[43]);
-  k_f = 77410 * exp(-(-30.6962166140879) * invT);
-  dlnkfdT = (-30.6962166140879) * invT2;
+  k_f = 77410 * exp(-(-30.6963915434247) * invT);
+  dlnkfdT = (-30.6963915434247) * invT2;
   // reverse
   phi_r = sc[9] * (sc[18] * sc[18]);
   Kc = refC * (kc_fast
@@ -44800,8 +44800,8 @@ aJacobian(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[14] * sc[43];
-  k_f = 1000000 * exp(-(-710.038715450459) * invT);
-  dlnkfdT = (-710.038715450459) * invT2;
+  k_f = 1000000 * exp(-(-710.042761766759) * invT);
+  dlnkfdT = (-710.042761766759) * invT2;
   // reverse
   phi_r = (sc[18] * sc[18]);
   Kc =
@@ -44997,8 +44997,8 @@ aJacobian(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[2] * sc[32];
-  k_f = 1.52e+53 * exp(-13.54 * logT - (13561.1859267714) * invT);
-  dlnkfdT = -13.54 * invT + (13561.1859267714) * invT2;
+  k_f = 1.52e+53 * exp(-13.54 * logT - (13561.2632082582) * invT);
+  dlnkfdT = -13.54 * invT + (13561.2632082582) * invT2;
   // reverse
   phi_r = sc[33];
   Kc = refCinv * (kc_fast ? (ge[33] * inv_ge[32] * inv_ge[2])
@@ -45037,8 +45037,8 @@ aJacobian(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[3] * sc[32];
-  k_f = 20 * exp(1.8 * logT - (503.21666580472) * invT);
-  dlnkfdT = 1.8 * invT + (503.21666580472) * invT2;
+  k_f = 20 * exp(1.8 * logT - (503.219533498766) * invT);
+  dlnkfdT = 1.8 * invT + (503.219533498766) * invT2;
   // reverse
   phi_r = sc[20] * sc[25];
   Kc =
@@ -45193,8 +45193,8 @@ aJacobian(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[9] * sc[33];
-  k_f = 4990000000 * exp(-1.4 * logT - (11286.1433806683) * invT);
-  dlnkfdT = -1.4 * invT + (11286.1433806683) * invT2;
+  k_f = 4990000000 * exp(-1.4 * logT - (11286.2076973103) * invT);
+  dlnkfdT = -1.4 * invT + (11286.2076973103) * invT2;
   // reverse
   phi_r = sc[5] * sc[32];
   Kc =
@@ -45415,8 +45415,8 @@ aJacobian(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[14] * sc[33];
-  k_f = 3000000 * exp(-0.32 * logT - (-65.9213832204183) * invT);
-  dlnkfdT = -0.32 * invT + (-65.9213832204183) * invT2;
+  k_f = 3000000 * exp(-0.32 * logT - (-65.9217588883383) * invT);
+  dlnkfdT = -0.32 * invT + (-65.9217588883383) * invT2;
   // reverse
   phi_r = sc[15] * sc[32];
   Kc =
@@ -45467,8 +45467,8 @@ aJacobian(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[2] * sc[34];
-  k_f = 8e+15 * exp(-2.39 * logT - (5625.96232369677) * invT);
-  dlnkfdT = -2.39 * invT + (5625.96232369677) * invT2;
+  k_f = 8e+15 * exp(-2.39 * logT - (5625.9943845162) * invT);
+  dlnkfdT = -2.39 * invT + (5625.9943845162) * invT2;
   // reverse
   phi_r = sc[14] * sc[25];
   Kc =
@@ -45519,8 +45519,8 @@ aJacobian(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[2] * sc[34];
-  k_f = 0.173 * exp(2.5 * logT - (1253.00949785375) * invT);
-  dlnkfdT = 2.5 * invT + (1253.00949785375) * invT2;
+  k_f = 0.173 * exp(2.5 * logT - (1253.01663841193) * invT);
+  dlnkfdT = 2.5 * invT + (1253.01663841193) * invT2;
   // reverse
   phi_r = sc[6] * sc[33];
   Kc =
@@ -45571,8 +45571,8 @@ aJacobian(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[3] * sc[34];
-  k_f = 80 * exp(1.65 * logT - (164.551849718143) * invT);
-  dlnkfdT = 1.65 * invT + (164.551849718143) * invT2;
+  k_f = 80 * exp(1.65 * logT - (164.552787454096) * invT);
+  dlnkfdT = 1.65 * invT + (164.552787454096) * invT2;
   // reverse
   phi_r = sc[2] * sc[14] * sc[29];
   Kc =
@@ -45637,8 +45637,8 @@ aJacobian(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[3] * sc[34];
-  k_f = 35 * exp(1.65 * logT - (-489.126599162188) * invT);
-  dlnkfdT = 1.65 * invT + (-489.126599162188) * invT2;
+  k_f = 35 * exp(1.65 * logT - (-489.1293865608) * invT);
+  dlnkfdT = 1.65 * invT + (-489.1293865608) * invT2;
   // reverse
   phi_r = sc[16] * sc[26];
   Kc =
@@ -45689,8 +45689,8 @@ aJacobian(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[3] * sc[34];
-  k_f = 180000 * exp(0.7 * logT - (2958.91399493175) * invT);
-  dlnkfdT = 0.7 * invT + (2958.91399493175) * invT2;
+  k_f = 180000 * exp(0.7 * logT - (2958.93085697274) * invT);
+  dlnkfdT = 0.7 * invT + (2958.93085697274) * invT2;
   // reverse
   phi_r = sc[4] * sc[33];
   Kc =
@@ -45741,8 +45741,8 @@ aJacobian(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[4] * sc[34];
-  k_f = 3.1 * exp(2 * logT - (-149.958566409806) * invT);
-  dlnkfdT = 2 * invT + (-149.958566409806) * invT2;
+  k_f = 3.1 * exp(2 * logT - (-149.959420982632) * invT);
+  dlnkfdT = 2 * invT + (-149.959420982632) * invT2;
   // reverse
   phi_r = sc[7] * sc[33];
   Kc =
@@ -45793,8 +45793,8 @@ aJacobian(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[5] * sc[34];
-  k_f = 0.0096 * exp(2.6 * logT - (6999.74382134365) * invT);
-  dlnkfdT = 2.6 * invT + (6999.74382134365) * invT2;
+  k_f = 0.0096 * exp(2.6 * logT - (6999.78371096783) * invT);
+  dlnkfdT = 2.6 * invT + (6999.78371096783) * invT2;
   // reverse
   phi_r = sc[8] * sc[33];
   Kc =
@@ -45845,8 +45845,8 @@ aJacobian(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[14] * sc[34];
-  k_f = 2.2e-06 * exp(3.5 * logT - (2855.75457844178) * invT);
-  dlnkfdT = 3.5 * invT + (2855.75457844178) * invT2;
+  k_f = 2.2e-06 * exp(3.5 * logT - (2855.7708526055) * invT);
+  dlnkfdT = 3.5 * invT + (2855.7708526055) * invT2;
   // reverse
   phi_r = sc[15] * sc[33];
   Kc =
@@ -45897,8 +45897,8 @@ aJacobian(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[2] * sc[35];
-  k_f = 3.7e+18 * exp(-2.92 * logT - (6292.72440588802) * invT);
-  dlnkfdT = -2.92 * invT + (6292.72440588802) * invT2;
+  k_f = 3.7e+18 * exp(-2.92 * logT - (6292.76026640207) * invT);
+  dlnkfdT = -2.92 * invT + (6292.76026640207) * invT2;
   // reverse
   phi_r = sc[14] * sc[26];
   Kc =
@@ -46275,8 +46275,8 @@ aJacobian(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[2] * sc[36];
-  k_f = 1.6e+16 * exp(-2.39 * logT - (5625.96232369677) * invT);
-  dlnkfdT = -2.39 * invT + (5625.96232369677) * invT2;
+  k_f = 1.6e+16 * exp(-2.39 * logT - (5625.9943845162) * invT);
+  dlnkfdT = -2.39 * invT + (5625.9943845162) * invT2;
   // reverse
   phi_r = sc[25] * sc[26];
   Kc =
@@ -46327,8 +46327,8 @@ aJacobian(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[2] * sc[36];
-  k_f = 3.2e+16 * exp(-2.39 * logT - (5625.96232369677) * invT);
-  dlnkfdT = -2.39 * invT + (5625.96232369677) * invT2;
+  k_f = 3.2e+16 * exp(-2.39 * logT - (5625.9943845162) * invT);
+  dlnkfdT = -2.39 * invT + (5625.9943845162) * invT2;
   // reverse
   phi_r = sc[14] * sc[34];
   Kc =
@@ -46379,8 +46379,8 @@ aJacobian(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[3] * sc[36];
-  k_f = 330 * exp(1.45 * logT - (-202.293099653497) * invT);
-  dlnkfdT = 1.45 * invT + (-202.293099653497) * invT2;
+  k_f = 330 * exp(1.45 * logT - (-202.294252466504) * invT);
+  dlnkfdT = 1.45 * invT + (-202.294252466504) * invT2;
   // reverse
   phi_r = sc[16] * sc[35];
   Kc =
@@ -46431,8 +46431,8 @@ aJacobian(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[37] * sc[38];
-  k_f = 27000000 * exp(-(178.641916360675) * invT);
-  dlnkfdT = (178.641916360675) * invT2;
+  k_f = 27000000 * exp(-(178.642934392062) * invT);
+  dlnkfdT = (178.642934392062) * invT2;
   // reverse
   phi_r = sc[1] * sc[3];
   Kc =
@@ -46483,8 +46483,8 @@ aJacobian(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[9] * sc[37];
-  k_f = 9000 * exp(1 * logT - (3270.90832773068) * invT);
-  dlnkfdT = 1 * invT + (3270.90832773068) * invT2;
+  k_f = 9000 * exp(1 * logT - (3270.92696774198) * invT);
+  dlnkfdT = 1 * invT + (3270.92696774198) * invT2;
   // reverse
   phi_r = sc[3] * sc[38];
   Kc =
@@ -46535,8 +46535,8 @@ aJacobian(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[4] * sc[37];
-  k_f = 33600000 * exp(-(193.738416334817) * invT);
-  dlnkfdT = (193.738416334817) * invT2;
+  k_f = 33600000 * exp(-(193.739520397025) * invT);
+  dlnkfdT = (193.739520397025) * invT2;
   // reverse
   phi_r = sc[2] * sc[38];
   Kc =
@@ -46587,8 +46587,8 @@ aJacobian(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[5] * sc[38];
-  k_f = 2110000 * exp(-(-241.543999586265) * invT);
-  dlnkfdT = (-241.543999586265) * invT2;
+  k_f = 2110000 * exp(-(-241.545376079408) * invT);
+  dlnkfdT = (-241.545376079408) * invT2;
   // reverse
   phi_r = sc[4] * sc[39];
   Kc =
@@ -46639,8 +46639,8 @@ aJacobian(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[3] * sc[39];
-  k_f = 3900000 * exp(-(-120.771999793133) * invT);
-  dlnkfdT = (-120.771999793133) * invT2;
+  k_f = 3900000 * exp(-(-120.772688039704) * invT);
+  dlnkfdT = (-120.772688039704) * invT2;
   // reverse
   phi_r = sc[9] * sc[38];
   Kc =
@@ -46691,8 +46691,8 @@ aJacobian(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[2] * sc[39];
-  k_f = 132000000 * exp(-(181.157999689699) * invT);
-  dlnkfdT = (181.157999689699) * invT2;
+  k_f = 132000000 * exp(-(181.159032059556) * invT);
+  dlnkfdT = (181.159032059556) * invT2;
   // reverse
   phi_r = sc[4] * sc[38];
   Kc =
@@ -46795,8 +46795,8 @@ aJacobian(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[4] * sc[42];
-  k_f = 8300000 * exp(-0.1 * logT - (37986.8196682667) * invT);
-  dlnkfdT = -0.1 * invT + (37986.8196682667) * invT2;
+  k_f = 8300000 * exp(-0.1 * logT - (37987.0361447548) * invT);
+  dlnkfdT = -0.1 * invT + (37987.0361447548) * invT2;
   // reverse
   phi_r = sc[2] * sc[20] * sc[38];
   Kc =
@@ -46913,8 +46913,8 @@ aJacobian(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[9] * sc[42];
-  k_f = 2000000 * exp(-(10064.3333160944) * invT);
-  dlnkfdT = (10064.3333160944) * invT2;
+  k_f = 2000000 * exp(-(10064.3906699753) * invT);
+  dlnkfdT = (10064.3906699753) * invT2;
   // reverse
   phi_r = sc[21] * sc[38];
   Kc =
@@ -46965,8 +46965,8 @@ aJacobian(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[38] * sc[42];
-  k_f = 3800000000000 * exp(-2 * logT - (402.573332643776) * invT);
-  dlnkfdT = -2 * invT + (402.573332643776) * invT2;
+  k_f = 3800000000000 * exp(-2 * logT - (402.575626799013) * invT);
+  dlnkfdT = -2 * invT + (402.575626799013) * invT2;
   // reverse
   phi_r = sc[1] * sc[21];
   Kc =
@@ -47173,8 +47173,8 @@ aJacobian(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[12] * sc[38];
-  k_f = 310000000000 * exp(-1.38 * logT - (639.085165571994) * invT);
-  dlnkfdT = -1.38 * invT + (639.085165571994) * invT2;
+  k_f = 310000000000 * exp(-1.38 * logT - (639.088807543433) * invT);
+  dlnkfdT = -1.38 * invT + (639.088807543433) * invT2;
   // reverse
   phi_r = sc[2] * sc[41];
   Kc =
@@ -47225,8 +47225,8 @@ aJacobian(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[12] * sc[38];
-  k_f = 38000000 * exp(-0.36 * logT - (291.865666166737) * invT);
-  dlnkfdT = -0.36 * invT + (291.865666166737) * invT2;
+  k_f = 38000000 * exp(-0.36 * logT - (291.867329429284) * invT);
+  dlnkfdT = -0.36 * invT + (291.867329429284) * invT2;
   // reverse
   phi_r = sc[2] * sc[40];
   Kc =
@@ -47277,8 +47277,8 @@ aJacobian(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[13] * sc[38];
-  k_f = 310000000000 * exp(-1.38 * logT - (639.085165571994) * invT);
-  dlnkfdT = -1.38 * invT + (639.085165571994) * invT2;
+  k_f = 310000000000 * exp(-1.38 * logT - (639.088807543433) * invT);
+  dlnkfdT = -1.38 * invT + (639.088807543433) * invT2;
   // reverse
   phi_r = sc[2] * sc[41];
   Kc =
@@ -47329,8 +47329,8 @@ aJacobian(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[13] * sc[38];
-  k_f = 38000000 * exp(-0.36 * logT - (291.865666166737) * invT);
-  dlnkfdT = -0.36 * invT + (291.865666166737) * invT2;
+  k_f = 38000000 * exp(-0.36 * logT - (291.867329429284) * invT);
+  dlnkfdT = -0.36 * invT + (291.867329429284) * invT2;
   // reverse
   phi_r = sc[2] * sc[40];
   Kc =
@@ -47381,8 +47381,8 @@ aJacobian(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[3] * sc[41];
-  k_f = 2.2 * exp(2.11 * logT - (24065.3306087791) * invT);
-  dlnkfdT = 2.11 * invT + (24065.3306087791) * invT2;
+  k_f = 2.2 * exp(2.11 * logT - (24065.4677505115) * invT);
+  dlnkfdT = 2.11 * invT + (24065.4677505115) * invT2;
   // reverse
   phi_r = sc[4] * sc[42];
   Kc =
@@ -47433,8 +47433,8 @@ aJacobian(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[2] * sc[41];
-  k_f = 90 * exp(1.7 * logT - (29266.0748498709) * invT);
-  dlnkfdT = 1.7 * invT + (29266.0748498709) * invT2;
+  k_f = 90 * exp(1.7 * logT - (29266.2416292212) * invT);
+  dlnkfdT = 1.7 * invT + (29266.2416292212) * invT2;
   // reverse
   phi_r = sc[6] * sc[42];
   Kc =
@@ -47485,8 +47485,8 @@ aJacobian(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[4] * sc[41];
-  k_f = 33 * exp(1.5 * logT - (1811.57999689699) * invT);
-  dlnkfdT = 1.5 * invT + (1811.57999689699) * invT2;
+  k_f = 33 * exp(1.5 * logT - (1811.59032059556) * invT);
+  dlnkfdT = 1.5 * invT + (1811.59032059556) * invT2;
   // reverse
   phi_r = sc[7] * sc[42];
   Kc =
@@ -47537,8 +47537,8 @@ aJacobian(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[2] * sc[40];
-  k_f = 2100000000 * exp(-0.69 * logT - (1434.16749754345) * invT);
-  dlnkfdT = -0.69 * invT + (1434.16749754345) * invT2;
+  k_f = 2100000000 * exp(-0.69 * logT - (1434.17567047148) * invT);
+  dlnkfdT = -0.69 * invT + (1434.17567047148) * invT2;
   // reverse
   phi_r = sc[2] * sc[41];
   Kc =
@@ -47573,8 +47573,8 @@ aJacobian(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[28] * sc[38];
-  k_f = 55000 * exp(-(920.886498422637) * invT);
-  dlnkfdT = (920.886498422637) * invT2;
+  k_f = 55000 * exp(-(920.891746302741) * invT);
+  dlnkfdT = (920.891746302741) * invT2;
   // reverse
   phi_r = sc[20] * sc[40];
   Kc =
@@ -47625,8 +47625,8 @@ aJacobian(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[21] * sc[37];
-  k_f = 3000000 * exp(-(5686.34832359333) * invT);
-  dlnkfdT = (5686.34832359333) * invT2;
+  k_f = 3000000 * exp(-(5686.38072853605) * invT);
+  dlnkfdT = (5686.38072853605) * invT2;
   // reverse
   phi_r = sc[20] * sc[38];
   Kc =
@@ -47729,8 +47729,8 @@ aJacobian(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[38] * sc[43];
-  k_f = 1690000 * exp(-(-286.83349950869) * invT);
-  dlnkfdT = (-286.83349950869) * invT2;
+  k_f = 1690000 * exp(-(-286.835134094297) * invT);
+  dlnkfdT = (-286.835134094297) * invT2;
   // reverse
   phi_r = sc[18] * sc[39];
   Kc =

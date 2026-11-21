@@ -292,7 +292,7 @@ AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE void
 CKRP(amrex::Real& ru, amrex::Real& ruc, amrex::Real& pa)
 {
   ru = 8.31446261815324e+07;
-  ruc = 1.98721558317399615845;
+  ruc = 1.98720425864083161116;
   pa = 1.01325e+06;
 }
 
@@ -2938,7 +2938,7 @@ comp_qss_coeff(
   }
 
   // reference concentration: P_atm / (RT) in inverse mol/m^3
-  const amrex::Real refC = 101325 / 8.31446 * invT;
+  const amrex::Real refC = 101325 / 8.31446261815324 * invT;
   const amrex::Real refCinv = 1. / refC;
   // compute the mixture concentration
   amrex::Real mixture = 0.0;
@@ -2951,7 +2951,7 @@ comp_qss_coeff(
     amrex::Real Corr =
       mixture + sc[0] + (6 - 1) * sc[5] + sc[8] + (1.5 - 1) * sc[9] + sc[10];
     const amrex::Real redP =
-      Corr / k_f[0] * 3.2e+15 * exp(-3.14 * logT - 618.956498939805 * invT);
+      Corr / k_f[0] * 3.2e+15 * exp(-3.14 * logT - 618.960026203482 * invT);
     const amrex::Real F = redP / (1.0 + redP);
     const amrex::Real logPred = log10(redP);
     const amrex::Real logFcent = log10(
@@ -2975,7 +2975,7 @@ comp_qss_coeff(
     amrex::Real Corr =
       mixture + sc[0] + (6 - 1) * sc[5] + sc[8] + (1.5 - 1) * sc[9] + sc[10];
     const amrex::Real redP = Corr / k_f[1] * 1350000000000 *
-                             exp(-2.57 * logT - 717.083748771726 * invT);
+                             exp(-2.57 * logT - 717.087835235741 * invT);
     const amrex::Real F = redP / (1.0 + redP);
     const amrex::Real logPred = log10(redP);
     const amrex::Real logFcent = log10(
@@ -2999,7 +2999,7 @@ comp_qss_coeff(
     amrex::Real Corr =
       mixture + sc[0] + (6 - 1) * sc[5] + sc[8] + (1.5 - 1) * sc[9] + sc[10];
     const amrex::Real redP =
-      Corr / k_f[2] * 1.27e+20 * exp(-4.82 * logT - 3286.00482770482 * invT);
+      Corr / k_f[2] * 1.27e+20 * exp(-4.82 * logT - 3286.02355374694 * invT);
     const amrex::Real F = redP / (1.0 + redP);
     const amrex::Real logPred = log10(redP);
     const amrex::Real logFcent = log10(
@@ -3378,13 +3378,13 @@ comp_k_f_qss(
   // reaction 0: CH2 + H (+M) <=> CH3 (+M)
   k_f[0] = 25000000000 * exp((-0.8) * logT);
   // reaction 2: H + HCO (+M) <=> CH2O (+M)
-  k_f[1] = 1090000 * exp((0.48) * logT - (-130.836333109227) * invT);
+  k_f[1] = 1090000 * exp((0.48) * logT - (-130.837078709679) * invT);
   // reaction 3: CH2O + H (+M) <=> CH2OH (+M)
-  k_f[2] = 540000 * exp((0.454) * logT - (1811.57999689699) * invT);
+  k_f[2] = 540000 * exp((0.454) * logT - (1811.59032059556) * invT);
   // reaction 17: HCO + H2O <=> CO + H + H2O
-  k_f[3] = 2244000000000 * exp((-1) * logT - (8554.68331868023) * invT);
+  k_f[3] = 2244000000000 * exp((-1) * logT - (8554.73206947902) * invT);
   // reaction 18: HCO + M <=> CO + H + M
-  k_f[4] = 187000000000 * exp((-1) * logT - (8554.68331868023) * invT);
+  k_f[4] = 187000000000 * exp((-1) * logT - (8554.73206947902) * invT);
   // reaction 21: CH2 + O <=> H + HCO
   k_f[5] = 80000000;
   // reaction 22: CH2(S) + O <=> CO + H2
@@ -3394,15 +3394,15 @@ comp_k_f_qss(
   // reaction 26: HCO + O <=> CO2 + H
   k_f[8] = 30000000;
   // reaction 27: CH2O + O <=> HCO + OH
-  k_f[9] = 39000000 * exp(-(1781.38699694871) * invT);
+  k_f[9] = 39000000 * exp(-(1781.39714858563) * invT);
   // reaction 28: CH2OH + O <=> CH2O + OH
   k_f[10] = 10000000;
   // reaction 30: CH2O + O2 <=> HCO + HO2
-  k_f[11] = 100000000 * exp(-(20128.6666321888) * invT);
+  k_f[11] = 100000000 * exp(-(20128.7813399506) * invT);
   // reaction 36: H + HCO <=> CO + H2
   k_f[12] = 73400000;
   // reaction 37: CH2O + H <=> H2 + HCO
-  k_f[13] = 23000 * exp((1.05) * logT - (1648.03458051046) * invT);
+  k_f[13] = 23000 * exp((1.05) * logT - (1648.04397220846) * invT);
   // reaction 38: CH2OH + H <=> CH2O + H2
   k_f[14] = 20000000;
   // reaction 39: CH2OH + H <=> CH3 + OH
@@ -3414,25 +3414,25 @@ comp_k_f_qss(
   // reaction 45: CH2(S) + OH <=> CH2O + H
   k_f[18] = 30000000;
   // reaction 46: CH3 + OH <=> CH2 + H2O
-  k_f[19] = 56 * exp((1.6) * logT - (2727.43432866158) * invT);
+  k_f[19] = 56 * exp((1.6) * logT - (2727.44987156331) * invT);
   // reaction 47: CH3 + OH <=> CH2(S) + H2O
   k_f[20] = 25010000;
   // reaction 50: HCO + OH <=> CO + H2O
   k_f[21] = 50000000;
   // reaction 51: CH2O + OH <=> H2O + HCO
-  k_f[22] = 3430 * exp((1.18) * logT - (-224.93784961471) * invT);
+  k_f[22] = 3430 * exp((1.18) * logT - (-224.939131473948) * invT);
   // reaction 52: CH2OH + OH <=> CH2O + H2O
   k_f[23] = 5000000;
   // reaction 53: CH2 + HO2 <=> CH2O + OH
   k_f[24] = 20000000;
   // reaction 56: CH2 + O2 <=> HCO + OH
-  k_f[25] = 13200000 * exp(-(754.82499870708) * invT);
+  k_f[25] = 13200000 * exp(-(754.829300248149) * invT);
   // reaction 57: CH2 + H2 <=> CH3 + H
-  k_f[26] = 0.5 * exp((2) * logT - (3638.25649376812) * invT);
+  k_f[26] = 0.5 * exp((2) * logT - (3638.27722719608) * invT);
   // reaction 58: CH2 + CH4 <=> 2 CH3
-  k_f[27] = 2.46 * exp((2) * logT - (4161.60182620503) * invT);
+  k_f[27] = 2.46 * exp((2) * logT - (4161.62554203479) * invT);
   // reaction 59: CH2(S) + N2 <=> CH2 + N2
-  k_f[28] = 15000000 * exp(-(301.929999482832) * invT);
+  k_f[28] = 15000000 * exp(-(301.93172009926) * invT);
   // reaction 60: CH2(S) + O2 <=> CO + H + OH
   k_f[29] = 28000000;
   // reaction 61: CH2(S) + O2 <=> CO + H2O
@@ -3442,7 +3442,7 @@ comp_k_f_qss(
   // reaction 63: CH2(S) + H2O <=> CH2 + H2O
   k_f[32] = 30000000;
   // reaction 64: CH2(S) + CH4 <=> 2 CH3
-  k_f[33] = 16000000 * exp(-(-286.83349950869) * invT);
+  k_f[33] = 16000000 * exp(-(-286.835134094297) * invT);
   // reaction 65: CH2(S) + CO <=> CH2 + CO
   k_f[34] = 9000000;
   // reaction 66: CH2(S) + CO2 <=> CH2 + CO2
@@ -3452,11 +3452,11 @@ comp_k_f_qss(
   // reaction 69: CH3 + HCO <=> CH4 + CO
   k_f[37] = 26480000;
   // reaction 70: CH2O + CH3 <=> CH4 + HCO
-  k_f[38] = 0.00332 * exp((2.81) * logT - (2948.84966161566) * invT);
+  k_f[38] = 0.00332 * exp((2.81) * logT - (2948.86646630277) * invT);
   // reaction 71: HCO + O2 <=> CO + HO2
-  k_f[39] = 7600000 * exp(-(201.286666321888) * invT);
+  k_f[39] = 7600000 * exp(-(201.287813399506) * invT);
   // reaction 72: CH2OH + O2 <=> CH2O + HO2
-  k_f[40] = 18000000 * exp(-(452.894999224248) * invT);
+  k_f[40] = 18000000 * exp(-(452.897580148889) * invT);
 
   return;
 }
@@ -3885,7 +3885,7 @@ comp_qfqr(
   }
 
   // reference concentration: P_atm / (RT) in inverse mol/m^3
-  amrex::Real refC = 101325 / 8.31446 * invT;
+  amrex::Real refC = 101325 / 8.31446261815324 * invT;
   amrex::Real refCinv = 1 / refC;
 
   // Evaluate the kfs
@@ -3895,7 +3895,7 @@ comp_qfqr(
   // reaction 0:  CH2 + H (+M) <=> CH3 (+M)
   k_f = 25000000000 * exp((-0.8) * logT);
   Corr = mixture + sc[0] + (5) * sc[5] + sc[8] + (0.5) * sc[9] + sc[10];
-  redP = Corr / k_f * 3.2e+15 * exp(-3.14 * logT - (618.956498939805) * invT);
+  redP = Corr / k_f * 3.2e+15 * exp(-3.14 * logT - (618.960026203482) * invT);
   F = redP / (1.0 + redP);
   logPred = log10(redP);
   logFcent = log10(
@@ -3912,9 +3912,9 @@ comp_qfqr(
                     : exp(-(g_RT[1] - g_RT[7] + g_RT_qss[0]))) *
            (refC);
   // reaction 1:  CH3 + H (+M) <=> CH4 (+M)
-  k_f = 12700000000 * exp((-0.63) * logT - (192.731983003208) * invT);
+  k_f = 12700000000 * exp((-0.63) * logT - (192.733081330027) * invT);
   Corr = mixture + sc[0] + (5) * sc[5] + sc[8] + (0.5) * sc[9] + sc[10];
-  redP = Corr / k_f * 2.477e+21 * exp(-4.76 * logT - (1227.84866456352) * invT);
+  redP = Corr / k_f * 2.477e+21 * exp(-4.76 * logT - (1227.85566173699) * invT);
   F = redP / (1.0 + redP);
   logPred = log10(redP);
   logFcent = log10(
@@ -3931,10 +3931,10 @@ comp_qfqr(
                     : exp(-(g_RT[1] + g_RT[7] - g_RT[8]))) *
            (refC);
   // reaction 2:  H + HCO (+M) <=> CH2O (+M)
-  k_f = 1090000 * exp((0.48) * logT - (-130.836333109227) * invT);
+  k_f = 1090000 * exp((0.48) * logT - (-130.837078709679) * invT);
   Corr = mixture + sc[0] + (5) * sc[5] + sc[8] + (0.5) * sc[9] + sc[10];
   redP =
-    Corr / k_f * 1350000000000 * exp(-2.57 * logT - (717.083748771726) * invT);
+    Corr / k_f * 1350000000000 * exp(-2.57 * logT - (717.087835235741) * invT);
   F = redP / (1.0 + redP);
   logPred = log10(redP);
   logFcent = log10(
@@ -3951,9 +3951,9 @@ comp_qfqr(
                     : exp(-(g_RT[1] - g_RT[11] + g_RT_qss[2]))) *
            (refC);
   // reaction 3:  CH2O + H (+M) <=> CH2OH (+M)
-  k_f = 540000 * exp((0.454) * logT - (1811.57999689699) * invT);
+  k_f = 540000 * exp((0.454) * logT - (1811.59032059556) * invT);
   Corr = mixture + sc[0] + (5) * sc[5] + sc[8] + (0.5) * sc[9] + sc[10];
-  redP = Corr / k_f * 1.27e+20 * exp(-4.82 * logT - (3286.00482770482) * invT);
+  redP = Corr / k_f * 1.27e+20 * exp(-4.82 * logT - (3286.02355374694) * invT);
   F = redP / (1.0 + redP);
   logPred = log10(redP);
   logFcent = log10(
@@ -3970,9 +3970,9 @@ comp_qfqr(
                     : exp(-(g_RT[1] + g_RT[11] - g_RT_qss[3]))) *
            (refC);
   // reaction 4:  CO + H2 (+M) <=> CH2O (+M)
-  k_f = 43 * exp((1.5) * logT - (40056.0465980557) * invT);
+  k_f = 43 * exp((1.5) * logT - (40056.2748665018) * invT);
   Corr = mixture + sc[0] + (5) * sc[5] + sc[8] + (0.5) * sc[9] + sc[10];
-  redP = Corr / k_f * 5.07e+15 * exp(-3.42 * logT - (42446.3257606281) * invT);
+  redP = Corr / k_f * 5.07e+15 * exp(-3.42 * logT - (42446.5676506209) * invT);
   F = redP / (1.0 + redP);
   logPred = log10(redP);
   logFcent = log10(
@@ -4006,7 +4006,7 @@ comp_qfqr(
                     : exp(-(g_RT[1] + g_RT[2] - g_RT[4]))) *
            (refC);
   // reaction 7:  CO + O + M <=> CO2 + M
-  k_f = 602 * exp(-(1509.64999741416) * invT);
+  k_f = 602 * exp(-(1509.6586004963) * invT);
   Corr = mixture + sc[0] + (5) * sc[3] + (5) * sc[5] + sc[8] + (0.5) * sc[9] +
          (2.5) * sc[10];
   qf[7] *= Corr * k_f;
@@ -4082,14 +4082,14 @@ comp_qfqr(
                      : exp(-(g_RT[1] + g_RT[4] - g_RT[5]))) *
             (refC);
   // reaction 17:  HCO + H2O <=> CO + H + H2O
-  k_f = 2244000000000 * exp((-1) * logT - (8554.68331868023) * invT);
+  k_f = 2244000000000 * exp((-1) * logT - (8554.73206947902) * invT);
   qf[17] *= k_f;
   qr[17] *= k_f *
             (kc_fast ? (ge_qss[2] * inv_ge[9] * inv_ge[1])
                      : exp(-(-g_RT[1] - g_RT[9] + g_RT_qss[2]))) *
             (refCinv);
   // reaction 18:  HCO + M <=> CO + H + M
-  k_f = 187000000000 * exp((-1) * logT - (8554.68331868023) * invT);
+  k_f = 187000000000 * exp((-1) * logT - (8554.73206947902) * invT);
   Corr = mixture + sc[0] + (-1) * sc[5] + sc[8] + (0.5) * sc[9] + sc[10];
   qf[18] *= Corr * k_f;
   qr[18] *= Corr * k_f *
@@ -4097,7 +4097,7 @@ comp_qfqr(
                      : exp(-(-g_RT[1] - g_RT[9] + g_RT_qss[2]))) *
             (refCinv);
   // reaction 19:  H2 + O <=> H + OH
-  k_f = 0.05 * exp((2.67) * logT - (3165.23282791169) * invT);
+  k_f = 0.05 * exp((2.67) * logT - (3165.25086570724) * invT);
   qf[19] *= k_f;
   qr[19] *= k_f * (kc_fast ? (ge[0] * inv_ge[4] * ge[2] * inv_ge[1])
                            : exp(-(g_RT[0] - g_RT[1] + g_RT[2] - g_RT[4])));
@@ -4124,7 +4124,7 @@ comp_qfqr(
   qr[23] *= k_f * (kc_fast ? (ge[7] * inv_ge[1] * inv_ge[11] * ge[2])
                            : exp(-(-g_RT[1] + g_RT[2] + g_RT[7] - g_RT[11])));
   // reaction 24:  CH4 + O <=> CH3 + OH
-  k_f = 1020 * exp((1.5) * logT - (4327.66332592059) * invT);
+  k_f = 1020 * exp((1.5) * logT - (4327.68798808939) * invT);
   qf[24] *= k_f;
   qr[24] *= k_f * (kc_fast ? (inv_ge[4] * ge[8] * ge[2] * inv_ge[7])
                            : exp(-(g_RT[2] - g_RT[4] - g_RT[7] + g_RT[8])));
@@ -4140,7 +4140,7 @@ comp_qfqr(
     k_f * (kc_fast ? (ge_qss[2] * inv_ge[1] * ge[2] * inv_ge[10])
                    : exp(-(-g_RT[1] + g_RT[2] - g_RT[10] + g_RT_qss[2])));
   // reaction 27:  CH2O + O <=> HCO + OH
-  k_f = 39000000 * exp(-(1781.38699694871) * invT);
+  k_f = 39000000 * exp(-(1781.39714858563) * invT);
   qf[27] *= k_f;
   qr[27] *=
     k_f * (kc_fast ? (inv_ge[4] * inv_ge_qss[2] * ge[11] * ge[2])
@@ -4152,38 +4152,38 @@ comp_qfqr(
     k_f * (kc_fast ? (inv_ge[4] * ge_qss[3] * inv_ge[11] * ge[2])
                    : exp(-(g_RT[2] - g_RT[4] - g_RT[11] + g_RT_qss[3])));
   // reaction 29:  CO + O2 <=> CO2 + O
-  k_f = 2500000 * exp(-(24053.7566254656) * invT);
+  k_f = 2500000 * exp(-(24053.893701241) * invT);
   qf[29] *= k_f;
   qr[29] *= k_f * (kc_fast ? (ge[3] * ge[9] * inv_ge[10] * inv_ge[2])
                            : exp(-(-g_RT[2] + g_RT[3] + g_RT[9] - g_RT[10])));
   // reaction 30:  CH2O + O2 <=> HCO + HO2
-  k_f = 100000000 * exp(-(20128.6666321888) * invT);
+  k_f = 100000000 * exp(-(20128.7813399506) * invT);
   qf[30] *= k_f;
   qr[30] *=
     k_f * (kc_fast ? (ge[3] * inv_ge[6] * inv_ge_qss[2] * ge[11])
                    : exp(-(g_RT[3] - g_RT[6] + g_RT[11] - g_RT_qss[2])));
   // reaction 31:  H + O2 <=> O + OH
-  k_f = 83000000 * exp(-(7252.86180424342) * invT);
+  k_f = 83000000 * exp(-(7252.90313631771) * invT);
   qf[31] *= k_f;
   qr[31] *= k_f * (kc_fast ? (inv_ge[4] * ge[3] * ge[1] * inv_ge[2])
                            : exp(-(g_RT[1] - g_RT[2] + g_RT[3] - g_RT[4])));
   // reaction 32:  H + HO2 <=> H2O + O
-  k_f = 3970000 * exp(-(337.658382754967) * invT);
+  k_f = 3970000 * exp(-(337.660306977672) * invT);
   qf[32] *= k_f;
   qr[32] *= k_f * (kc_fast ? (ge[6] * ge[1] * inv_ge[2] * inv_ge[5])
                            : exp(-(g_RT[1] - g_RT[2] - g_RT[5] + g_RT[6])));
   // reaction 33:  H + HO2 <=> H2 + O2
-  k_f = 28000000 * exp(-(537.435399079441) * invT);
+  k_f = 28000000 * exp(-(537.438461776682) * invT);
   qf[33] *= k_f;
   qr[33] *= k_f * (kc_fast ? (inv_ge[0] * ge[6] * inv_ge[3] * ge[1])
                            : exp(-(-g_RT[0] + g_RT[1] - g_RT[3] + g_RT[6])));
   // reaction 34:  H + HO2 <=> 2 OH
-  k_f = 134000000 * exp(-(319.542582785997) * invT);
+  k_f = 134000000 * exp(-(319.544403771716) * invT);
   qf[34] *= k_f;
   qr[34] *= k_f * (kc_fast ? (inv_ge[4] * ge[6] * inv_ge[4] * ge[1])
                            : exp(-(g_RT[1] - 2.000000 * g_RT[4] + g_RT[6])));
   // reaction 35:  CH4 + H <=> CH3 + H2
-  k_f = 660 * exp((1.62) * logT - (5454.86865732316) * invT);
+  k_f = 660 * exp((1.62) * logT - (5454.89974312662) * invT);
   qf[35] *= k_f;
   qr[35] *= k_f * (kc_fast ? (inv_ge[0] * ge[8] * ge[1] * inv_ge[7])
                            : exp(-(-g_RT[0] + g_RT[1] - g_RT[7] + g_RT[8])));
@@ -4194,7 +4194,7 @@ comp_qfqr(
     k_f * (kc_fast ? (inv_ge[0] * ge_qss[2] * inv_ge[9] * ge[1])
                    : exp(-(-g_RT[0] + g_RT[1] - g_RT[9] + g_RT_qss[2])));
   // reaction 37:  CH2O + H <=> H2 + HCO
-  k_f = 23000 * exp((1.05) * logT - (1648.03458051046) * invT);
+  k_f = 23000 * exp((1.05) * logT - (1648.04397220846) * invT);
   qf[37] *= k_f;
   qr[37] *=
     k_f * (kc_fast ? (inv_ge[0] * inv_ge_qss[2] * ge[11] * ge[1])
@@ -4217,17 +4217,17 @@ comp_qfqr(
     k_f * (kc_fast ? (ge_qss[3] * ge[1] * inv_ge_qss[1] * inv_ge[5])
                    : exp(-(g_RT[1] - g_RT[5] - g_RT_qss[1] + g_RT_qss[3])));
   // reaction 41:  H2 + OH <=> H + H2O
-  k_f = 216 * exp((1.51) * logT - (1726.03316371019) * invT);
+  k_f = 216 * exp((1.51) * logT - (1726.04299990077) * invT);
   qf[41] *= k_f;
   qr[41] *= k_f * (kc_fast ? (ge[0] * ge[4] * inv_ge[1] * inv_ge[5])
                            : exp(-(g_RT[0] - g_RT[1] + g_RT[4] - g_RT[5])));
   // reaction 42:  2 OH <=> H2O + O
-  k_f = 0.0357 * exp((2.4) * logT - (-1061.78716484796) * invT);
+  k_f = 0.0357 * exp((2.4) * logT - (-1061.7932156824) * invT);
   qf[42] *= k_f;
   qr[42] *= k_f * (kc_fast ? (ge[4] * ge[4] * inv_ge[2] * inv_ge[5])
                            : exp(-(-g_RT[2] + 2.000000 * g_RT[4] - g_RT[5])));
   // reaction 43:  HO2 + OH <=> H2O + O2
-  k_f = 29000000 * exp(-(-251.60833290236) * invT);
+  k_f = 29000000 * exp(-(-251.609766749383) * invT);
   qf[43] *= k_f;
   qr[43] *= k_f * (kc_fast ? (ge[4] * inv_ge[3] * ge[6] * inv_ge[5])
                            : exp(-(-g_RT[3] + g_RT[4] - g_RT[5] + g_RT[6])));
@@ -4244,7 +4244,7 @@ comp_qfqr(
     k_f * (kc_fast ? (ge[4] * inv_ge[11] * inv_ge[1] * ge_qss[1])
                    : exp(-(-g_RT[1] + g_RT[4] - g_RT[11] + g_RT_qss[1])));
   // reaction 46:  CH3 + OH <=> CH2 + H2O
-  k_f = 56 * exp((1.6) * logT - (2727.43432866158) * invT);
+  k_f = 56 * exp((1.6) * logT - (2727.44987156331) * invT);
   qf[46] *= k_f;
   qr[46] *= k_f * (kc_fast ? (ge[4] * ge[7] * inv_ge_qss[0] * inv_ge[5])
                            : exp(-(g_RT[4] - g_RT[5] + g_RT[7] - g_RT_qss[0])));
@@ -4254,12 +4254,12 @@ comp_qfqr(
   qr[47] *= k_f * (kc_fast ? (ge[4] * ge[7] * inv_ge_qss[1] * inv_ge[5])
                            : exp(-(g_RT[4] - g_RT[5] + g_RT[7] - g_RT_qss[1])));
   // reaction 48:  CH4 + OH <=> CH3 + H2O
-  k_f = 100 * exp((1.6) * logT - (1570.03599731073) * invT);
+  k_f = 100 * exp((1.6) * logT - (1570.04494451615) * invT);
   qf[48] *= k_f;
   qr[48] *= k_f * (kc_fast ? (ge[4] * inv_ge[7] * inv_ge[5] * ge[8])
                            : exp(-(g_RT[4] - g_RT[5] - g_RT[7] + g_RT[8])));
   // reaction 49:  CO + OH <=> CO2 + H
-  k_f = 47.6 * exp((1.228) * logT - (35.2251666063304) * invT);
+  k_f = 47.6 * exp((1.228) * logT - (35.2253673449136) * invT);
   qf[49] *= k_f;
   qr[49] *= k_f * (kc_fast ? (ge[4] * ge[9] * inv_ge[10] * inv_ge[1])
                            : exp(-(-g_RT[1] + g_RT[4] + g_RT[9] - g_RT[10])));
@@ -4269,7 +4269,7 @@ comp_qfqr(
   qr[50] *= k_f * (kc_fast ? (ge[4] * ge_qss[2] * inv_ge[9] * inv_ge[5])
                            : exp(-(g_RT[4] - g_RT[5] - g_RT[9] + g_RT_qss[2])));
   // reaction 51:  CH2O + OH <=> H2O + HCO
-  k_f = 3430 * exp((1.18) * logT - (-224.93784961471) * invT);
+  k_f = 3430 * exp((1.18) * logT - (-224.939131473948) * invT);
   qf[51] *= k_f;
   qr[51] *=
     k_f * (kc_fast ? (ge[4] * inv_ge_qss[2] * ge[11] * inv_ge[5])
@@ -4292,29 +4292,29 @@ comp_qfqr(
   qr[54] *= k_f * (kc_fast ? (inv_ge[3] * ge[6] * ge[7] * inv_ge[8])
                            : exp(-(-g_RT[3] + g_RT[6] + g_RT[7] - g_RT[8])));
   // reaction 55:  CO + HO2 <=> CO2 + OH
-  k_f = 150000000 * exp(-(11875.9133129914) * invT);
+  k_f = 150000000 * exp(-(11875.9809905709) * invT);
   qf[55] *= k_f;
   qr[55] *= k_f * (kc_fast ? (inv_ge[4] * ge[6] * ge[9] * inv_ge[10])
                            : exp(-(-g_RT[4] + g_RT[6] + g_RT[9] - g_RT[10])));
   // reaction 56:  CH2 + O2 <=> HCO + OH
-  k_f = 13200000 * exp(-(754.82499870708) * invT);
+  k_f = 13200000 * exp(-(754.829300248149) * invT);
   qf[56] *= k_f;
   qr[56] *=
     k_f * (kc_fast ? (inv_ge[4] * ge[3] * inv_ge_qss[2] * ge_qss[0])
                    : exp(-(g_RT[3] - g_RT[4] + g_RT_qss[0] - g_RT_qss[2])));
   // reaction 57:  CH2 + H2 <=> CH3 + H
-  k_f = 0.5 * exp((2) * logT - (3638.25649376812) * invT);
+  k_f = 0.5 * exp((2) * logT - (3638.27722719608) * invT);
   qf[57] *= k_f;
   qr[57] *= k_f * (kc_fast ? (ge[0] * inv_ge[7] * ge_qss[0] * inv_ge[1])
                            : exp(-(g_RT[0] - g_RT[1] - g_RT[7] + g_RT_qss[0])));
   // reaction 58:  CH2 + CH4 <=> 2 CH3
-  k_f = 2.46 * exp((2) * logT - (4161.60182620503) * invT);
+  k_f = 2.46 * exp((2) * logT - (4161.62554203479) * invT);
   qf[58] *= k_f;
   qr[58] *=
     k_f * (kc_fast ? (inv_ge[7] * inv_ge[7] * ge_qss[0] * ge[8])
                    : exp(-(-2.000000 * g_RT[7] + g_RT[8] + g_RT_qss[0])));
   // reaction 59:  CH2(S) + N2 <=> CH2 + N2
-  k_f = 15000000 * exp(-(301.929999482832) * invT);
+  k_f = 15000000 * exp(-(301.93172009926) * invT);
   qf[59] *= k_f;
   qr[59] *=
     k_f * (kc_fast ? (inv_ge_qss[0] * ge_qss[1])
@@ -4344,7 +4344,7 @@ comp_qfqr(
     k_f * (kc_fast ? (inv_ge_qss[0] * ge_qss[1])
                    : exp(-(g_RT[5] - g_RT[5] - g_RT_qss[0] + g_RT_qss[1])));
   // reaction 64:  CH2(S) + CH4 <=> 2 CH3
-  k_f = 16000000 * exp(-(-286.83349950869) * invT);
+  k_f = 16000000 * exp(-(-286.835134094297) * invT);
   qf[64] *= k_f;
   qr[64] *=
     k_f * (kc_fast ? (inv_ge[7] * inv_ge[7] * ge_qss[1] * ge[8])
@@ -4368,7 +4368,7 @@ comp_qfqr(
     k_f * (kc_fast ? (inv_ge[9] * ge[10] * ge_qss[1] * inv_ge[11])
                    : exp(-(-g_RT[9] + g_RT[10] - g_RT[11] + g_RT_qss[1])));
   // reaction 68:  CH3 + O2 <=> CH2O + OH
-  k_f = 36000 * exp(-(4498.75699229419) * invT);
+  k_f = 36000 * exp(-(4498.78262947897) * invT);
   qf[68] *= k_f;
   qr[68] *= k_f * (kc_fast ? (inv_ge[4] * ge[3] * ge[7] * inv_ge[11])
                            : exp(-(g_RT[3] - g_RT[4] + g_RT[7] - g_RT[11])));
@@ -4378,18 +4378,18 @@ comp_qfqr(
   qr[69] *= k_f * (kc_fast ? (ge_qss[2] * inv_ge[8] * ge[7] * inv_ge[9])
                            : exp(-(g_RT[7] - g_RT[8] - g_RT[9] + g_RT_qss[2])));
   // reaction 70:  CH2O + CH3 <=> CH4 + HCO
-  k_f = 0.00332 * exp((2.81) * logT - (2948.84966161566) * invT);
+  k_f = 0.00332 * exp((2.81) * logT - (2948.86646630277) * invT);
   qf[70] *= k_f;
   qr[70] *=
     k_f * (kc_fast ? (inv_ge_qss[2] * ge[7] * ge[11] * inv_ge[8])
                    : exp(-(g_RT[7] - g_RT[8] + g_RT[11] - g_RT_qss[2])));
   // reaction 71:  HCO + O2 <=> CO + HO2
-  k_f = 7600000 * exp(-(201.286666321888) * invT);
+  k_f = 7600000 * exp(-(201.287813399506) * invT);
   qf[71] *= k_f;
   qr[71] *= k_f * (kc_fast ? (ge[3] * inv_ge[6] * ge_qss[2] * inv_ge[9])
                            : exp(-(g_RT[3] - g_RT[6] - g_RT[9] + g_RT_qss[2])));
   // reaction 72:  CH2OH + O2 <=> CH2O + HO2
-  k_f = 18000000 * exp(-(452.894999224248) * invT);
+  k_f = 18000000 * exp(-(452.897580148889) * invT);
   qf[72] *= k_f;
   qr[72] *=
     k_f * (kc_fast ? (ge[3] * inv_ge[6] * ge_qss[3] * inv_ge[11])
@@ -4403,7 +4403,7 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
   const amrex::Real logT = log(T);
 
   // reference concentration: P_atm / (RT) in inverse mol/m^3
-  const amrex::Real refC = 101325 / 8.31446 * invT;
+  const amrex::Real refC = 101325 / 8.31446261815324 * invT;
   const amrex::Real refCinv = 1 / refC;
 
   for (int i = 0; i < 13; ++i) {
@@ -4454,7 +4454,7 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
     amrex::Real Corr =
       mixture + sc[0] + (5) * sc[5] + sc[8] + (0.5) * sc[9] + sc[10];
     const amrex::Real redP =
-      Corr / k_f * 3.2e+15 * exp(-3.14 * logT - 618.956498939805 * invT);
+      Corr / k_f * 3.2e+15 * exp(-3.14 * logT - 618.960026203482 * invT);
     const amrex::Real F = redP / (1.0 + redP);
     const amrex::Real logPred = log10(redP);
     const amrex::Real logFcent = log10(
@@ -4479,11 +4479,11 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
   {
     // reaction 1:  CH3 + H (+M) <=> CH4 (+M)
     const amrex::Real k_f =
-      12700000000 * exp((-0.63) * logT - (192.731983003208) * invT);
+      12700000000 * exp((-0.63) * logT - (192.733081330027) * invT);
     amrex::Real Corr =
       mixture + sc[0] + (5) * sc[5] + sc[8] + (0.5) * sc[9] + sc[10];
     const amrex::Real redP =
-      Corr / k_f * 2.477e+21 * exp(-4.76 * logT - 1227.84866456352 * invT);
+      Corr / k_f * 2.477e+21 * exp(-4.76 * logT - 1227.85566173699 * invT);
     const amrex::Real F = redP / (1.0 + redP);
     const amrex::Real logPred = log10(redP);
     const amrex::Real logFcent = log10(
@@ -4509,11 +4509,11 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
   {
     // reaction 2:  H + HCO (+M) <=> CH2O (+M)
     const amrex::Real k_f =
-      1090000 * exp((0.48) * logT - (-130.836333109227) * invT);
+      1090000 * exp((0.48) * logT - (-130.837078709679) * invT);
     amrex::Real Corr =
       mixture + sc[0] + (5) * sc[5] + sc[8] + (0.5) * sc[9] + sc[10];
     const amrex::Real redP =
-      Corr / k_f * 1350000000000 * exp(-2.57 * logT - 717.083748771726 * invT);
+      Corr / k_f * 1350000000000 * exp(-2.57 * logT - 717.087835235741 * invT);
     const amrex::Real F = redP / (1.0 + redP);
     const amrex::Real logPred = log10(redP);
     const amrex::Real logFcent = log10(
@@ -4539,11 +4539,11 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
   {
     // reaction 3:  CH2O + H (+M) <=> CH2OH (+M)
     const amrex::Real k_f =
-      540000 * exp((0.454) * logT - (1811.57999689699) * invT);
+      540000 * exp((0.454) * logT - (1811.59032059556) * invT);
     amrex::Real Corr =
       mixture + sc[0] + (5) * sc[5] + sc[8] + (0.5) * sc[9] + sc[10];
     const amrex::Real redP =
-      Corr / k_f * 1.27e+20 * exp(-4.82 * logT - 3286.00482770482 * invT);
+      Corr / k_f * 1.27e+20 * exp(-4.82 * logT - 3286.02355374694 * invT);
     const amrex::Real F = redP / (1.0 + redP);
     const amrex::Real logPred = log10(redP);
     const amrex::Real logFcent = log10(
@@ -4568,11 +4568,11 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
 
   {
     // reaction 4:  CO + H2 (+M) <=> CH2O (+M)
-    const amrex::Real k_f = 43 * exp((1.5) * logT - (40056.0465980557) * invT);
+    const amrex::Real k_f = 43 * exp((1.5) * logT - (40056.2748665018) * invT);
     amrex::Real Corr =
       mixture + sc[0] + (5) * sc[5] + sc[8] + (0.5) * sc[9] + sc[10];
     const amrex::Real redP =
-      Corr / k_f * 5.07e+15 * exp(-3.42 * logT - 42446.3257606281 * invT);
+      Corr / k_f * 5.07e+15 * exp(-3.42 * logT - 42446.5676506209 * invT);
     const amrex::Real F = redP / (1.0 + redP);
     const amrex::Real logPred = log10(redP);
     const amrex::Real logFcent = log10(
@@ -4628,7 +4628,7 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
 
   {
     // reaction 7:  CO + O + M <=> CO2 + M
-    const amrex::Real k_f = 602 * exp(-(1509.64999741416) * invT);
+    const amrex::Real k_f = 602 * exp(-(1509.6586004963) * invT);
     const amrex::Real Corr = mixture + sc[0] + (5) * sc[3] + (5) * sc[5] +
                              sc[8] + (0.5) * sc[9] + (2.5) * sc[10];
     const amrex::Real qf = Corr * k_f * (sc[2] * sc[9]);
@@ -4772,7 +4772,7 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
   {
     // reaction 17:  HCO + H2O <=> CO + H + H2O
     const amrex::Real k_f =
-      2244000000000 * exp((-1) * logT - (8554.68331868023) * invT);
+      2244000000000 * exp((-1) * logT - (8554.73206947902) * invT);
     const amrex::Real qf = k_f * (sc[5] * sc_qss[2]);
     const amrex::Real qr =
       k_f *
@@ -4787,7 +4787,7 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
   {
     // reaction 18:  HCO + M <=> CO + H + M
     const amrex::Real k_f =
-      187000000000 * exp((-1) * logT - (8554.68331868023) * invT);
+      187000000000 * exp((-1) * logT - (8554.73206947902) * invT);
     const amrex::Real Corr =
       mixture + sc[0] + (-1) * sc[5] + sc[8] + (0.5) * sc[9] + sc[10];
     const amrex::Real qf = Corr * k_f * (sc_qss[2]);
@@ -4804,7 +4804,7 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
   {
     // reaction 19:  H2 + O <=> H + OH
     const amrex::Real k_f =
-      0.05 * exp((2.67) * logT - (3165.23282791169) * invT);
+      0.05 * exp((2.67) * logT - (3165.25086570724) * invT);
     const amrex::Real qf = k_f * (sc[0] * sc[2]);
     const amrex::Real qr =
       k_f *
@@ -4882,7 +4882,7 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
   {
     // reaction 24:  CH4 + O <=> CH3 + OH
     const amrex::Real k_f =
-      1020 * exp((1.5) * logT - (4327.66332592059) * invT);
+      1020 * exp((1.5) * logT - (4327.68798808939) * invT);
     const amrex::Real qf = k_f * (sc[2] * sc[8]);
     const amrex::Real qr =
       k_f *
@@ -4928,7 +4928,7 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
 
   {
     // reaction 27:  CH2O + O <=> HCO + OH
-    const amrex::Real k_f = 39000000 * exp(-(1781.38699694871) * invT);
+    const amrex::Real k_f = 39000000 * exp(-(1781.39714858563) * invT);
     const amrex::Real qf = k_f * (sc[2] * sc[11]);
     const amrex::Real qr =
       k_f *
@@ -4958,7 +4958,7 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
 
   {
     // reaction 29:  CO + O2 <=> CO2 + O
-    const amrex::Real k_f = 2500000 * exp(-(24053.7566254656) * invT);
+    const amrex::Real k_f = 2500000 * exp(-(24053.893701241) * invT);
     const amrex::Real qf = k_f * (sc[3] * sc[9]);
     const amrex::Real qr =
       k_f *
@@ -4974,7 +4974,7 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
 
   {
     // reaction 30:  CH2O + O2 <=> HCO + HO2
-    const amrex::Real k_f = 100000000 * exp(-(20128.6666321888) * invT);
+    const amrex::Real k_f = 100000000 * exp(-(20128.7813399506) * invT);
     const amrex::Real qf = k_f * (sc[3] * sc[11]);
     const amrex::Real qr =
       k_f *
@@ -4989,7 +4989,7 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
 
   {
     // reaction 31:  H + O2 <=> O + OH
-    const amrex::Real k_f = 83000000 * exp(-(7252.86180424342) * invT);
+    const amrex::Real k_f = 83000000 * exp(-(7252.90313631771) * invT);
     const amrex::Real qf = k_f * (sc[1] * sc[3]);
     const amrex::Real qr =
       k_f *
@@ -5005,7 +5005,7 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
 
   {
     // reaction 32:  H + HO2 <=> H2O + O
-    const amrex::Real k_f = 3970000 * exp(-(337.658382754967) * invT);
+    const amrex::Real k_f = 3970000 * exp(-(337.660306977672) * invT);
     const amrex::Real qf = k_f * (sc[1] * sc[6]);
     const amrex::Real qr =
       k_f *
@@ -5021,7 +5021,7 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
 
   {
     // reaction 33:  H + HO2 <=> H2 + O2
-    const amrex::Real k_f = 28000000 * exp(-(537.435399079441) * invT);
+    const amrex::Real k_f = 28000000 * exp(-(537.438461776682) * invT);
     const amrex::Real qf = k_f * (sc[1] * sc[6]);
     const amrex::Real qr =
       k_f *
@@ -5037,7 +5037,7 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
 
   {
     // reaction 34:  H + HO2 <=> 2 OH
-    const amrex::Real k_f = 134000000 * exp(-(319.542582785997) * invT);
+    const amrex::Real k_f = 134000000 * exp(-(319.544403771716) * invT);
     const amrex::Real qf = k_f * (sc[1] * sc[6]);
     const amrex::Real qr =
       k_f *
@@ -5053,7 +5053,7 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
   {
     // reaction 35:  CH4 + H <=> CH3 + H2
     const amrex::Real k_f =
-      660 * exp((1.62) * logT - (5454.86865732316) * invT);
+      660 * exp((1.62) * logT - (5454.89974312662) * invT);
     const amrex::Real qf = k_f * (sc[1] * sc[8]);
     const amrex::Real qr =
       k_f *
@@ -5085,7 +5085,7 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
   {
     // reaction 37:  CH2O + H <=> H2 + HCO
     const amrex::Real k_f =
-      23000 * exp((1.05) * logT - (1648.03458051046) * invT);
+      23000 * exp((1.05) * logT - (1648.04397220846) * invT);
     const amrex::Real qf = k_f * (sc[1] * sc[11]);
     const amrex::Real qr =
       k_f *
@@ -5145,7 +5145,7 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
   {
     // reaction 41:  H2 + OH <=> H + H2O
     const amrex::Real k_f =
-      216 * exp((1.51) * logT - (1726.03316371019) * invT);
+      216 * exp((1.51) * logT - (1726.04299990077) * invT);
     const amrex::Real qf = k_f * (sc[0] * sc[4]);
     const amrex::Real qr =
       k_f *
@@ -5162,7 +5162,7 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
   {
     // reaction 42:  2 OH <=> H2O + O
     const amrex::Real k_f =
-      0.0357 * exp((2.4) * logT - (-1061.78716484796) * invT);
+      0.0357 * exp((2.4) * logT - (-1061.7932156824) * invT);
     const amrex::Real qf = k_f * ((sc[4] * sc[4]));
     const amrex::Real qr =
       k_f *
@@ -5177,7 +5177,7 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
 
   {
     // reaction 43:  HO2 + OH <=> H2O + O2
-    const amrex::Real k_f = 29000000 * exp(-(-251.60833290236) * invT);
+    const amrex::Real k_f = 29000000 * exp(-(-251.609766749383) * invT);
     const amrex::Real qf = k_f * (sc[4] * sc[6]);
     const amrex::Real qr =
       k_f *
@@ -5223,7 +5223,7 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
 
   {
     // reaction 46:  CH3 + OH <=> CH2 + H2O
-    const amrex::Real k_f = 56 * exp((1.6) * logT - (2727.43432866158) * invT);
+    const amrex::Real k_f = 56 * exp((1.6) * logT - (2727.44987156331) * invT);
     const amrex::Real qf = k_f * (sc[4] * sc[7]);
     const amrex::Real qr =
       k_f *
@@ -5253,7 +5253,7 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
 
   {
     // reaction 48:  CH4 + OH <=> CH3 + H2O
-    const amrex::Real k_f = 100 * exp((1.6) * logT - (1570.03599731073) * invT);
+    const amrex::Real k_f = 100 * exp((1.6) * logT - (1570.04494451615) * invT);
     const amrex::Real qf = k_f * (sc[4] * sc[8]);
     const amrex::Real qr =
       k_f *
@@ -5270,7 +5270,7 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
   {
     // reaction 49:  CO + OH <=> CO2 + H
     const amrex::Real k_f =
-      47.6 * exp((1.228) * logT - (35.2251666063304) * invT);
+      47.6 * exp((1.228) * logT - (35.2253673449136) * invT);
     const amrex::Real qf = k_f * (sc[4] * sc[9]);
     const amrex::Real qr =
       k_f *
@@ -5302,7 +5302,7 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
   {
     // reaction 51:  CH2O + OH <=> H2O + HCO
     const amrex::Real k_f =
-      3430 * exp((1.18) * logT - (-224.93784961471) * invT);
+      3430 * exp((1.18) * logT - (-224.939131473948) * invT);
     const amrex::Real qf = k_f * (sc[4] * sc[11]);
     const amrex::Real qr =
       k_f *
@@ -5363,7 +5363,7 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
 
   {
     // reaction 55:  CO + HO2 <=> CO2 + OH
-    const amrex::Real k_f = 150000000 * exp(-(11875.9133129914) * invT);
+    const amrex::Real k_f = 150000000 * exp(-(11875.9809905709) * invT);
     const amrex::Real qf = k_f * (sc[6] * sc[9]);
     const amrex::Real qr =
       k_f *
@@ -5379,7 +5379,7 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
 
   {
     // reaction 56:  CH2 + O2 <=> HCO + OH
-    const amrex::Real k_f = 13200000 * exp(-(754.82499870708) * invT);
+    const amrex::Real k_f = 13200000 * exp(-(754.829300248149) * invT);
     const amrex::Real qf = k_f * (sc[3] * sc_qss[0]);
     const amrex::Real qr =
       k_f *
@@ -5393,7 +5393,7 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
 
   {
     // reaction 57:  CH2 + H2 <=> CH3 + H
-    const amrex::Real k_f = 0.5 * exp((2) * logT - (3638.25649376812) * invT);
+    const amrex::Real k_f = 0.5 * exp((2) * logT - (3638.27722719608) * invT);
     const amrex::Real qf = k_f * (sc[0] * sc_qss[0]);
     const amrex::Real qr =
       k_f *
@@ -5408,7 +5408,7 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
 
   {
     // reaction 58:  CH2 + CH4 <=> 2 CH3
-    const amrex::Real k_f = 2.46 * exp((2) * logT - (4161.60182620503) * invT);
+    const amrex::Real k_f = 2.46 * exp((2) * logT - (4161.62554203479) * invT);
     const amrex::Real qf = k_f * (sc[8] * sc_qss[0]);
     const amrex::Real qr =
       k_f *
@@ -5422,7 +5422,7 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
 
   {
     // reaction 59:  CH2(S) + N2 <=> CH2 + N2
-    const amrex::Real k_f = 15000000 * exp(-(301.929999482832) * invT);
+    const amrex::Real k_f = 15000000 * exp(-(301.93172009926) * invT);
     const amrex::Real qf = k_f * (sc[12] * sc_qss[1]);
     const amrex::Real qr =
       k_f *
@@ -5496,7 +5496,7 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
 
   {
     // reaction 64:  CH2(S) + CH4 <=> 2 CH3
-    const amrex::Real k_f = 16000000 * exp(-(-286.83349950869) * invT);
+    const amrex::Real k_f = 16000000 * exp(-(-286.835134094297) * invT);
     const amrex::Real qf = k_f * (sc[8] * sc_qss[1]);
     const amrex::Real qr =
       k_f *
@@ -5553,7 +5553,7 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
 
   {
     // reaction 68:  CH3 + O2 <=> CH2O + OH
-    const amrex::Real k_f = 36000 * exp(-(4498.75699229419) * invT);
+    const amrex::Real k_f = 36000 * exp(-(4498.78262947897) * invT);
     const amrex::Real qf = k_f * (sc[3] * sc[7]);
     const amrex::Real qr =
       k_f *
@@ -5585,7 +5585,7 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
   {
     // reaction 70:  CH2O + CH3 <=> CH4 + HCO
     const amrex::Real k_f =
-      0.00332 * exp((2.81) * logT - (2948.84966161566) * invT);
+      0.00332 * exp((2.81) * logT - (2948.86646630277) * invT);
     const amrex::Real qf = k_f * (sc[7] * sc[11]);
     const amrex::Real qr =
       k_f *
@@ -5600,7 +5600,7 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
 
   {
     // reaction 71:  HCO + O2 <=> CO + HO2
-    const amrex::Real k_f = 7600000 * exp(-(201.286666321888) * invT);
+    const amrex::Real k_f = 7600000 * exp(-(201.287813399506) * invT);
     const amrex::Real qf = k_f * (sc[3] * sc_qss[2]);
     const amrex::Real qr =
       k_f *
@@ -5615,7 +5615,7 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
 
   {
     // reaction 72:  CH2OH + O2 <=> CH2O + HO2
-    const amrex::Real k_f = 18000000 * exp(-(452.894999224248) * invT);
+    const amrex::Real k_f = 18000000 * exp(-(452.897580148889) * invT);
     const amrex::Real qf = k_f * (sc[3] * sc_qss[3]);
     const amrex::Real qr =
       k_f *
@@ -5645,7 +5645,7 @@ productionRate_light(
   const amrex::Real logT)
 {
   // reference concentration: P_atm / (RT) in inverse mol/m^3
-  const amrex::Real refC = 101325 / 8.31446 * invT;
+  const amrex::Real refC = 101325 / 8.31446261815324 * invT;
   const amrex::Real refCinv = 1 / refC;
 
   for (int i = 0; i < 13; ++i) {
@@ -5692,7 +5692,7 @@ productionRate_light(
     amrex::Real Corr =
       mixture + sc[0] + (5) * sc[5] + sc[8] + (0.5) * sc[9] + sc[10];
     const amrex::Real redP =
-      Corr / k_f * 3.2e+15 * exp(-3.14 * logT - 618.956498939805 * invT);
+      Corr / k_f * 3.2e+15 * exp(-3.14 * logT - 618.960026203482 * invT);
     const amrex::Real F = redP / (1.0 + redP);
     const amrex::Real logPred = log10(redP);
     const amrex::Real logFcent = log10(
@@ -5717,11 +5717,11 @@ productionRate_light(
   {
     // reaction 1:  CH3 + H (+M) <=> CH4 (+M)
     const amrex::Real k_f =
-      12700000000 * exp((-0.63) * logT - (192.731983003208) * invT);
+      12700000000 * exp((-0.63) * logT - (192.733081330027) * invT);
     amrex::Real Corr =
       mixture + sc[0] + (5) * sc[5] + sc[8] + (0.5) * sc[9] + sc[10];
     const amrex::Real redP =
-      Corr / k_f * 2.477e+21 * exp(-4.76 * logT - 1227.84866456352 * invT);
+      Corr / k_f * 2.477e+21 * exp(-4.76 * logT - 1227.85566173699 * invT);
     const amrex::Real F = redP / (1.0 + redP);
     const amrex::Real logPred = log10(redP);
     const amrex::Real logFcent = log10(
@@ -5747,11 +5747,11 @@ productionRate_light(
   {
     // reaction 2:  H + HCO (+M) <=> CH2O (+M)
     const amrex::Real k_f =
-      1090000 * exp((0.48) * logT - (-130.836333109227) * invT);
+      1090000 * exp((0.48) * logT - (-130.837078709679) * invT);
     amrex::Real Corr =
       mixture + sc[0] + (5) * sc[5] + sc[8] + (0.5) * sc[9] + sc[10];
     const amrex::Real redP =
-      Corr / k_f * 1350000000000 * exp(-2.57 * logT - 717.083748771726 * invT);
+      Corr / k_f * 1350000000000 * exp(-2.57 * logT - 717.087835235741 * invT);
     const amrex::Real F = redP / (1.0 + redP);
     const amrex::Real logPred = log10(redP);
     const amrex::Real logFcent = log10(
@@ -5777,11 +5777,11 @@ productionRate_light(
   {
     // reaction 3:  CH2O + H (+M) <=> CH2OH (+M)
     const amrex::Real k_f =
-      540000 * exp((0.454) * logT - (1811.57999689699) * invT);
+      540000 * exp((0.454) * logT - (1811.59032059556) * invT);
     amrex::Real Corr =
       mixture + sc[0] + (5) * sc[5] + sc[8] + (0.5) * sc[9] + sc[10];
     const amrex::Real redP =
-      Corr / k_f * 1.27e+20 * exp(-4.82 * logT - 3286.00482770482 * invT);
+      Corr / k_f * 1.27e+20 * exp(-4.82 * logT - 3286.02355374694 * invT);
     const amrex::Real F = redP / (1.0 + redP);
     const amrex::Real logPred = log10(redP);
     const amrex::Real logFcent = log10(
@@ -5806,11 +5806,11 @@ productionRate_light(
 
   {
     // reaction 4:  CO + H2 (+M) <=> CH2O (+M)
-    const amrex::Real k_f = 43 * exp((1.5) * logT - (40056.0465980557) * invT);
+    const amrex::Real k_f = 43 * exp((1.5) * logT - (40056.2748665018) * invT);
     amrex::Real Corr =
       mixture + sc[0] + (5) * sc[5] + sc[8] + (0.5) * sc[9] + sc[10];
     const amrex::Real redP =
-      Corr / k_f * 5.07e+15 * exp(-3.42 * logT - 42446.3257606281 * invT);
+      Corr / k_f * 5.07e+15 * exp(-3.42 * logT - 42446.5676506209 * invT);
     const amrex::Real F = redP / (1.0 + redP);
     const amrex::Real logPred = log10(redP);
     const amrex::Real logFcent = log10(
@@ -5866,7 +5866,7 @@ productionRate_light(
 
   {
     // reaction 7:  CO + O + M <=> CO2 + M
-    const amrex::Real k_f = 602 * exp(-(1509.64999741416) * invT);
+    const amrex::Real k_f = 602 * exp(-(1509.6586004963) * invT);
     const amrex::Real Corr = mixture + sc[0] + (5) * sc[3] + (5) * sc[5] +
                              sc[8] + (0.5) * sc[9] + (2.5) * sc[10];
     const amrex::Real qf = Corr * k_f * (sc[2] * sc[9]);
@@ -6010,7 +6010,7 @@ productionRate_light(
   {
     // reaction 17:  HCO + H2O <=> CO + H + H2O
     const amrex::Real k_f =
-      2244000000000 * exp((-1) * logT - (8554.68331868023) * invT);
+      2244000000000 * exp((-1) * logT - (8554.73206947902) * invT);
     const amrex::Real qf = k_f * (sc[5] * sc_qss[2]);
     const amrex::Real qr =
       k_f *
@@ -6025,7 +6025,7 @@ productionRate_light(
   {
     // reaction 18:  HCO + M <=> CO + H + M
     const amrex::Real k_f =
-      187000000000 * exp((-1) * logT - (8554.68331868023) * invT);
+      187000000000 * exp((-1) * logT - (8554.73206947902) * invT);
     const amrex::Real Corr =
       mixture + sc[0] + (-1) * sc[5] + sc[8] + (0.5) * sc[9] + sc[10];
     const amrex::Real qf = Corr * k_f * (sc_qss[2]);
@@ -6042,7 +6042,7 @@ productionRate_light(
   {
     // reaction 19:  H2 + O <=> H + OH
     const amrex::Real k_f =
-      0.05 * exp((2.67) * logT - (3165.23282791169) * invT);
+      0.05 * exp((2.67) * logT - (3165.25086570724) * invT);
     const amrex::Real qf = k_f * (sc[0] * sc[2]);
     const amrex::Real qr =
       k_f *
@@ -6120,7 +6120,7 @@ productionRate_light(
   {
     // reaction 24:  CH4 + O <=> CH3 + OH
     const amrex::Real k_f =
-      1020 * exp((1.5) * logT - (4327.66332592059) * invT);
+      1020 * exp((1.5) * logT - (4327.68798808939) * invT);
     const amrex::Real qf = k_f * (sc[2] * sc[8]);
     const amrex::Real qr =
       k_f *
@@ -6166,7 +6166,7 @@ productionRate_light(
 
   {
     // reaction 27:  CH2O + O <=> HCO + OH
-    const amrex::Real k_f = 39000000 * exp(-(1781.38699694871) * invT);
+    const amrex::Real k_f = 39000000 * exp(-(1781.39714858563) * invT);
     const amrex::Real qf = k_f * (sc[2] * sc[11]);
     const amrex::Real qr =
       k_f *
@@ -6196,7 +6196,7 @@ productionRate_light(
 
   {
     // reaction 29:  CO + O2 <=> CO2 + O
-    const amrex::Real k_f = 2500000 * exp(-(24053.7566254656) * invT);
+    const amrex::Real k_f = 2500000 * exp(-(24053.893701241) * invT);
     const amrex::Real qf = k_f * (sc[3] * sc[9]);
     const amrex::Real qr =
       k_f *
@@ -6212,7 +6212,7 @@ productionRate_light(
 
   {
     // reaction 30:  CH2O + O2 <=> HCO + HO2
-    const amrex::Real k_f = 100000000 * exp(-(20128.6666321888) * invT);
+    const amrex::Real k_f = 100000000 * exp(-(20128.7813399506) * invT);
     const amrex::Real qf = k_f * (sc[3] * sc[11]);
     const amrex::Real qr =
       k_f *
@@ -6227,7 +6227,7 @@ productionRate_light(
 
   {
     // reaction 31:  H + O2 <=> O + OH
-    const amrex::Real k_f = 83000000 * exp(-(7252.86180424342) * invT);
+    const amrex::Real k_f = 83000000 * exp(-(7252.90313631771) * invT);
     const amrex::Real qf = k_f * (sc[1] * sc[3]);
     const amrex::Real qr =
       k_f *
@@ -6243,7 +6243,7 @@ productionRate_light(
 
   {
     // reaction 32:  H + HO2 <=> H2O + O
-    const amrex::Real k_f = 3970000 * exp(-(337.658382754967) * invT);
+    const amrex::Real k_f = 3970000 * exp(-(337.660306977672) * invT);
     const amrex::Real qf = k_f * (sc[1] * sc[6]);
     const amrex::Real qr =
       k_f *
@@ -6259,7 +6259,7 @@ productionRate_light(
 
   {
     // reaction 33:  H + HO2 <=> H2 + O2
-    const amrex::Real k_f = 28000000 * exp(-(537.435399079441) * invT);
+    const amrex::Real k_f = 28000000 * exp(-(537.438461776682) * invT);
     const amrex::Real qf = k_f * (sc[1] * sc[6]);
     const amrex::Real qr =
       k_f *
@@ -6275,7 +6275,7 @@ productionRate_light(
 
   {
     // reaction 34:  H + HO2 <=> 2 OH
-    const amrex::Real k_f = 134000000 * exp(-(319.542582785997) * invT);
+    const amrex::Real k_f = 134000000 * exp(-(319.544403771716) * invT);
     const amrex::Real qf = k_f * (sc[1] * sc[6]);
     const amrex::Real qr =
       k_f *
@@ -6291,7 +6291,7 @@ productionRate_light(
   {
     // reaction 35:  CH4 + H <=> CH3 + H2
     const amrex::Real k_f =
-      660 * exp((1.62) * logT - (5454.86865732316) * invT);
+      660 * exp((1.62) * logT - (5454.89974312662) * invT);
     const amrex::Real qf = k_f * (sc[1] * sc[8]);
     const amrex::Real qr =
       k_f *
@@ -6323,7 +6323,7 @@ productionRate_light(
   {
     // reaction 37:  CH2O + H <=> H2 + HCO
     const amrex::Real k_f =
-      23000 * exp((1.05) * logT - (1648.03458051046) * invT);
+      23000 * exp((1.05) * logT - (1648.04397220846) * invT);
     const amrex::Real qf = k_f * (sc[1] * sc[11]);
     const amrex::Real qr =
       k_f *
@@ -6383,7 +6383,7 @@ productionRate_light(
   {
     // reaction 41:  H2 + OH <=> H + H2O
     const amrex::Real k_f =
-      216 * exp((1.51) * logT - (1726.03316371019) * invT);
+      216 * exp((1.51) * logT - (1726.04299990077) * invT);
     const amrex::Real qf = k_f * (sc[0] * sc[4]);
     const amrex::Real qr =
       k_f *
@@ -6400,7 +6400,7 @@ productionRate_light(
   {
     // reaction 42:  2 OH <=> H2O + O
     const amrex::Real k_f =
-      0.0357 * exp((2.4) * logT - (-1061.78716484796) * invT);
+      0.0357 * exp((2.4) * logT - (-1061.7932156824) * invT);
     const amrex::Real qf = k_f * ((sc[4] * sc[4]));
     const amrex::Real qr =
       k_f *
@@ -6415,7 +6415,7 @@ productionRate_light(
 
   {
     // reaction 43:  HO2 + OH <=> H2O + O2
-    const amrex::Real k_f = 29000000 * exp(-(-251.60833290236) * invT);
+    const amrex::Real k_f = 29000000 * exp(-(-251.609766749383) * invT);
     const amrex::Real qf = k_f * (sc[4] * sc[6]);
     const amrex::Real qr =
       k_f *
@@ -6461,7 +6461,7 @@ productionRate_light(
 
   {
     // reaction 46:  CH3 + OH <=> CH2 + H2O
-    const amrex::Real k_f = 56 * exp((1.6) * logT - (2727.43432866158) * invT);
+    const amrex::Real k_f = 56 * exp((1.6) * logT - (2727.44987156331) * invT);
     const amrex::Real qf = k_f * (sc[4] * sc[7]);
     const amrex::Real qr =
       k_f *
@@ -6491,7 +6491,7 @@ productionRate_light(
 
   {
     // reaction 48:  CH4 + OH <=> CH3 + H2O
-    const amrex::Real k_f = 100 * exp((1.6) * logT - (1570.03599731073) * invT);
+    const amrex::Real k_f = 100 * exp((1.6) * logT - (1570.04494451615) * invT);
     const amrex::Real qf = k_f * (sc[4] * sc[8]);
     const amrex::Real qr =
       k_f *
@@ -6508,7 +6508,7 @@ productionRate_light(
   {
     // reaction 49:  CO + OH <=> CO2 + H
     const amrex::Real k_f =
-      47.6 * exp((1.228) * logT - (35.2251666063304) * invT);
+      47.6 * exp((1.228) * logT - (35.2253673449136) * invT);
     const amrex::Real qf = k_f * (sc[4] * sc[9]);
     const amrex::Real qr =
       k_f *
@@ -6540,7 +6540,7 @@ productionRate_light(
   {
     // reaction 51:  CH2O + OH <=> H2O + HCO
     const amrex::Real k_f =
-      3430 * exp((1.18) * logT - (-224.93784961471) * invT);
+      3430 * exp((1.18) * logT - (-224.939131473948) * invT);
     const amrex::Real qf = k_f * (sc[4] * sc[11]);
     const amrex::Real qr =
       k_f *
@@ -6601,7 +6601,7 @@ productionRate_light(
 
   {
     // reaction 55:  CO + HO2 <=> CO2 + OH
-    const amrex::Real k_f = 150000000 * exp(-(11875.9133129914) * invT);
+    const amrex::Real k_f = 150000000 * exp(-(11875.9809905709) * invT);
     const amrex::Real qf = k_f * (sc[6] * sc[9]);
     const amrex::Real qr =
       k_f *
@@ -6617,7 +6617,7 @@ productionRate_light(
 
   {
     // reaction 56:  CH2 + O2 <=> HCO + OH
-    const amrex::Real k_f = 13200000 * exp(-(754.82499870708) * invT);
+    const amrex::Real k_f = 13200000 * exp(-(754.829300248149) * invT);
     const amrex::Real qf = k_f * (sc[3] * sc_qss[0]);
     const amrex::Real qr =
       k_f *
@@ -6631,7 +6631,7 @@ productionRate_light(
 
   {
     // reaction 57:  CH2 + H2 <=> CH3 + H
-    const amrex::Real k_f = 0.5 * exp((2) * logT - (3638.25649376812) * invT);
+    const amrex::Real k_f = 0.5 * exp((2) * logT - (3638.27722719608) * invT);
     const amrex::Real qf = k_f * (sc[0] * sc_qss[0]);
     const amrex::Real qr =
       k_f *
@@ -6646,7 +6646,7 @@ productionRate_light(
 
   {
     // reaction 58:  CH2 + CH4 <=> 2 CH3
-    const amrex::Real k_f = 2.46 * exp((2) * logT - (4161.60182620503) * invT);
+    const amrex::Real k_f = 2.46 * exp((2) * logT - (4161.62554203479) * invT);
     const amrex::Real qf = k_f * (sc[8] * sc_qss[0]);
     const amrex::Real qr =
       k_f *
@@ -6660,7 +6660,7 @@ productionRate_light(
 
   {
     // reaction 59:  CH2(S) + N2 <=> CH2 + N2
-    const amrex::Real k_f = 15000000 * exp(-(301.929999482832) * invT);
+    const amrex::Real k_f = 15000000 * exp(-(301.93172009926) * invT);
     const amrex::Real qf = k_f * (sc[12] * sc_qss[1]);
     const amrex::Real qr =
       k_f *
@@ -6734,7 +6734,7 @@ productionRate_light(
 
   {
     // reaction 64:  CH2(S) + CH4 <=> 2 CH3
-    const amrex::Real k_f = 16000000 * exp(-(-286.83349950869) * invT);
+    const amrex::Real k_f = 16000000 * exp(-(-286.835134094297) * invT);
     const amrex::Real qf = k_f * (sc[8] * sc_qss[1]);
     const amrex::Real qr =
       k_f *
@@ -6791,7 +6791,7 @@ productionRate_light(
 
   {
     // reaction 68:  CH3 + O2 <=> CH2O + OH
-    const amrex::Real k_f = 36000 * exp(-(4498.75699229419) * invT);
+    const amrex::Real k_f = 36000 * exp(-(4498.78262947897) * invT);
     const amrex::Real qf = k_f * (sc[3] * sc[7]);
     const amrex::Real qr =
       k_f *
@@ -6823,7 +6823,7 @@ productionRate_light(
   {
     // reaction 70:  CH2O + CH3 <=> CH4 + HCO
     const amrex::Real k_f =
-      0.00332 * exp((2.81) * logT - (2948.84966161566) * invT);
+      0.00332 * exp((2.81) * logT - (2948.86646630277) * invT);
     const amrex::Real qf = k_f * (sc[7] * sc[11]);
     const amrex::Real qr =
       k_f *
@@ -6838,7 +6838,7 @@ productionRate_light(
 
   {
     // reaction 71:  HCO + O2 <=> CO + HO2
-    const amrex::Real k_f = 7600000 * exp(-(201.286666321888) * invT);
+    const amrex::Real k_f = 7600000 * exp(-(201.287813399506) * invT);
     const amrex::Real qf = k_f * (sc[3] * sc_qss[2]);
     const amrex::Real qr =
       k_f *
@@ -6853,7 +6853,7 @@ productionRate_light(
 
   {
     // reaction 72:  CH2OH + O2 <=> CH2O + HO2
-    const amrex::Real k_f = 18000000 * exp(-(452.894999224248) * invT);
+    const amrex::Real k_f = 18000000 * exp(-(452.897580148889) * invT);
     const amrex::Real qf = k_f * (sc[3] * sc_qss[3]);
     const amrex::Real qr =
       k_f *
@@ -7091,7 +7091,7 @@ aJacobian(amrex::Real* J, amrex::Real* sc, amrex::Real T, const int consP)
   const amrex::Real logT = log(T);
 
   // reference concentration: P_atm / (RT) in inverse mol/m^3
-  const amrex::Real refC = 101325 / 8.31446 * invT;
+  const amrex::Real refC = 101325 / 8.31446261815324 * invT;
   const amrex::Real refCinv = 1 / refC;
   amrex::Real g_RT[13];
   amrex::Real h_RT[13];
@@ -7122,2721 +7122,2734 @@ aJacobian(amrex::Real* J, amrex::Real* sc, amrex::Real T, const int consP)
   // Species terms
   const amrex::Real x2 =
     sc[11] + sc[12] + sc[1] + sc[2] + sc[4] + sc[6] + sc[7] + 2 * sc[8];
-  const amrex::Real x6 = 2 * sc[0] + 2 * sc[10] + sc[3] + 1.5 * sc[9] + x2;
+  amrex::Real x6 = 2 * sc[0] + 2 * sc[10] + sc[3] + 1.5 * sc[9] + x2;
   const amrex::Real x7 = 6.0 * sc[5] + x6;
   amrex::Real x10 = -g_RT[11] - g_RT[1] + g_RT_qss[3];
-  amrex::Real x11 = -3286.0048277048199 * invT - 4.82 * logT;
+  amrex::Real x11 = -3286.0235537469407 * invT - 4.82 * logT;
   amrex::Real x15 = 1.27e+20 * x7 * exp(x11);
   amrex::Real x17 = log(
-    exp(-4160.0 * invT) + 0.2813 * exp(-0.0097087378640776708 * T) +
+    exp(-4160.0 * invT) + 0.2813 * exp(-0.0097087378640776691 * T) +
     0.7187 * exp(-0.00077459333849728897 * T));
-  amrex::Real x20 = -0.29097730287517898 * x17 +
-                    0.43429448190325198 * log(x15 / kf_qss[2]) - 0.4;
-  amrex::Real x22 = -0.55155399201712996 * x17 - 0.14 * x20 + 0.75;
-  amrex::Real x25 = ((x20) * (x20)) / ((x22) * (x22)) + 1.0;
+  amrex::Real x20 = -0.2909773028751787 * x17 +
+                    0.43429448190325176 * log(x15 / kf_qss[2]) - 0.4;
+  amrex::Real x25 =
+    ((x20) * (x20)) / ((-0.55155399201712974 * x17 - 0.14 * x20 + 0.75) *
+                       (-0.55155399201712974 * x17 - 0.14 * x20 + 0.75)) +
+    1.0;
   amrex::Real x28 =
-    exp(M_LN10 * (0.43429448190325198 * x17 / x25)) / (1.0 + x15 / kf_qss[2]);
+    exp(M_LN10 * (0.43429448190325176 * x17 / x25)) / (1.0 + x15 / kf_qss[2]);
   amrex::Real x30 = refC * x28 * exp(x10 + x11);
   amrex::Real x33 = -kf_qss[10] * sc[2] - kf_qss[14] * sc[1] -
                     kf_qss[15] * sc[1] - kf_qss[16] * sc[1] -
                     kf_qss[23] * sc[4] - kf_qss[40] * sc[3] -
                     1.27e+20 * x30 * x7 + 10.0e-13;
-  const amrex::Real x37 = exp(-g_RT[1] + g_RT[5] + g_RT_qss[1] - g_RT_qss[3]);
-  const amrex::Real x41 = (kf_qss[16] * sc[5] * x37 + 10.0e-13) / x33;
-  amrex::Real x43 = g_RT[4] - g_RT[5];
-  const amrex::Real x45 = exp(-g_RT[7] + g_RT_qss[1] - x43);
-  amrex::Real x50 =
-    -kf_qss[16] * sc[5] * x37 - kf_qss[18] * sc[4] - kf_qss[20] * sc[5] * x45 -
+  const amrex::Real x38 = exp(-g_RT[1] + g_RT[5] + g_RT_qss[1] - g_RT_qss[3]);
+  const amrex::Real x42 = (kf_qss[16] * sc[5] * x38 + 10.0e-13) / x33;
+  amrex::Real x44 = g_RT[4] - g_RT[5];
+  const amrex::Real x46 = exp(-g_RT[7] + g_RT_qss[1] - x44);
+  amrex::Real x51 =
+    -kf_qss[16] * sc[5] * x38 - kf_qss[18] * sc[4] - kf_qss[20] * sc[5] * x46 -
     kf_qss[28] * sc[12] - kf_qss[29] * sc[3] - kf_qss[30] * sc[3] -
     kf_qss[31] * sc[0] - kf_qss[32] * sc[5] - kf_qss[33] * sc[8] -
     kf_qss[34] * sc[9] - kf_qss[35] * sc[10] - kf_qss[36] * sc[10] -
     kf_qss[6] * sc[2] + 10.0e-13;
-  amrex::Real x52 = kf_qss[16] * sc[1] + 10.0e-13;
-  amrex::Real x53 = x52 / x50;
-  amrex::Real x54 = -x41 * x53 + 1;
-  amrex::Real x57 = exp(g_RT_qss[0] - g_RT_qss[1]);
-  amrex::Real x66 = kf_qss[28] * sc[12] * x57 + kf_qss[32] * sc[5] * x57 +
-                    kf_qss[34] * sc[9] * x57 + kf_qss[35] * sc[10] * x57 +
+  amrex::Real x53 = kf_qss[16] * sc[1] + 10.0e-13;
+  amrex::Real x54 = x53 / x51;
+  amrex::Real x55 = -x42 * x54 + 1;
+  amrex::Real x58 = exp(g_RT_qss[0] - g_RT_qss[1]);
+  amrex::Real x65 = kf_qss[28] * sc[12] * x58 + kf_qss[32] * sc[5] * x58 +
+                    kf_qss[34] * sc[9] * x58 + kf_qss[35] * sc[10] * x58 +
                     10.0e-13;
-  const amrex::Real x68 = x66 / (x50 * x54);
-  amrex::Real x70 = -717.08374877172605 * invT - 2.57 * logT;
-  amrex::Real x72 = 1350000000000.0 * exp(x70);
-  amrex::Real x75 = log(
-    exp(-6570.0 * invT) + 0.2176 * exp(-0.0036900369003690001 * T) +
-    0.7824 * exp(-0.00036297640653357502 * T));
-  amrex::Real x78 = -0.29097730287517898 * x75 +
-                    0.43429448190325198 * log(x7 * x72 / kf_qss[1]) - 0.4;
-  amrex::Real x81 = -0.55155399201712996 * x75 - 0.14 * x78 + 0.75;
-  amrex::Real x84 = ((x78) * (x78)) / ((x81) * (x81)) + 1.0;
-  amrex::Real x87 = exp(M_LN10 * (0.43429448190325198 * x75 / x84)) /
-                    (1.0 + x7 * x72 / kf_qss[1]);
-  amrex::Real x92 = g_RT[2] - g_RT[4];
-  amrex::Real x94 = g_RT[11] - g_RT_qss[2];
-  amrex::Real x97 = g_RT[7] - g_RT[8];
-  amrex::Real x103 =
+  const amrex::Real x67 = x65 / (x51 * x55);
+  const amrex::Real x68 = g_RT[7] - g_RT[8];
+  amrex::Real x70 = g_RT[11] - g_RT_qss[2];
+  amrex::Real x79 =
     kf_qss[25] * exp(-g_RT[3] + g_RT[4] - g_RT_qss[0] + g_RT_qss[2]);
-  const amrex::Real x107 = exp(g_RT[1] - g_RT[2] - g_RT_qss[0] + g_RT_qss[2]);
-  amrex::Real x110 = g_RT[3] - g_RT[6];
-  amrex::Real x117 = -g_RT[0] + g_RT[11] + g_RT[1] - g_RT_qss[2];
-  amrex::Real x119 = -kf_qss[11] * sc[6] * exp(-x110 - x94) -
-                     kf_qss[12] * sc[1] - kf_qss[13] * sc[0] * exp(-x117) -
-                     kf_qss[21] * sc[4] - kf_qss[22] * sc[5] * exp(-x43 - x94) -
-                     kf_qss[37] * sc[7] - kf_qss[38] * sc[8] * exp(-x94 - x97) -
+  const amrex::Real x83 = exp(g_RT[1] - g_RT[2] - g_RT_qss[0] + g_RT_qss[2]);
+  amrex::Real x88 = g_RT[3] - g_RT[6];
+  amrex::Real x91 = -717.0878352357413 * invT - 2.57 * logT;
+  amrex::Real x93 = 1350000000000.0 * exp(x91);
+  amrex::Real x96 = log(
+    exp(-6570.0 * invT) + 0.2176 * exp(-0.0036900369003690036 * T) +
+    0.7824 * exp(-0.00036297640653357529 * T));
+  amrex::Real x99 = -0.2909773028751787 * x96 +
+                    0.43429448190325176 * log(x7 * x93 / kf_qss[1]) - 0.4;
+  amrex::Real x102 = -0.55155399201712974 * x96 - 0.14 * x99 + 0.75;
+  amrex::Real x105 = 1.0 + ((x99) * (x99)) / ((x102) * (x102));
+  amrex::Real x109 = exp(M_LN10 * (0.43429448190325176 * x96 / x105)) /
+                     (1.0 + x7 * x93 / kf_qss[1]);
+  amrex::Real x114 = g_RT[2] - g_RT[4];
+  amrex::Real x118 = -g_RT[0] + g_RT[11] + g_RT[1] - g_RT_qss[2];
+  amrex::Real x120 = -kf_qss[11] * sc[6] * exp(-x70 - x88) -
+                     kf_qss[12] * sc[1] - kf_qss[13] * sc[0] * exp(-x118) -
+                     kf_qss[21] * sc[4] - kf_qss[22] * sc[5] * exp(-x44 - x70) -
+                     kf_qss[37] * sc[7] - kf_qss[38] * sc[8] * exp(-x68 - x70) -
                      kf_qss[39] * sc[3] - kf_qss[3] * sc[5] - kf_qss[4] * x6 -
-                     kf_qss[5] * sc[1] * x107 - kf_qss[7] * sc[2] -
-                     kf_qss[8] * sc[2] - kf_qss[9] * sc[4] * exp(-x92 - x94) -
-                     sc[1] * x7 * x72 * x87 - sc[4] * x103 + 10.0e-13;
-  const amrex::Real x124 =
-    (kf_qss[25] * sc[3] + kf_qss[5] * sc[2] + 10.0e-13) / x119;
-  amrex::Real x128 =
-    3200000000000000.0 * exp(-618.95649893980499 * invT - 3.14 * logT);
-  amrex::Real x131 = log(
-    exp(-5590.0 * invT) + 0.32 * exp(-0.012820512820512799 * T) +
-    0.68 * exp(-0.00050125313283207998 * T));
-  amrex::Real x134 = -0.29097730287517898 * x131 +
-                     0.43429448190325198 * log(x128 * x7 / kf_qss[0]) - 0.4;
-  amrex::Real x139 = 2.3703703703703702 * ((x134) * (x134)) /
-                     ((-0.73540532269 * x131 - 0.18666666666666668 * x134 + 1) *
-                      (-0.73540532269 * x131 - 0.18666666666666668 * x134 + 1) *
-                      (-0.73540532269 * x131 - 0.18666666666666668 * x134 + 1));
-  amrex::Real x140 = 0.43429448190325198 / x7;
-  amrex::Real x143 =
-    1.7777777777777777 * x134 /
-    ((-0.73540532268950665 * x131 - 0.18666666666666668 * x134 + 1) *
-     (-0.73540532268950665 * x131 - 0.18666666666666668 * x134 + 1));
-  x134 = 1.7777777777777777 * ((x134) * (x134)) /
-           ((-0.73540532268950665 * x131 - 0.18666666666666668 * x134 + 1) *
-            (-0.73540532268950665 * x131 - 0.18666666666666668 * x134 + 1)) +
-         1.0;
-  amrex::Real x149 = exp(M_LN10 * (0.43429448190325198 * x131 / x134)) /
-                     (1.0 + x128 * x7 / kf_qss[0]);
-  amrex::Real x154 = sc[1] * x128 * x131 * x149 * x7 / ((x134) * (x134));
-  amrex::Real x155 =
-    sc[1] * x149 * exp(-618.95649893980499 * invT - 3.14 * logT);
-  amrex::Real x156 = exp(M_LN10 * (0.43429448190325198 * x131 / x134)) * x7 /
-                     (kf_qss[0] * ((1.0 + x128 * x7 / kf_qss[0]) *
-                                   (1.0 + x128 * x7 / kf_qss[0])));
+                     kf_qss[5] * sc[1] * x83 - kf_qss[7] * sc[2] -
+                     kf_qss[8] * sc[2] - kf_qss[9] * sc[4] * exp(-x114 - x70) -
+                     sc[1] * x109 * x7 * x93 - sc[4] * x79 + 10.0e-13;
+  const amrex::Real x125 =
+    (kf_qss[25] * sc[3] + kf_qss[5] * sc[2] + 10.0e-13) / x120;
+  amrex::Real x129 = 0.43429448190325176 / x7;
+  amrex::Real x132 =
+    3200000000000000.0 * exp(-618.9600262034819 * invT - 3.14 * logT);
+  amrex::Real x135 = log(
+    exp(-5590.0 * invT) + 0.32 * exp(-0.01282051282051282 * T) +
+    0.68 * exp(-0.00050125313283208019 * T));
+  amrex::Real x138 = -0.2909773028751787 * x135 +
+                     0.43429448190325176 * log(x132 * x7 / kf_qss[0]) - 0.4;
+  amrex::Real x141 = -0.55155399201712974 * x135 - 0.14 * x138 + 0.75;
+  amrex::Real x143 = x129 * ((x138) * (x138)) / ((x141) * (x141) * (x141));
+  amrex::Real x145 = x129 * x138 / ((x141) * (x141));
+  amrex::Real x147 = ((x138) * (x138)) / ((x141) * (x141)) + 1.0;
+  amrex::Real x150 = exp(M_LN10 * (0.43429448190325176 * x135 / x147)) /
+                     (1.0 + x132 * x7 / kf_qss[0]);
+  amrex::Real x155 = sc[1] * x132 * x135 * x150 * x7 / ((x147) * (x147));
+  amrex::Real x156 =
+    sc[1] * x150 * exp(-618.9600262034819 * invT - 3.14 * logT);
+  amrex::Real x157 = exp(M_LN10 * (0.43429448190325176 * x135 / x147)) * x7 /
+                     (kf_qss[0] * ((1.0 + x132 * x7 / kf_qss[0]) *
+                                   (1.0 + x132 * x7 / kf_qss[0])));
   amrex::Real x161 =
-    2.048e+31 * sc[1] * x156 * exp(-1237.91299787961 * invT - 6.28 * logT) +
-    x154 * (0.56 * x139 * x140 + 4.0 * x140 * x143) - 6400000000000000.0 * x155;
-  amrex::Real x165 = -kf_qss[17] * sc[4] -
-                     kf_qss[19] * sc[5] * exp(-g_RT[7] + g_RT_qss[0] - x43) -
+    sc[1] * x157 * exp(-1237.9200524069638 * invT - 6.28 * logT);
+  amrex::Real x162 = x155 * (0.56 * x143 + 4.0 * x145) -
+                     6400000000000000.0 * x156 + 2.048e+31 * x161;
+  amrex::Real x166 = -kf_qss[17] * sc[4] -
+                     kf_qss[19] * sc[5] * exp(-g_RT[7] + g_RT_qss[0] - x44) -
                      kf_qss[24] * sc[6] - kf_qss[25] * sc[3] -
                      kf_qss[26] * sc[0] - kf_qss[27] * sc[8] -
-                     kf_qss[28] * sc[12] * x57 - kf_qss[32] * sc[5] * x57 -
-                     kf_qss[34] * sc[9] * x57 - kf_qss[35] * sc[10] * x57 -
-                     kf_qss[5] * sc[2] - sc[1] * x128 * x149 * x7 + 10.0e-13;
-  amrex::Real x167 = kf_qss[5] * sc[1] * x107 + sc[4] * x103 + 10.0e-13;
-  amrex::Real x169 = x124 * x167 / ((x165) * (x165));
-  amrex::Real x174 = x140 * ((x78) * (x78)) / ((x81) * (x81) * (x81));
-  amrex::Real x175 = x78 / ((x81) * (x81));
-  amrex::Real x179 = sc[1] * x7 * x72 * x75 * x87 / ((x84) * (x84));
-  amrex::Real x180 =
-    exp(M_LN10 * (0.43429448190325198 * x75 / x84)) * x7 /
-    (kf_qss[1] * ((1.0 + x7 * x72 / kf_qss[1]) * (1.0 + x7 * x72 / kf_qss[1])));
-  amrex::Real x183 =
-    sc[1] * x180 * exp(-1434.1674975434501 * invT - 5.14 * logT);
-  amrex::Real x185 = -2 * kf_qss[4] - 2700000000000.0 * sc[1] * x87 * exp(x70) +
-                     x179 * (4.0 * x140 * x175 + 0.56 * x174) +
-                     3.645e+24 * x183;
-  amrex::Real x186 = -kf_qss[13] * exp(-x117) + x185;
-  amrex::Real x188 = x167 / x165;
+                     kf_qss[28] * sc[12] * x58 - kf_qss[32] * sc[5] * x58 -
+                     kf_qss[34] * sc[9] * x58 - kf_qss[35] * sc[10] * x58 -
+                     kf_qss[5] * sc[2] - sc[1] * x132 * x150 * x7 + 10.0e-13;
+  amrex::Real x168 = kf_qss[5] * sc[1] * x83 + sc[4] * x79 + 10.0e-13;
+  amrex::Real x170 = x125 * x168 / ((x166) * (x166));
+  amrex::Real x175 = x129 * ((x99) * (x99)) / ((x102) * (x102) * (x102));
+  amrex::Real x176 = x129 * x99 / ((x102) * (x102));
+  amrex::Real x179 = sc[1] * x109 * x7 * x93 * x96 / ((x105) * (x105));
+  amrex::Real x181 =
+    exp(M_LN10 * (0.43429448190325176 * x96 / x105)) * x7 /
+    (kf_qss[1] * ((1.0 + x7 * x93 / kf_qss[1]) * (1.0 + x7 * x93 / kf_qss[1])));
+  amrex::Real x184 =
+    sc[1] * x181 * exp(-1434.1756704714826 * invT - 5.14 * logT);
+  amrex::Real x185 = -2 * kf_qss[4] -
+                     2700000000000.0 * sc[1] * x109 * exp(x91) +
+                     x179 * (0.56 * x175 + 4.0 * x176) + 3.645e+24 * x184;
+  amrex::Real x186 = -kf_qss[13] * exp(-x118) + x185;
+  amrex::Real x188 = x168 / x166;
   amrex::Real x191 = x188 *
                      (kf_qss[25] * sc[3] + kf_qss[5] * sc[2] + 10.0e-13) /
-                     ((x119) * (x119));
-  amrex::Real x195 = x140 * ((x20) * (x20)) / ((x22) * (x22) * (x22));
-  amrex::Real x197 = x140 * x20 / ((x22) * (x22));
-  amrex::Real x200 = 1.27e+20 * x17 * x30 * x7 / ((x25) * (x25));
-  amrex::Real x202 =
-    exp(M_LN10 * (0.43429448190325198 * x17 / x25)) /
+                     ((x120) * (x120));
+  amrex::Real x193 = x129 * ((x20) * (x20)) /
+                     ((-0.55155399201712974 * x17 - 0.14 * x20 + 0.75) *
+                      (-0.55155399201712974 * x17 - 0.14 * x20 + 0.75) *
+                      (-0.55155399201712974 * x17 - 0.14 * x20 + 0.75));
+  x20 = x129 * x20 /
+        ((-0.55155399201712974 * x17 - 0.14 * x20 + 0.75) *
+         (-0.55155399201712974 * x17 - 0.14 * x20 + 0.75));
+  amrex::Real x197 = 1.27e+20 * x17 * x30 * x7 / ((x25) * (x25));
+  amrex::Real x198 =
+    exp(M_LN10 * (0.43429448190325176 * x17 / x25)) /
     (kf_qss[2] * ((1.0 + x15 / kf_qss[2]) * (1.0 + x15 / kf_qss[2])));
-  const amrex::Real x204 = refC * x7;
-  amrex::Real x205 = x204 * exp(-6572.0096554096399 * invT - 9.64 * logT + x10);
-  amrex::Real x207 = -2.54e+20 * refC * x28 * exp(x10 + x11) +
-                     x200 * (0.56 * x195 + 4.0 * x197) +
-                     3.2258e+40 * x202 * x205;
-  amrex::Real x209 = (kf_qss[16] * sc[5] * x37 + 10.0e-13) / ((x33) * (x33));
-  amrex::Real x210 = x209 * x53;
-  amrex::Real x214 = x41 * x52 / ((x50) * (x50));
-  amrex::Real x217 = kf_qss[28] * sc[12] + kf_qss[32] * sc[5] +
+  amrex::Real x201 =
+    refC * x7 * exp(-6572.0471074938814 * invT - 9.64 * logT + x10);
+  amrex::Real x203 = x197 * (0.56 * x193 + 4.0 * x20) +
+                     3.2258e+40 * x198 * x201 - 2.54e+20 * x30;
+  amrex::Real x205 = (kf_qss[16] * sc[5] * x38 + 10.0e-13) / ((x33) * (x33));
+  amrex::Real x206 = x205 * x54;
+  amrex::Real x210 = x42 * x53 / ((x51) * (x51));
+  amrex::Real x213 = kf_qss[28] * sc[12] + kf_qss[32] * sc[5] +
                      kf_qss[34] * sc[9] + kf_qss[35] * sc[10] + 10.0e-13;
-  amrex::Real x220 = x217 * x66 / (x165 * x50 * ((x54) * (x54)));
-  amrex::Real x222 = x217 * x68 / ((x165) * (x165));
-  amrex::Real x223 = x217 / (x165 * x54);
-  amrex::Real x225 = x223 * x66 / ((x50) * (x50));
-  const amrex::Real x228 = exp(g_RT[11] - g_RT_qss[3] - x43);
-  amrex::Real x232 = kf_qss[40] * exp(g_RT[11] - g_RT_qss[3] - x110);
-  const amrex::Real x234 = exp(g_RT[0] + g_RT[11] - g_RT[1] - g_RT_qss[3]);
-  const amrex::Real x237 = exp(g_RT[11] - g_RT_qss[3] - x92);
-  const amrex::Real x245 = exp(-g_RT[1] + g_RT[4] + g_RT[7] - g_RT_qss[3]);
-  amrex::Real x248 =
-    kf_qss[10] * sc[11] * sc[4] * x237 + kf_qss[14] * sc[0] * sc[11] * x234 +
-    kf_qss[15] * sc[4] * sc[7] * x245 + kf_qss[23] * sc[11] * sc[5] * x228 +
-    sc[11] * sc[1] * x15 * x28 + sc[11] * sc[6] * x232 + 10.0e-13;
-  const amrex::Real x249 = x248 / x33;
-  const amrex::Real x253 = exp(-g_RT[3] + g_RT[5] + g_RT[9] - g_RT_qss[1]);
-  const amrex::Real x256 = exp(g_RT[0] - g_RT[2] + g_RT[9] - g_RT_qss[1]);
-  const amrex::Real x260 = -2.0 * g_RT[7] + g_RT[8];
-  const amrex::Real x265 = exp(g_RT[11] + g_RT[1] - g_RT[4] - g_RT_qss[1]);
-  const amrex::Real x269 = refCinv * sc[1];
-  const amrex::Real x270 = sc[9] * x269;
-  const amrex::Real x271 =
+  amrex::Real x216 = x213 * x65 / (x166 * x51 * ((x55) * (x55)));
+  amrex::Real x217 = x213 / (x166 * x55);
+  amrex::Real x219 = x217 * x65 / ((x51) * (x51));
+  amrex::Real x221 = x213 * x67 / ((x166) * (x166));
+  const amrex::Real x224 = exp(g_RT[11] - g_RT_qss[3] - x114);
+  amrex::Real x228 = kf_qss[40] * exp(g_RT[11] - g_RT_qss[3] - x88);
+  const amrex::Real x230 = exp(g_RT[0] + g_RT[11] - g_RT[1] - g_RT_qss[3]);
+  const amrex::Real x235 = exp(-g_RT[1] + g_RT[4] + g_RT[7] - g_RT_qss[3]);
+  const amrex::Real x241 = exp(g_RT[11] - g_RT_qss[3] - x44);
+  amrex::Real x244 =
+    kf_qss[10] * sc[11] * sc[4] * x224 + kf_qss[14] * sc[0] * sc[11] * x230 +
+    kf_qss[15] * sc[4] * sc[7] * x235 + kf_qss[23] * sc[11] * sc[5] * x241 +
+    sc[11] * sc[1] * x15 * x28 + sc[11] * sc[6] * x228 + 10.0e-13;
+  const amrex::Real x245 = x244 / x33;
+  const amrex::Real x248 = exp(-g_RT[3] + g_RT[5] + g_RT[9] - g_RT_qss[1]);
+  const amrex::Real x251 = exp(g_RT[0] - g_RT[2] + g_RT[9] - g_RT_qss[1]);
+  const amrex::Real x255 = -2.0 * g_RT[7] + g_RT[8];
+  const amrex::Real x260 = exp(g_RT[11] + g_RT[1] - g_RT[4] - g_RT_qss[1]);
+  const amrex::Real x264 = refCinv * sc[1];
+  const amrex::Real x265 = sc[9] * x264;
+  const amrex::Real x266 =
     exp(g_RT[1] - g_RT[3] + g_RT[4] + g_RT[9] - g_RT_qss[1]);
-  const amrex::Real x274 = exp(-g_RT[10] + g_RT[11] + g_RT[9] - g_RT_qss[1]);
-  const amrex::Real x279 = exp(-g_RT[0] + g_RT[1] + g_RT[7] - g_RT_qss[1]);
-  amrex::Real x282 =
-    kf_qss[18] * sc[11] * sc[1] * x265 + kf_qss[20] * sc[4] * sc[7] +
-    kf_qss[29] * sc[4] * x270 * x271 + kf_qss[30] * sc[5] * sc[9] * x253 +
-    kf_qss[31] * sc[1] * sc[7] * x279 +
-    kf_qss[33] * ((sc[7]) * (sc[7])) * exp(-g_RT_qss[1] - x260) +
-    kf_qss[36] * sc[11] * sc[9] * x274 + kf_qss[6] * sc[0] * sc[9] * x256 +
+  const amrex::Real x269 = exp(-g_RT[10] + g_RT[11] + g_RT[9] - g_RT_qss[1]);
+  const amrex::Real x274 = exp(-g_RT[0] + g_RT[1] + g_RT[7] - g_RT_qss[1]);
+  amrex::Real x277 =
+    kf_qss[18] * sc[11] * sc[1] * x260 + kf_qss[20] * sc[4] * sc[7] +
+    kf_qss[29] * sc[4] * x265 * x266 + kf_qss[30] * sc[5] * sc[9] * x248 +
+    kf_qss[31] * sc[1] * sc[7] * x274 +
+    kf_qss[33] * ((sc[7]) * (sc[7])) * exp(-g_RT_qss[1] - x255) +
+    kf_qss[36] * sc[11] * sc[9] * x269 + kf_qss[6] * sc[0] * sc[9] * x251 +
     10.0e-13;
-  amrex::Real x283 = x249 * x53 - x282 / x50;
-  amrex::Real x286 = -g_RT[9] + g_RT_qss[2];
-  const amrex::Real x287 = exp(-x286 - x43);
-  const amrex::Real x292 = exp(g_RT[0] - g_RT[1] + g_RT[9] - g_RT_qss[2]);
-  const amrex::Real x295 = exp(-x286 - x92);
-  amrex::Real x299 = exp(g_RT[1] - x286);
-  amrex::Real x304 = kf_qss[39] * exp(-x110 - x286);
-  const amrex::Real x308 = exp(g_RT[10] + g_RT[1] - g_RT[2] - g_RT_qss[2]);
-  const amrex::Real x311 = exp(-x286 - x97);
-  const amrex::Real x314 = refC * sc[11];
-  amrex::Real x316 = g_RT[11] - g_RT[1] - g_RT_qss[2];
-  amrex::Real x321 =
-    kf_qss[11] * sc[11] * sc[3] + kf_qss[12] * sc[0] * sc[9] * x292 +
-    kf_qss[13] * sc[11] * sc[1] + kf_qss[21] * sc[5] * sc[9] * x287 +
-    kf_qss[22] * sc[11] * sc[4] + kf_qss[37] * sc[8] * sc[9] * x311 +
-    kf_qss[38] * sc[11] * sc[7] + kf_qss[3] * sc[5] * x270 * x299 +
-    kf_qss[4] * x270 * x299 * x6 + kf_qss[7] * sc[4] * sc[9] * x295 +
-    kf_qss[8] * sc[10] * sc[1] * x308 + kf_qss[9] * sc[11] * sc[2] +
-    sc[6] * sc[9] * x304 + 1350000000000.0 * x314 * x7 * x87 * exp(x316 + x70) +
-    10.0e-13;
-  const amrex::Real x322 = x321 / x119;
-  const amrex::Real x323 = exp(g_RT[11] + g_RT[1] - g_RT[4] - g_RT_qss[0]);
-  amrex::Real x326 = -g_RT[1] + g_RT[7] - g_RT_qss[0];
-  amrex::Real x327 =
-    refC * exp(-618.95649893980499 * invT - 3.14 * logT + x326);
-  const amrex::Real x333 = exp(g_RT[11] + g_RT[4] - g_RT[6] - g_RT_qss[0]);
-  amrex::Real x339 =
+  amrex::Real x278 = x245 * x54 - x277 / x51;
+  amrex::Real x281 = -g_RT[9] + g_RT_qss[2];
+  amrex::Real x283 = exp(g_RT[1] - x281);
+  amrex::Real x286 = kf_qss[39] * exp(-x281 - x88);
+  amrex::Real x292 = g_RT[11] - g_RT[1] - g_RT_qss[2];
+  const amrex::Real x299 = exp(g_RT[10] + g_RT[1] - g_RT[2] - g_RT_qss[2]);
+  const amrex::Real x302 = exp(-x281 - x68);
+  const amrex::Real x305 = exp(-x281 - x44);
+  const amrex::Real x308 = exp(-x114 - x281);
+  const amrex::Real x311 = exp(g_RT[0] - g_RT[1] + g_RT[9] - g_RT_qss[2]);
+  amrex::Real x315 =
+    kf_qss[11] * sc[11] * sc[3] + kf_qss[12] * sc[0] * sc[9] * x311 +
+    kf_qss[13] * sc[11] * sc[1] + kf_qss[21] * sc[5] * sc[9] * x305 +
+    kf_qss[22] * sc[11] * sc[4] + kf_qss[37] * sc[8] * sc[9] * x302 +
+    kf_qss[38] * sc[11] * sc[7] + kf_qss[3] * sc[5] * x265 * x283 +
+    kf_qss[4] * x265 * x283 * x6 + kf_qss[7] * sc[4] * sc[9] * x308 +
+    kf_qss[8] * sc[10] * sc[1] * x299 + kf_qss[9] * sc[11] * sc[2] +
+    1350000000000.0 * refC * sc[11] * x109 * x7 * exp(x292 + x91) +
+    sc[6] * sc[9] * x286 + 10.0e-13;
+  const amrex::Real x316 = x315 / x120;
+  const amrex::Real x317 = exp(g_RT[11] + g_RT[1] - g_RT[4] - g_RT_qss[0]);
+  amrex::Real x321 = -g_RT[1] + g_RT[7] - g_RT_qss[0];
+  amrex::Real x322 = refC * exp(-618.9600262034819 * invT - 3.14 * logT + x321);
+  const amrex::Real x327 = exp(g_RT[11] + g_RT[4] - g_RT[6] - g_RT_qss[0]);
+  amrex::Real x333 =
     kf_qss[26] * exp(-g_RT[0] + g_RT[1] + g_RT[7] - g_RT_qss[0]);
-  amrex::Real x342 =
-    kf_qss[17] * sc[11] * sc[1] * x323 + kf_qss[19] * sc[4] * sc[7] +
-    kf_qss[24] * sc[11] * sc[4] * x333 +
-    kf_qss[27] * ((sc[7]) * (sc[7])) * exp(-g_RT_qss[0] - x260) +
-    sc[1] * sc[7] * x339 + 3200000000000000.0 * sc[7] * x149 * x327 * x7 +
+  amrex::Real x336 =
+    kf_qss[17] * sc[11] * sc[1] * x317 + kf_qss[19] * sc[4] * sc[7] +
+    kf_qss[24] * sc[11] * sc[4] * x327 +
+    kf_qss[27] * ((sc[7]) * (sc[7])) * exp(-g_RT_qss[0] - x255) +
+    sc[1] * sc[7] * x333 + 3200000000000000.0 * sc[7] * x150 * x322 * x7 +
     10.0e-13;
-  amrex::Real x345 = (x188 * x322 - x223 * x283 - x342 / x165) /
-                     ((-x124 * x188 + 1 - x217 * x68 / x165) *
-                      (-x124 * x188 + 1 - x217 * x68 / x165));
-  const amrex::Real x346 =
-    x345 *
-    (-kf_qss[31] * x225 + x169 * (-kf_qss[26] + x161) + x186 * x191 +
-     x220 * (-kf_qss[31] * x214 + x207 * x210) + x222 * (-kf_qss[26] + x161));
-  amrex::Real x347 = x342 / ((x165) * (x165));
-  x134 =
-    3200000000000000.0 * sc[7] * x131 * x149 * x327 * x7 / ((x134) * (x134));
+  amrex::Real x339 = (x188 * x316 - x217 * x278 - x336 / x166) /
+                     ((-x125 * x188 + 1 - x213 * x67 / x166) *
+                      (-x125 * x188 + 1 - x213 * x67 / x166));
+  const amrex::Real x340 =
+    x339 *
+    (-kf_qss[31] * x219 + x170 * (-kf_qss[26] + x162) + x186 * x191 +
+     x216 * (-kf_qss[31] * x210 + x203 * x206) + x221 * (-kf_qss[26] + x162));
+  amrex::Real x341 = x336 / ((x166) * (x166));
+  x147 =
+    3200000000000000.0 * sc[7] * x135 * x150 * x322 * x7 / ((x147) * (x147));
+  amrex::Real x344 =
+    refC * sc[7] * exp(-1237.9200524069638 * invT - 6.28 * logT + x321);
+  amrex::Real x348 =
+    -(6400000000000000.0 * sc[7] * x150 * x322 -
+      x147 * (0.56 * x143 + 4.0 * x145) - 2.048e+31 * x157 * x344) /
+    x166;
+  x105 = 1350000000000.0 * refC * sc[11] * x109 * x7 * x96 * exp(x292 + x91) /
+         ((x105) * (x105));
+  const amrex::Real x350 = refC * sc[11];
   amrex::Real x351 =
-    refC * sc[7] * exp(-1237.91299787961 * invT - 6.28 * logT + x326);
-  amrex::Real x352 = -(6400000000000000.0 * sc[7] * x149 * x327 -
-                       x134 * (0.56 * x139 * x140 + 4.0 * x140 * x143) -
-                       2.048e+31 * x156 * x351) /
-                     x165;
-  x84 =
-    1350000000000.0 * x314 * x7 * x75 * x87 * exp(x316 + x70) / ((x84) * (x84));
-  amrex::Real x356 =
-    x314 * exp(-1434.1674975434501 * invT - 5.14 * logT + x316);
-  amrex::Real x359 = 2 * kf_qss[4] * x270 * x299 - 3.645e+24 * x180 * x356 +
-                     2700000000000.0 * x314 * x87 * exp(x316 + x70) -
-                     x84 * (4.0 * x140 * x175 + 0.56 * x174);
-  amrex::Real x361 = x217 * x283 / (x165 * ((x54) * (x54)));
-  x321 = x321 / ((x119) * (x119));
-  x167 = x167 * x322 / ((x165) * (x165));
-  x282 = x282 / ((x50) * (x50));
-  x248 = x248 / ((x33) * (x33));
+    x350 * exp(-1434.1756704714826 * invT - 5.14 * logT + x292);
+  amrex::Real x355 =
+    2 * kf_qss[4] * x265 * x283 - x105 * (0.56 * x175 + 4.0 * x176) +
+    2700000000000.0 * x109 * x350 * exp(x292 + x91) - 3.645e+24 * x181 * x351;
+  x315 = x315 / ((x120) * (x120));
+  amrex::Real x360 = x168 * x316 / ((x166) * (x166));
+  x277 = x277 / ((x51) * (x51));
+  x244 = x244 / ((x33) * (x33));
   x25 = sc[11] * sc[1] * x15 * x17 * x28 / ((x25) * (x25));
+  amrex::Real x369 =
+    sc[11] * sc[1] * x7 * exp(-6572.0471074938814 * invT - 9.64 * logT);
   amrex::Real x371 = sc[11] * sc[1] * x28 * exp(x11);
-  amrex::Real x373 =
-    sc[11] * sc[1] * x7 * exp(-6572.0096554096399 * invT - 9.64 * logT);
-  amrex::Real x375 = -3.2258e+40 * x202 * x373 -
-                     x25 * (0.56 * x195 + 4.0 * x197) + 2.54e+20 * x371;
-  amrex::Real x378 = x249 * x52 / ((x50) * (x50));
-  amrex::Real x379 = -kf_qss[31] * x282 + kf_qss[31] * x378 -
-                     kf_qss[6] * sc[9] * x256 / x50 - x207 * x248 * x53 +
-                     x53 * (kf_qss[14] * sc[11] * x234 + x375) / x33;
-  amrex::Real x381 = x217 * x283 / (((x165) * (x165)) * x54);
-  amrex::Real x382 = (1.0 / ((-x124 * x188 + 1 - x217 * x68 / x165)));
-  const amrex::Real x383 =
-    x382 *
-    (-x167 * (-kf_qss[26] + x161) - x186 * x188 * x321 - x223 * x379 +
-     x347 * (-kf_qss[26] + x161) + x352 +
-     x361 * (-kf_qss[31] * x214 + x207 * x210) + x381 * (-kf_qss[26] + x161) +
-     x188 * (kf_qss[12] * sc[9] * x292 + x359) / x119);
-  amrex::Real x389 = -kf_qss[4] - sc[1] * x72 * x87 +
-                     x179 * (2.0 * x140 * x175 + 0.28 * x140 * ((x78) * (x78)) /
-                                                   ((x81) * (x81) * (x81))) +
-                     1.8225e+24 * x183;
-  x72 = -kf_qss[12] - kf_qss[5] * x107 + x389 - x7 * x72 * x87;
-  amrex::Real x392 = sc[1] * x156 * exp(-1237.91299787961 * invT - 6.28 * logT);
-  amrex::Real x393 = -sc[1] * x128 * x149 +
-                     x154 * (0.28 * x139 * x140 + 2.0 * x140 * x143) +
-                     1.024e+31 * x392;
-  x128 = -x128 * x149 * x7 + x393;
-  x20 = 0.28 * x140 * ((x20) * (x20)) / ((x22) * (x22) * (x22)) +
-        2.0 * x140 * x20 / ((x22) * (x22));
-  x22 = x20 * x200 + 1.6129e+40 * x202 * x205 - 1.27e+20 * x30;
-  amrex::Real x397 = -kf_qss[14] - kf_qss[15] - kf_qss[16] + x22;
-  amrex::Real x399 = -kf_qss[16] * x41 / x50 + x210 * x397;
-  const amrex::Real x400 =
-    x345 * (-kf_qss[5] * x107 * x124 / x165 + x128 * x169 + x128 * x222 +
-            x191 * x72 + x220 * x399);
-  amrex::Real x402 = 3200000000000000.0 * sc[7] * x149 * x327 -
-                     x134 * (0.28 * x139 * x140 + 2.0 * x140 * x143) -
-                     1.024e+31 * x156 * x351;
-  x78 = kf_qss[4] * x270 * x299 - 1.8225e+24 * x180 * x356 +
-        1350000000000.0 * x314 * x87 * exp(x316 + x70) -
-        x84 * (2.0 * x140 * x175 +
-               0.28 * x140 * ((x78) * (x78)) / ((x81) * (x81) * (x81)));
-  x81 = (kf_qss[13] * sc[11] + kf_qss[3] * refCinv * sc[5] * sc[9] * x299 +
-         kf_qss[4] * refCinv * sc[9] * x299 * x6 + kf_qss[8] * sc[10] * x308 +
-         x78) /
-        x119;
-  x20 = -x20 * x25 - 1.6129e+40 * x202 * x373 + 1.27e+20 * x371;
-  const amrex::Real x413 =
-    (kf_qss[16] * x249 / x50 - x248 * x397 * x53 -
-     (kf_qss[18] * sc[11] * x265 + kf_qss[29] * refCinv * sc[4] * sc[9] * x271 +
-      kf_qss[31] * sc[7] * x279) /
-       x50 +
-     x53 * (sc[11] * x15 * x28 + x20) / x33) /
-    x54;
-  x128 = x382 * (kf_qss[5] * x107 * x322 / x165 - x128 * x167 + x128 * x347 +
-                 x128 * x381 - x188 * x321 * x72 + x188 * x81 + x361 * x399 -
-                 x217 * x413 / x165 -
-                 (kf_qss[17] * sc[11] * x323 + sc[7] * x339 + x402) / x165);
-  amrex::Real x417 = -kf_qss[6] * x214 + x210 * (-kf_qss[10] + x22);
-  amrex::Real x419 = -kf_qss[7] - kf_qss[8] + x389;
-  const amrex::Real x420 = x345 * (-kf_qss[5] * x188 / x119 - kf_qss[6] * x225 +
-                                   x169 * (-kf_qss[5] + x393) + x191 * x419 +
-                                   x220 * x417 + x222 * (-kf_qss[5] + x393));
-  amrex::Real x427 = -kf_qss[6] * x282 + kf_qss[6] * x378 + x20 * x53 / x33 -
-                     x248 * x53 * (-kf_qss[10] + x22);
-  const amrex::Real x428 =
-    x382 *
-    (-x167 * (-kf_qss[5] + x393) - x188 * x321 * x419 - x223 * x427 +
-     x347 * (-kf_qss[5] + x393) + x361 * x417 + x381 * (-kf_qss[5] + x393) -
-     x402 / x165 + x188 * (kf_qss[9] * sc[11] + x78) / x119);
-  amrex::Real x429 = -kf_qss[29] - kf_qss[30];
-  amrex::Real x432 = x210 * (-kf_qss[40] + x22) + x214 * x429;
-  const amrex::Real x434 =
-    x345 * (-kf_qss[25] * x188 / x119 + x169 * (-kf_qss[25] + x393) +
-            x191 * (-kf_qss[39] + x389) + x220 * x432 +
-            x222 * (-kf_qss[25] + x393) + x225 * x429);
-  amrex::Real x438 = x20 * x53 / x33 - x248 * x53 * (-kf_qss[40] + x22) +
-                     x282 * x429 - x378 * x429;
-  const amrex::Real x439 =
-    x382 * (-x167 * (-kf_qss[25] + x393) - x188 * x321 * (-kf_qss[39] + x389) -
-            x223 * x438 + x347 * (-kf_qss[25] + x393) + x361 * x432 +
-            x381 * (-kf_qss[25] + x393) - x402 / x165 +
-            x188 * (kf_qss[11] * sc[11] + x78) / x119);
-  amrex::Real x443 = -kf_qss[18] * x214 + x210 * (-kf_qss[23] + x22);
-  amrex::Real x444 = -kf_qss[21] - kf_qss[9] * exp(-x92 - x94) - x103 + x389;
-  const amrex::Real x445 = x345 * (-kf_qss[18] * x225 - x103 * x124 / x165 +
-                                   x169 * (-kf_qss[17] + x393) + x191 * x444 +
-                                   x220 * x443 + x222 * (-kf_qss[17] + x393));
-  amrex::Real x450 =
-    -kf_qss[18] * x282 + kf_qss[18] * x378 - x248 * x53 * (-kf_qss[23] + x22) -
-    (kf_qss[20] * sc[7] + kf_qss[29] * x270 * x271) / x50 +
-    x53 * (kf_qss[10] * sc[11] * x237 + kf_qss[15] * sc[7] * x245 + x20) / x33;
-  x103 = x382 *
-         (x103 * x322 / x165 - x167 * (-kf_qss[17] + x393) -
-          x188 * x321 * x444 - x223 * x450 + x347 * (-kf_qss[17] + x393) +
-          x361 * x443 + x381 * (-kf_qss[17] + x393) -
-          (kf_qss[19] * sc[7] + kf_qss[24] * sc[11] * x333 + x402) / x165 +
-          x188 * (kf_qss[22] * sc[11] + kf_qss[7] * sc[9] * x295 + x78) / x119);
-  x183 = -kf_qss[22] * exp(-x43 - x94) - kf_qss[3] -
-         8100000000000.0 * sc[1] * x87 * exp(x70) +
-         x179 * (12.0 * x140 * x175 + 1.68 * x174) + 1.0935e+25 * x183;
-  amrex::Real x457 = -kf_qss[19] * exp(-g_RT[7] + g_RT_qss[0] - x43) -
-                     kf_qss[32] * x57 +
-                     x154 * (1.68 * x139 * x140 + 12.0 * x140 * x143) -
-                     1.92e+16 * x155 + 6.144e+31 * x392;
-  amrex::Real x460 = x200 * (1.68 * x195 + 12.0 * x197) +
-                     9.6774e+40 * x202 * x205 - 7.62e+20 * x30;
-  amrex::Real x462 = -kf_qss[16] * x37 - kf_qss[20] * x45 - kf_qss[32];
-  amrex::Real x463 = -kf_qss[16] * x37 * x53 / x33 + x210 * x460 + x214 * x462;
-  const amrex::Real x466 =
-    x345 *
-    (-kf_qss[32] * x223 * x57 / x50 - kf_qss[32] * x68 / x165 + x169 * x457 +
-     x183 * x191 + x220 * x463 + x222 * x457 + x225 * x462);
-  amrex::Real x468 =
-    (kf_qss[21] * sc[9] * x287 + kf_qss[3] * x270 * x299 -
-     1.0935e+25 * x180 * x356 + 8100000000000.0 * x314 * x87 * exp(x316 + x70) -
-     x84 * (12.0 * x140 * x175 + 1.68 * x174)) /
-    x119;
-  amrex::Real x471 = (kf_qss[23] * sc[11] * x228 - 9.6774e+40 * x202 * x373 -
-                      x25 * (1.68 * x195 + 12.0 * x197) + 7.62e+20 * x371) /
-                     x33;
-  amrex::Real x472 = -kf_qss[30] * sc[9] * x253 / x50 - x248 * x460 * x53 +
-                     x282 * x462 - x378 * x462 + x471 * x53;
-  x457 = x382 *
-         (-kf_qss[32] * x283 / (x165 * x54) - x167 * x457 - x183 * x188 * x321 +
-          x188 * x468 - x223 * x472 + x347 * x457 + x361 * x463 + x381 * x457 -
-          (1.92e+16 * sc[7] * x149 * x327 -
-           x134 * (1.68 * x139 * x140 + 12.0 * x140 * x143) -
-           6.144e+31 * x156 * x351) /
-            x165);
-  amrex::Real x475 =
-    x209 * x217 * x22 * x52 * x66 / (x165 * ((x50) * (x50)) * ((x54) * (x54)));
-  amrex::Real x476 = -kf_qss[11] * exp(-x110 - x94) + x389;
-  const amrex::Real x477 = x345 * (x169 * (-kf_qss[24] + x393) + x191 * x476 +
-                                   x222 * (-kf_qss[24] + x393) + x475);
+  amrex::Real x372 = -3.2258e+40 * x198 * x369 -
+                     x25 * (0.56 * x193 + 4.0 * x20) + 2.54e+20 * x371;
+  amrex::Real x374 = x245 * x53 / ((x51) * (x51));
+  amrex::Real x375 = -kf_qss[31] * x277 + kf_qss[31] * x374 -
+                     kf_qss[6] * sc[9] * x251 / x51 - x203 * x244 * x54 +
+                     x54 * (kf_qss[14] * sc[11] * x230 + x372) / x33;
+  amrex::Real x376 = x213 * x278 / (x166 * ((x55) * (x55)));
+  amrex::Real x379 = x213 * x278 / (((x166) * (x166)) * x55);
+  amrex::Real x380 = (1.0 / ((-x125 * x188 + 1 - x213 * x67 / x166)));
+  const amrex::Real x381 =
+    x380 *
+    (-x186 * x188 * x315 - x217 * x375 + x341 * (-kf_qss[26] + x162) + x348 -
+     x360 * (-kf_qss[26] + x162) + x376 * (-kf_qss[31] * x210 + x203 * x206) +
+     x379 * (-kf_qss[26] + x162) +
+     x188 * (kf_qss[12] * sc[9] * x311 + x355) / x120);
+  amrex::Real x384 =
+    -sc[1] * x132 * x150 + x155 * (0.28 * x143 + 2.0 * x145) + 1.024e+31 * x161;
+  x132 = -x132 * x150 * x7 + x384;
+  amrex::Real x388 = -kf_qss[4] - sc[1] * x109 * x93 +
+                     x179 * (0.28 * x175 + 2.0 * x176) + 1.8225e+24 * x184;
+  x93 = -kf_qss[12] - kf_qss[5] * x83 - x109 * x7 * x93 + x388;
+  amrex::Real x392 = -1.27e+20 * refC * x28 * exp(x10 + x11) +
+                     x197 * (0.28 * x193 + 2.0 * x20) +
+                     1.6129e+40 * x198 * x201;
+  amrex::Real x393 = -kf_qss[14] - kf_qss[15] - kf_qss[16] + x392;
+  amrex::Real x395 = -kf_qss[16] * x42 / x51 + x206 * x393;
+  const amrex::Real x396 =
+    x339 *
+    (-kf_qss[5] * x125 * x83 / x166 + x125 * x132 * x168 / ((x166) * (x166)) +
+     x132 * x213 * x67 / ((x166) * (x166)) + x191 * x93 + x216 * x395);
+  amrex::Real x397 = 3200000000000000.0 * sc[7] * x150 * x322 -
+                     x147 * (0.28 * x143 + 2.0 * x145) -
+                     1.024e+31 * x157 * x344;
+  amrex::Real x401 = kf_qss[4] * x265 * x283 +
+                     1350000000000.0 * refC * sc[11] * x109 * exp(x292 + x91) -
+                     x105 * (0.28 * x175 + 2.0 * x176) -
+                     1.8225e+24 * x181 * x351;
+  amrex::Real x402 =
+    (kf_qss[13] * sc[11] + kf_qss[3] * refCinv * sc[5] * sc[9] * x283 +
+     kf_qss[4] * refCinv * sc[9] * x283 * x6 + kf_qss[8] * sc[10] * x299 +
+     x401) /
+    x120;
+  amrex::Real x405 = -1.6129e+40 * x198 * x369 -
+                     x25 * (0.28 * x193 + 2.0 * x20) + 1.27e+20 * x371;
+  const amrex::Real x408 =
+    (kf_qss[16] * x245 / x51 - x244 * x393 * x54 -
+     (kf_qss[18] * sc[11] * x260 + kf_qss[29] * refCinv * sc[4] * sc[9] * x266 +
+      kf_qss[31] * sc[7] * x274) /
+       x51 +
+     x54 * (sc[11] * x15 * x28 + x405) / x33) /
+    x55;
+  x132 = x380 * (kf_qss[5] * x316 * x83 / x166 + x132 * x341 - x132 * x360 +
+                 x132 * x379 - x188 * x315 * x93 + x188 * x402 + x376 * x395 -
+                 x213 * x408 / x166 -
+                 (kf_qss[17] * sc[11] * x317 + sc[7] * x333 + x397) / x166);
+  amrex::Real x412 = (-kf_qss[5] + x384) / ((x166) * (x166));
+  amrex::Real x413 = -kf_qss[7] - kf_qss[8] + x388;
+  amrex::Real x416 = -kf_qss[6] * x210 + x206 * (-kf_qss[10] + x392);
+  const amrex::Real x417 =
+    x339 * (-kf_qss[5] * x188 / x120 - kf_qss[6] * x219 + x125 * x168 * x412 +
+            x191 * x413 + x213 * x412 * x67 + x216 * x416);
+  amrex::Real x424 = -kf_qss[6] * x277 + kf_qss[6] * x374 -
+                     x244 * x54 * (-kf_qss[10] + x392) + x405 * x54 / x33;
+  x168 = x380 *
+         (-x168 * x316 * x412 - x188 * x315 * x413 + x213 * x278 * x412 / x55 -
+          x217 * x424 + x341 * (-kf_qss[5] + x384) + x376 * x416 - x397 / x166 +
+          x188 * (kf_qss[9] * sc[11] + x401) / x120);
+  x412 = -kf_qss[29] - kf_qss[30];
+  amrex::Real x430 = x206 * (-kf_qss[40] + x392) + x210 * x412;
+  const amrex::Real x431 =
+    x339 * (-kf_qss[25] * x188 / x120 + x170 * (-kf_qss[25] + x384) +
+            x191 * (-kf_qss[39] + x388) + x216 * x430 + x219 * x412 +
+            x221 * (-kf_qss[25] + x384));
+  amrex::Real x435 = -x244 * x54 * (-kf_qss[40] + x392) + x277 * x412 -
+                     x374 * x412 + x405 * x54 / x33;
+  const amrex::Real x436 =
+    x380 * (-x188 * x315 * (-kf_qss[39] + x388) - x217 * x435 +
+            x341 * (-kf_qss[25] + x384) - x360 * (-kf_qss[25] + x384) +
+            x376 * x430 + x379 * (-kf_qss[25] + x384) - x397 / x166 +
+            x188 * (kf_qss[11] * sc[11] + x401) / x120);
+  amrex::Real x437 = -kf_qss[21] - kf_qss[9] * exp(-x114 - x70) + x388 - x79;
+  amrex::Real x440 = -kf_qss[18] * x210 + x206 * (-kf_qss[23] + x392);
+  const amrex::Real x441 = x339 * (-kf_qss[18] * x219 - x125 * x79 / x166 +
+                                   x170 * (-kf_qss[17] + x384) + x191 * x437 +
+                                   x216 * x440 + x221 * (-kf_qss[17] + x384));
+  amrex::Real x446 =
+    -kf_qss[18] * x277 + kf_qss[18] * x374 - x244 * x54 * (-kf_qss[23] + x392) -
+    (kf_qss[20] * sc[7] + kf_qss[29] * x265 * x266) / x51 +
+    x54 * (kf_qss[10] * sc[11] * x224 + kf_qss[15] * sc[7] * x235 + x405) / x33;
+  x79 = x380 *
+        (-x188 * x315 * x437 - x217 * x446 + x341 * (-kf_qss[17] + x384) -
+         x360 * (-kf_qss[17] + x384) + x376 * x440 +
+         x379 * (-kf_qss[17] + x384) + x316 * x79 / x166 -
+         (kf_qss[19] * sc[7] + kf_qss[24] * sc[11] * x327 + x397) / x166 +
+         x188 * (kf_qss[22] * sc[11] + kf_qss[7] * sc[9] * x308 + x401) / x120);
+  amrex::Real x451 =
+    -kf_qss[19] * exp(-g_RT[7] + g_RT_qss[0] - x44) - kf_qss[32] * x58 +
+    6.144e+31 * sc[1] * x157 * exp(-1237.9200524069638 * invT - 6.28 * logT) +
+    x155 * (1.68 * x129 * ((x138) * (x138)) / ((x141) * (x141) * (x141)) +
+            12.0 * x145) -
+    1.92e+16 * x156;
+  x184 = -kf_qss[22] * exp(-x44 - x70) - kf_qss[3] -
+         8100000000000.0 * sc[1] * x109 * exp(x91) +
+         x179 * (12.0 * x176 +
+                 1.68 * x129 * ((x99) * (x99)) / ((x102) * (x102) * (x102))) +
+         1.0935e+25 * x184;
+  amrex::Real x456 = x197 * (1.68 * x193 + 12.0 * x20) +
+                     9.6774e+40 * x198 * x201 - 7.62e+20 * x30;
+  amrex::Real x458 = -kf_qss[16] * x38 - kf_qss[20] * x46 - kf_qss[32];
+  amrex::Real x459 = -kf_qss[16] * x38 * x54 / x33 + x206 * x456 + x210 * x458;
+  const amrex::Real x462 =
+    x339 *
+    (-kf_qss[32] * x217 * x58 / x51 - kf_qss[32] * x67 / x166 + x170 * x451 +
+     x184 * x191 + x216 * x459 + x219 * x458 + x221 * x451);
+  x99 = (kf_qss[21] * sc[9] * x305 + kf_qss[3] * x265 * x283 -
+         x105 * (12.0 * x176 +
+                 1.68 * x129 * ((x99) * (x99)) / ((x102) * (x102) * (x102))) +
+         8100000000000.0 * x109 * x350 * exp(x292 + x91) -
+         1.0935e+25 * x181 * x351) /
+        x120;
+  x102 = (kf_qss[23] * sc[11] * x241 - 9.6774e+40 * x198 * x369 -
+          x25 * (1.68 * x193 + 12.0 * x20) + 7.62e+20 * x371) /
+         x33;
+  amrex::Real x467 = -kf_qss[30] * sc[9] * x248 / x51 + x102 * x54 -
+                     x244 * x456 * x54 + x277 * x458 - x374 * x458;
+  x138 =
+    x380 *
+    (-kf_qss[32] * x278 / (x166 * x55) - x184 * x188 * x315 + x188 * x99 -
+     x217 * x467 + x341 * x451 - x360 * x451 + x376 * x459 + x379 * x451 -
+     (1.92e+16 * sc[7] * x150 * x322 -
+      x147 * (1.68 * x129 * ((x138) * (x138)) / ((x141) * (x141) * (x141)) +
+              12.0 * x145) -
+      6.144e+31 * x157 * x344) /
+       x166);
+  x141 = -kf_qss[11] * exp(-x70 - x88) + x388;
+  x451 =
+    x205 * x213 * x392 * x53 * x65 / (x166 * ((x51) * (x51)) * ((x55) * (x55)));
+  const amrex::Real x474 = x339 * (x141 * x191 + x170 * (-kf_qss[24] + x384) +
+                                   x221 * (-kf_qss[24] + x384) + x451);
+  amrex::Real x478 = -x244 * x392 * x54;
+  const amrex::Real x480 = (x478 + x54 * (sc[11] * x228 + x405) / x33) / x55;
   const amrex::Real x483 =
-    (-x22 * x248 * x53 + x53 * (sc[11] * x232 + x20) / x33) / x54;
+    x380 *
+    (-x141 * x188 * x315 + x206 * x376 * x392 + x341 * (-kf_qss[24] + x384) -
+     x360 * (-kf_qss[24] + x384) + x379 * (-kf_qss[24] + x384) -
+     x213 * x480 / x166 - x397 / x166 + x188 * (sc[9] * x286 + x401) / x120);
   const amrex::Real x486 =
-    x382 *
-    (-x167 * (-kf_qss[24] + x393) - x188 * x321 * x476 + x210 * x22 * x361 +
-     x347 * (-kf_qss[24] + x393) + x381 * (-kf_qss[24] + x393) -
-     x217 * x483 / x165 - x402 / x165 + x188 * (sc[9] * x304 + x78) / x119);
-  const amrex::Real x489 =
-    x345 * (x169 * x393 + x191 * (-kf_qss[37] + x389) + x222 * x393 + x475);
-  const amrex::Real x494 =
-    (-x22 * x248 * x53 -
-     (kf_qss[20] * sc[4] + kf_qss[31] * sc[1] * x279 +
-      2.0 * kf_qss[33] * ((sc[7])) * exp(-g_RT_qss[1] - x260)) /
-       x50 +
-     x53 * (kf_qss[15] * sc[4] * x245 + x20) / x33) /
-    x54;
-  x339 =
-    x382 * (-x167 * x393 - x188 * x321 * (-kf_qss[37] + x389) +
-            x210 * x22 * x361 + x347 * x393 + x381 * x393 - x217 * x494 / x165 -
-            (kf_qss[19] * sc[4] +
-             2.0 * kf_qss[27] * ((sc[7])) * exp(-g_RT_qss[0] - x260) +
-             sc[1] * x339 + 3200000000000000.0 * x149 * x327 * x7 + x402) /
-              x165 +
-            x188 * (kf_qss[38] * sc[11] + x78) / x119);
-  amrex::Real x497 = -kf_qss[38] * exp(-x94 - x97) + x185;
-  const amrex::Real x500 =
-    x345 *
-    (-kf_qss[33] * x225 + x169 * (-kf_qss[27] + x161) + x191 * x497 +
-     x220 * (-kf_qss[33] * x214 + x207 * x210) + x222 * (-kf_qss[27] + x161));
-  amrex::Real x504 = -x207 * x248 * x53 + x375 * x53 / x33;
-  const amrex::Real x506 =
-    x382 *
-    (-x167 * (-kf_qss[27] + x161) - x188 * x321 * x497 -
-     x223 * (-kf_qss[33] * x282 + kf_qss[33] * x378 + x504) +
-     x347 * (-kf_qss[27] + x161) + x352 +
-     x361 * (-kf_qss[33] * x214 + x207 * x210) + x381 * (-kf_qss[27] + x161) +
-     x188 * (kf_qss[37] * sc[9] * x311 + x359) / x119);
-  x154 = -kf_qss[34] * x57 + x154 * (0.42 * x139 * x140 + 3.0 * x140 * x143) -
-         4800000000000000.0 * x155 + 1.536e+31 * x392;
-  x30 = x200 * (0.42 * x195 + 3.0 * x197) + 2.41935e+40 * x202 * x205 -
+    x339 * (x170 * x384 + x191 * (-kf_qss[37] + x388) + x221 * x384 + x451);
+  const amrex::Real x490 =
+    (x478 -
+     (kf_qss[20] * sc[4] + kf_qss[31] * sc[1] * x274 +
+      2.0 * kf_qss[33] * ((sc[7])) * exp(-g_RT_qss[1] - x255)) /
+       x51 +
+     x54 * (kf_qss[15] * sc[4] * x235 + x405) / x33) /
+    x55;
+  x333 = x380 * (-x188 * x315 * (-kf_qss[37] + x388) + x206 * x376 * x392 +
+                 x341 * x384 - x360 * x384 + x379 * x384 - x213 * x490 / x166 -
+                 (kf_qss[19] * sc[4] +
+                  2.0 * kf_qss[27] * ((sc[7])) * exp(-g_RT_qss[0] - x255) +
+                  sc[1] * x333 + 3200000000000000.0 * x150 * x322 * x7 + x397) /
+                   x166 +
+                 x188 * (kf_qss[38] * sc[11] + x401) / x120);
+  amrex::Real x495 = -kf_qss[38] * exp(-x68 - x70) + x185;
+  const amrex::Real x497 =
+    x339 *
+    (-kf_qss[33] * x219 + x170 * (-kf_qss[27] + x162) + x191 * x495 +
+     x216 * (-kf_qss[33] * x210 + x203 * x206) + x221 * (-kf_qss[27] + x162));
+  amrex::Real x501 = -x203 * x244 * x54 + x372 * x54 / x33;
+  const amrex::Real x503 =
+    x380 *
+    (-x188 * x315 * x495 -
+     x217 * (-kf_qss[33] * x277 + kf_qss[33] * x374 + x501) +
+     x341 * (-kf_qss[27] + x162) + x348 - x360 * (-kf_qss[27] + x162) +
+     x376 * (-kf_qss[33] * x210 + x203 * x206) + x379 * (-kf_qss[27] + x162) +
+     x188 * (kf_qss[37] * sc[9] * x302 + x355) / x120);
+  x179 =
+    -1.5 * kf_qss[4] - 2025000000000.0 * sc[1] * x109 * exp(x91) +
+    2.73375e+24 * sc[1] * x181 * exp(-1434.1756704714826 * invT - 5.14 * logT) +
+    x179 * (0.42 * x175 + 3.0 * x176);
+  x30 = x197 * (0.42 * x193 + 3.0 * x20) + 2.41935e+40 * x198 * x201 -
         1.905e+20 * x30;
-  x155 =
-    -1.5 * kf_qss[4] +
-    2.73375e+24 * sc[1] * x180 * exp(-1434.1674975434501 * invT - 5.14 * logT) -
-    2025000000000.0 * sc[1] * x87 * exp(x70) +
-    x179 * (3.0 * x140 * x175 + 0.42 * x174);
-  x179 = x345 * (-kf_qss[34] * x223 * x57 / x50 - kf_qss[34] * x225 -
-                 kf_qss[34] * x68 / x165 + x154 * x169 + x154 * x222 +
-                 x155 * x191 + x220 * (-kf_qss[34] * x214 + x210 * x30));
-  x174 = (kf_qss[12] * sc[0] * x292 + kf_qss[21] * sc[5] * x287 +
-          kf_qss[37] * sc[8] * x311 + kf_qss[3] * sc[5] * x269 * x299 +
-          1.5 * kf_qss[4] * sc[9] * x269 * x299 + kf_qss[4] * x269 * x299 * x6 +
-          kf_qss[7] * sc[4] * x295 + sc[6] * x304 - 2.73375e+24 * x180 * x356 +
-          2025000000000.0 * x314 * x87 * exp(x316 + x70) -
-          x84 * (3.0 * x140 * x175 + 0.42 * x174)) /
-         x119;
-  x175 = (-2.41935e+40 * x202 * x373 - x25 * (0.42 * x195 + 3.0 * x197) +
+  x155 = -kf_qss[34] * x58 + x155 * (0.42 * x143 + 3.0 * x145) -
+         4800000000000000.0 * x156 + 1.536e+31 * x161;
+  x156 = x339 * (-kf_qss[34] * x217 * x58 / x51 - kf_qss[34] * x219 -
+                 kf_qss[34] * x67 / x166 + x155 * x170 + x155 * x221 +
+                 x179 * x191 + x216 * (-kf_qss[34] * x210 + x206 * x30));
+  x161 = (kf_qss[12] * sc[0] * x311 + kf_qss[21] * sc[5] * x305 +
+          kf_qss[37] * sc[8] * x302 + kf_qss[3] * sc[5] * x264 * x283 +
+          1.5 * kf_qss[4] * sc[9] * x264 * x283 + kf_qss[4] * x264 * x283 * x6 +
+          kf_qss[7] * sc[4] * x308 + sc[6] * x286 -
+          x105 * (0.42 * x175 + 3.0 * x176) +
+          2025000000000.0 * x109 * x350 * exp(x292 + x91) -
+          2.73375e+24 * x181 * x351) /
+         x120;
+  x175 = (-2.41935e+40 * x198 * x369 - x25 * (0.42 * x193 + 3.0 * x20) +
           1.905e+20 * x371) /
          x33;
-  x180 = -kf_qss[34] * x282 + kf_qss[34] * x378 + x175 * x53 -
-         x248 * x30 * x53 -
-         (kf_qss[29] * sc[4] * x269 * x271 + kf_qss[30] * sc[5] * x253 +
-          kf_qss[36] * sc[11] * x274 + kf_qss[6] * sc[0] * x256) /
-           x50;
-  x139 = x382 * (-kf_qss[34] * x283 / (x165 * x54) - x154 * x167 + x154 * x347 +
-                 x154 * x381 - x155 * x188 * x321 + x174 * x188 - x180 * x223 +
-                 x361 * (-kf_qss[34] * x214 + x210 * x30) -
-                 (4800000000000000.0 * sc[7] * x149 * x327 -
-                  x134 * (0.42 * x139 * x140 + 3.0 * x140 * x143) -
-                  1.536e+31 * x156 * x351) /
-                   x165);
-  x143 = -kf_qss[35] - kf_qss[36];
-  x149 = x143 * x41 * x52 / ((x50) * (x50)) + x207 * x210;
-  x156 = -kf_qss[35] * x57 + x161;
-  x161 = x345 * (-kf_qss[35] * x223 * x57 / x50 - kf_qss[35] * x68 / x165 +
-                 x143 * x223 * x66 / ((x50) * (x50)) + x149 * x220 +
-                 x156 * x169 + x156 * x222 + x185 * x191);
-  x195 =
-    x382 * (-kf_qss[35] * x283 / (x165 * x54) + x149 * x361 - x156 * x167 +
-            x156 * x347 + x156 * x381 - x185 * x188 * x321 -
-            x223 * (-x143 * x249 * x52 / ((x50) * (x50)) + x143 * x282 + x504) +
-            x352 + x188 * (kf_qss[8] * sc[1] * x308 + x359) / x119);
-  x197 = x345 * (x169 * x393 + x191 * x389 + x222 * x393 + x475);
-  x87 = (kf_qss[11] * sc[3] + kf_qss[13] * sc[1] + kf_qss[22] * sc[4] +
-         kf_qss[38] * sc[7] + kf_qss[9] * sc[2] +
-         1350000000000.0 * refC * x7 * x87 * exp(x316 + x70) + x78) /
-        x119;
-  x200 = (kf_qss[10] * sc[4] * x237 + kf_qss[14] * sc[0] * x234 +
-          kf_qss[23] * sc[5] * x228 + sc[1] * x15 * x28 + sc[6] * x232 + x20) /
+  x176 = -kf_qss[34] * x277 + kf_qss[34] * x374 + x175 * x54 -
+         x244 * x30 * x54 -
+         (kf_qss[29] * sc[4] * x264 * x266 + kf_qss[30] * sc[5] * x248 +
+          kf_qss[36] * sc[11] * x269 + kf_qss[6] * sc[0] * x251) /
+           x51;
+  x143 = x380 * (-kf_qss[34] * x278 / (x166 * x55) + x155 * x341 - x155 * x360 +
+                 x155 * x379 + x161 * x188 - x176 * x217 - x179 * x188 * x315 +
+                 x376 * (-kf_qss[34] * x210 + x206 * x30) -
+                 (4800000000000000.0 * sc[7] * x150 * x322 -
+                  x147 * (0.42 * x143 + 3.0 * x145) - 1.536e+31 * x157 * x344) /
+                   x166);
+  x145 = -kf_qss[35] * x58 + x162;
+  x150 = (-kf_qss[35] - kf_qss[36]) / ((x51) * (x51));
+  x157 = x339 * (-kf_qss[35] * x217 * x58 / x51 - kf_qss[35] * x67 / x166 +
+                 x145 * x170 + x145 * x221 + x150 * x217 * x65 + x185 * x191 +
+                 x216 * (x150 * x42 * x53 + x203 * x206));
+  x162 =
+    x380 *
+    (-kf_qss[35] * x278 / (x166 * x55) + x145 * x341 - x145 * x360 +
+     x145 * x379 - x185 * x188 * x315 -
+     x217 * (-x150 * x245 * x53 + x277 * (-kf_qss[35] - kf_qss[36]) + x501) +
+     x348 + x376 * (x150 * x42 * x53 + x203 * x206) +
+     x188 * (kf_qss[8] * sc[1] * x299 + x355) / x120);
+  x181 = x339 * (x170 * x384 + x191 * x388 + x221 * x384 + x451);
+  x109 = (kf_qss[11] * sc[3] + kf_qss[13] * sc[1] + kf_qss[22] * sc[4] +
+          kf_qss[38] * sc[7] + kf_qss[9] * sc[2] +
+          1350000000000.0 * refC * x109 * x7 * exp(x292 + x91) + x401) /
+         x120;
+  x193 = (kf_qss[10] * sc[4] * x224 + kf_qss[14] * sc[0] * x230 +
+          kf_qss[23] * sc[5] * x241 + sc[1] * x15 * x28 + sc[6] * x228 + x405) /
          x33;
-  x202 = (x200 * x53 - x22 * x248 * x53 -
-          (kf_qss[18] * sc[1] * x265 + kf_qss[36] * sc[9] * x274) / x50) /
-         x54;
-  x205 =
-    x382 *
-    (-x167 * x393 - x188 * x321 * x389 + x188 * x87 + x210 * x22 * x361 +
-     x347 * x393 + x381 * x393 - x202 * x217 / x165 -
-     (kf_qss[17] * sc[1] * x323 + kf_qss[24] * sc[4] * x333 + x402) / x165);
-  x217 = -kf_qss[28] * x57 + x393;
-  x225 = -kf_qss[28] * x41 * x52 / ((x50) * (x50)) + x210 * x22;
-  x169 = x345 *
-         (-kf_qss[28] * x223 * x57 / x50 -
-          kf_qss[28] * x223 * x66 / ((x50) * (x50)) - kf_qss[28] * x68 / x165 +
-          x169 * x217 + x191 * x389 + x217 * x222 + x220 * x225);
-  x53 = kf_qss[28] * x249 * x52 / ((x50) * (x50)) - kf_qss[28] * x282 +
-        x20 * x53 / x33 - x22 * x248 * x53;
-  x191 = x382 * (-kf_qss[28] * x283 / (x165 * x54) - x167 * x217 -
-                 x188 * x321 * x389 + x217 * x347 + x217 * x381 - x223 * x53 +
-                 x225 * x361 - x402 / x165 + x188 * x78 / x119);
-  x220 = sc_qss[0] * x66 / ((x50) * (x50));
-  x222 = (-kf_qss[31] * x220 + x379) / x54;
-  x299 = (-sc_qss[0] * x66 / x50 + x283) / ((x54) * (x54));
-  x327 = x299 * (-kf_qss[31] * x214 + x207 * x210);
-  x345 = x299 * x399;
-  x347 = (-kf_qss[6] * x220 + x427) / x54;
-  x134 = x299 * x417;
-  x351 = (x220 * x429 + x438) / x54;
-  x352 = x299 * x432;
-  x84 = (-kf_qss[18] * x220 + x450) / x54;
-  x356 = x299 * x443;
-  x361 = (-kf_qss[32] * sc_qss[0] * x57 / x50 + x220 * x462 + x472) / x54;
-  x167 = x299 * x463;
-  x25 = x210 * x22 * x299;
-  x371 =
-    (-kf_qss[33] * x220 - kf_qss[33] * x282 + kf_qss[33] * x378 + x504) / x54;
-  x373 = x299 * (-kf_qss[33] * x214 + x207 * x210);
-  x378 = (-kf_qss[34] * sc_qss[0] * x57 / x50 - kf_qss[34] * x220 + x180) / x54;
-  x210 = x299 * (-kf_qss[34] * x214 + x210 * x30);
-  x52 = (-kf_qss[35] * sc_qss[0] * x57 / x50 + x143 * x220 -
-         x143 * x249 * x52 / ((x50) * (x50)) + x143 * x282 + x504) /
-        x54;
-  x214 = x149 * x299;
-  x57 = (-kf_qss[28] * sc_qss[0] * x57 / x50 -
-         kf_qss[28] * sc_qss[0] * x66 / ((x50) * (x50)) + x53) /
-        x54;
-  x282 = x225 * x299;
-  x379 = sc_qss[0] * (kf_qss[25] * sc[3] + kf_qss[5] * sc[2] + 10.0e-13) /
-         ((x119) * (x119));
-  x186 = x186 * x321 + x186 * x379 - (kf_qss[12] * sc[9] * x292 + x359) / x119;
-  x381 = x321 * x72 + x379 * x72 - x81;
-  x72 = -kf_qss[5] * sc_qss[0] / x119 + x321 * x419 + x379 * x419 -
-        (kf_qss[9] * sc[11] + x78) / x119;
-  x392 = -kf_qss[25] * sc_qss[0] / x119 + x321 * (-kf_qss[39] + x389) +
-         x379 * (-kf_qss[39] + x389) - (kf_qss[11] * sc[11] + x78) / x119;
-  x393 = x321 * x444 + x379 * x444 -
-         (kf_qss[22] * sc[11] + kf_qss[7] * sc[9] * x295 + x78) / x119;
-  x399 = x183 * x321 + x183 * x379 - x468;
-  x304 = x321 * x476 + x379 * x476 - (sc[9] * x304 + x78) / x119;
-  x402 = x321 * (-kf_qss[37] + x389) + x379 * (-kf_qss[37] + x389) -
-         (kf_qss[38] * sc[11] + x78) / x119;
-  x81 = x321 * x497 + x379 * x497 - (kf_qss[37] * sc[9] * x311 + x359) / x119;
-  x417 = x155 * x321 + x155 * x379 - x174;
-  x185 = x185 * x321 + x185 * x379 - (kf_qss[8] * sc[1] * x308 + x359) / x119;
-  x359 = x321 * x389 + x379 * x389 - x87;
-  x119 = x321 * x389 + x379 * x389 - x78 / x119;
-  x321 = sc_qss[1] * x207 * x209 + x207 * x248 -
-         (kf_qss[14] * sc[11] * x234 + x375) / x33;
+  x20 = (x193 * x54 + x478 -
+         (kf_qss[18] * sc[1] * x260 + kf_qss[36] * sc[9] * x269) / x51) /
+        x55;
+  x197 =
+    x380 *
+    (x109 * x188 - x188 * x315 * x388 + x206 * x376 * x392 + x341 * x384 -
+     x360 * x384 + x379 * x384 - x20 * x213 / x166 -
+     (kf_qss[17] * sc[1] * x317 + kf_qss[24] * sc[4] * x327 + x397) / x166);
+  x198 = -kf_qss[28] * x58 + x384;
+  x170 = x339 * (-kf_qss[28] * x217 * x58 / x51 - kf_qss[28] * x219 -
+                 kf_qss[28] * x67 / x166 + x170 * x198 + x191 * x388 +
+                 x198 * x221 + x216 * (-kf_qss[28] * x210 + x206 * x392));
+  x191 =
+    x380 *
+    (-kf_qss[28] * x278 / (x166 * x55) - x188 * x315 * x388 + x198 * x341 -
+     x198 * x360 + x198 * x379 -
+     x217 * (-kf_qss[28] * x277 + kf_qss[28] * x374 + x478 + x405 * x54 / x33) +
+     x376 * (-kf_qss[28] * x210 + x206 * x392) - x397 / x166 +
+     x188 * x401 / x120);
+  x201 = (-sc_qss[0] * x65 / x51 + x278) / ((x55) * (x55));
+  x213 = x201 * (-kf_qss[31] * x210 + x203 * x206);
+  x216 = sc_qss[0] * x65 / ((x51) * (x51));
+  x219 = (-kf_qss[31] * x216 + x375) / x55;
+  x221 = x201 * x395;
+  x283 = x201 * x416;
+  x322 = (-kf_qss[6] * x216 + x424) / x55;
+  x339 = x201 * x430;
+  x341 = (x216 * x412 + x435) / x55;
+  x147 = x201 * x440;
+  x344 = (-kf_qss[18] * x216 + x446) / x55;
+  x348 = x201 * x459;
+  x105 = (-kf_qss[32] * sc_qss[0] * x58 / x51 + x216 * x458 + x467) / x55;
+  x351 = x201 * x206 * x392;
+  x360 = x201 * (-kf_qss[33] * x210 + x203 * x206);
+  x25 =
+    (-kf_qss[33] * x216 - kf_qss[33] * x277 + kf_qss[33] * x374 + x501) / x55;
+  x369 = x201 * (-kf_qss[34] * x210 + x206 * x30);
+  x371 = (-kf_qss[34] * sc_qss[0] * x58 / x51 - kf_qss[34] * x216 + x176) / x55;
+  x375 = x201 * (x150 * x42 * x53 + x203 * x206);
+  x53 = (-kf_qss[35] * sc_qss[0] * x58 / x51 + sc_qss[0] * x150 * x65 -
+         x150 * x245 * x53 + x277 * (-kf_qss[35] - kf_qss[36]) + x501) /
+        x55;
+  x206 = x201 * (-kf_qss[28] * x210 + x206 * x392);
+  x54 = (-kf_qss[28] * sc_qss[0] * x58 / x51 - kf_qss[28] * x216 -
+         kf_qss[28] * x277 + kf_qss[28] * x374 + x478 + x405 * x54 / x33) /
+        x55;
+  x58 = sc_qss[0] * (kf_qss[25] * sc[3] + kf_qss[5] * sc[2] + 10.0e-13) /
+        ((x120) * (x120));
+  x186 = x186 * x315 + x186 * x58 - (kf_qss[12] * sc[9] * x311 + x355) / x120;
+  x210 = x315 * x93 - x402 + x58 * x93;
+  x277 = -kf_qss[5] * sc_qss[0] / x120 + x315 * x413 + x413 * x58 -
+         (kf_qss[9] * sc[11] + x401) / x120;
+  x374 = -kf_qss[25] * sc_qss[0] / x120 + x315 * (-kf_qss[39] + x388) +
+         x58 * (-kf_qss[39] + x388) - (kf_qss[11] * sc[11] + x401) / x120;
+  x376 = x315 * x437 + x437 * x58 -
+         (kf_qss[22] * sc[11] + kf_qss[7] * sc[9] * x308 + x401) / x120;
+  x379 = x184 * x315 + x184 * x58 - x99;
+  x286 = x141 * x315 + x141 * x58 - (sc[9] * x286 + x401) / x120;
+  x384 = x315 * (-kf_qss[37] + x388) + x58 * (-kf_qss[37] + x388) -
+         (kf_qss[38] * sc[11] + x401) / x120;
+  x93 = x315 * x495 + x495 * x58 - (kf_qss[37] * sc[9] * x302 + x355) / x120;
+  x395 = -x161 + x179 * x315 + x179 * x58;
+  x185 = x185 * x315 + x185 * x58 - (kf_qss[8] * sc[1] * x299 + x355) / x120;
+  x355 = -x109 + x315 * x388 + x388 * x58;
+  x120 = x315 * x388 + x388 * x58 - x401 / x120;
+  x315 = sc_qss[1] * x203 * x205 + x203 * x244 -
+         (kf_qss[14] * sc[11] * x230 + x372) / x33;
   x15 =
-    sc_qss[1] * x209 * x397 + x248 * x397 - (sc[11] * x15 * x28 + x20) / x33;
-  x28 = sc_qss[1] * x209 * (-kf_qss[10] + x22) - x20 / x33 +
-        x248 * (-kf_qss[10] + x22);
-  x389 = sc_qss[1] * x209 * (-kf_qss[40] + x22) - x20 / x33 +
-         x248 * (-kf_qss[40] + x22);
-  x397 = sc_qss[1] * x209 * (-kf_qss[23] + x22) + x248 * (-kf_qss[23] + x22) -
-         (kf_qss[10] * sc[11] * x237 + kf_qss[15] * sc[7] * x245 + x20) / x33;
-  x78 = -kf_qss[16] * sc_qss[1] * x37 / x33 + sc_qss[1] * x209 * x460 +
-        x248 * x460 - x471;
-  x22 = sc_qss[1] * x209 * x22 + x22 * x248;
-  x232 = x22 - (sc[11] * x232 + x20) / x33;
-  x419 = x22 - (kf_qss[15] * sc[4] * x245 + x20) / x33;
-  x207 = sc_qss[1] * x207 * x209 + x207 * x248 - x375 / x33;
-  x209 = sc_qss[1] * x209 * x30 - x175 + x248 * x30;
-  x248 = -x200 + x22;
-  x33 = -x20 / x33 + x22;
-  x117 = 23000.0 * exp(-1648.03458051046 * invT + 1.05 * logT - x117);
-  x375 = sc[0] * x117;
-  x20 = 6000000.0 * sc[5] * x37;
-  x427 = -717.08374877172594 * invT - 2.57 * logT;
-  x70 =
-    1238532.11009174 * x7 * exp(-130.83633310922701 * invT - 0.48 * logT + x70);
-  x429 = -0.29097730287517898 * x75 + 0.43429448190325198 * log(x70) - 0.4;
-  x432 = 1.7777777777777777 * ((x429) * (x429)) /
-           ((-0.18666666666666668 * x429 - 0.73540532268950665 * x75 + 1) *
-            (-0.18666666666666668 * x429 - 0.73540532268950665 * x75 + 1)) +
-         1.0;
-  x438 = exp(M_LN10 * (0.43429448190325198 * x75 / x432)) / (x70 + 1.0);
-  x443 = 1350000000000.0 * sc[1] * x438 * x7 * exp(x427);
-  x444 = 80000000.0 * sc[1] * x107;
-  x450 = exp(-8554.6833186802305 * invT - logT);
-  x183 = 2244000000000.0 * sc[5] * x450;
-  x460 = 187000000000.0 * x450 * x6;
-  x462 = -3286.0048277048204 * invT - 4.82 * logT;
-  x11 =
-    235185185185185.0 * x7 * exp(1811.57999689699 * invT - 0.454 * logT + x11);
-  x463 = -0.29097730287517898 * x17 + 0.43429448190325198 * log(x11) - 0.4;
-  x468 = 1.7777777777777777 * ((x463) * (x463)) /
-           ((-0.73540532268950665 * x17 - 0.18666666666666668 * x463 + 1) *
-            (-0.73540532268950665 * x17 - 0.18666666666666668 * x463 + 1)) +
-         1.0;
-  x471 = exp(M_LN10 * (0.43429448190325198 * x17 / x468)) / (x11 + 1.0);
-  x472 = 1.27e+20 * refC * x471 * x7 * exp(x10 + x462);
-  x475 = 39000000.0 * exp(-1781.38699694871 * invT - x92 - x94);
-  x476 = sc[4] * x475;
-  x497 = 7600000.0 * sc[3] * exp(-201.28666632188799 * invT);
-  x504 = 13200000.0 * exp(
+    sc_qss[1] * x205 * x393 + x244 * x393 - (sc[11] * x15 * x28 + x405) / x33;
+  x28 = sc_qss[1] * x205 * (-kf_qss[10] + x392) + x244 * (-kf_qss[10] + x392) -
+        x405 / x33;
+  x388 = sc_qss[1] * x205 * (-kf_qss[40] + x392) + x244 * (-kf_qss[40] + x392) -
+         x405 / x33;
+  x393 = sc_qss[1] * x205 * (-kf_qss[23] + x392) + x244 * (-kf_qss[23] + x392) -
+         (kf_qss[10] * sc[11] * x224 + kf_qss[15] * sc[7] * x235 + x405) / x33;
+  x397 = -kf_qss[16] * sc_qss[1] * x38 / x33 + sc_qss[1] * x205 * x456 - x102 +
+         x244 * x456;
+  x392 = sc_qss[1] * x205 * x392 + x244 * x392;
+  x228 = x392 - (sc[11] * x228 + x405) / x33;
+  x401 = x392 - (kf_qss[15] * sc[4] * x235 + x405) / x33;
+  x203 = sc_qss[1] * x203 * x205 + x203 * x244 - x372 / x33;
+  x205 = sc_qss[1] * x205 * x30 - x175 + x244 * x30;
+  x244 = -x193 + x392;
+  x33 = x392 - x405 / x33;
+  x118 = 23000.0 * exp(-1648.0439722084579 * invT + 1.05 * logT - x118);
+  x372 = sc[0] * x118;
+  x402 = 80000000.0 * sc[1] * x83;
+  x405 = 6000000.0 * sc[5] * x38;
+  x413 = -717.0878352357413 * invT - 2.57 * logT;
+  x91 = 1238532.1100917431 * x7 *
+        exp(-130.8370787096791 * invT - 0.48 * logT + x91);
+  x416 = -0.2909773028751787 * x96 + 0.43429448190325176 * log(x91) - 0.4;
+  x424 = -0.14 * x416 - 0.55155399201712974 * x96 + 0.75;
+  x412 = exp(
+    M_LN10 * (0.43429448190325176 * x96 /
+              (((x416) * (x416)) / ((x424) * (x424)) + 1.0)));
+  x430 = 1350000000000.0 * x412 * x7 * exp(x413) / (x91 + 1.0);
+  x435 = sc[1] * x430;
+  x437 = exp(-8554.7320694790178 * invT - logT);
+  x440 = 187000000000.0 * x437 * x6;
+  x446 = 2244000000000.0 * sc[5] * x437;
+  x11 = 235185185185185.22 * x7 *
+        exp(1811.5903205955569 * invT - 0.454 * logT + x11);
+  x184 = -0.2909773028751787 * x17 + 0.43429448190325176 * log(x11) - 0.4;
+  x456 =
+    ((x184) * (x184)) / ((-0.55155399201712974 * x17 - 0.14 * x184 + 0.75) *
+                         (-0.55155399201712974 * x17 - 0.14 * x184 + 0.75)) +
+    1.0;
+  x458 = exp(M_LN10 * (0.43429448190325176 * x17 / x456)) / (x11 + 1.0);
+  x459 = 1.27e+20 * x458 * x7;
+  x99 = -3286.0235537469412 * invT - 4.82 * logT;
+  x102 = refC * x459 * exp(x10 + x99);
+  x467 = 39000000.0 * exp(-1781.3971485856309 * invT - x114 - x70);
+  x141 = sc[4] * x467;
+  x451 = 13200000.0 * exp(
                         -g_RT[3] + g_RT[4] - g_RT_qss[0] + g_RT_qss[2] -
-                        754.82499870708 * invT);
-  x154 = sc[4] * x504;
-  x30 = 100000000.0 * exp(-20128.666632188801 * invT - x110 - x94);
-  x155 = sc[6] * x30;
-  x174 = 18000000.0 * sc[3] * exp(-452.89499922424801 * invT);
-  x175 = 25010000.0 * sc[5] * x45;
-  x180 = 3430.0 * exp(224.93784961470999 * invT + 1.18 * logT - x43 - x94);
-  x143 = sc[5] * x180;
-  x149 = 32000000.0 * sc[8] * exp(286.83349950869001 * invT);
-  x94 = 0.00332 * exp(-2948.8496616156599 * invT + 2.81 * logT - x94 - x97);
-  x156 = sc[8] * x94;
-  x87 = 16000000.0 * sc[8] * exp(286.83349950869001 * invT);
-  x200 = 28000000.0 *
-         exp(g_RT[0] - g_RT[1] + g_RT[3] - g_RT[6] - 537.43539907944103 * invT);
-  x217 = 0.05 * exp(-3165.23282791169 * invT + 2.67 * logT);
-  x225 = 216.0 * sc[4] * exp(-1726.0331637101899 * invT + 1.51 * logT);
-  x53 = 0.5 * exp(-3638.25649376812 * invT + 2.0 * logT);
-  x220 = sc[0] * x53;
-  x299 = sc_qss[0] * x124;
-  x379 = -x299 - x322;
-  x22 = g_RT[0] - 2.0 * g_RT[1];
-  const amrex::Real x775 = refC * exp(-logT + x22);
-  x165 = x382 * (x188 * x322 - x223 * x283 - x342 / x165);
-  x188 = 660.0 * exp(
+                        754.82930024814868 * invT);
+  x478 = sc[4] * x451;
+  x495 = 7600000.0 * sc[3] * exp(-201.28781339950632 * invT);
+  x501 = 100000000.0 * exp(-20128.78133995063 * invT - x70 - x88);
+  x179 = sc[6] * x501;
+  x30 = 18000000.0 * sc[3] * exp(-452.89758014888923 * invT);
+  x155 = 25010000.0 * sc[5] * x46;
+  x161 = 3430.0 * exp(224.93913147394832 * invT + 1.18 * logT - x44 - x70);
+  x175 = sc[5] * x161;
+  x176 = 32000000.0 * sc[8] * exp(286.83513409429651 * invT);
+  x70 = 0.00332 * exp(-2948.8664663027675 * invT + 2.81 * logT - x68 - x70);
+  x145 = sc[8] * x70;
+  x150 = 16000000.0 * sc[8] * exp(286.83513409429651 * invT);
+  x109 = 28000000.0 *
+         exp(g_RT[0] - g_RT[1] + g_RT[3] - g_RT[6] - 537.43846177668183 * invT);
+  x193 = 0.05 * exp(-3165.2508657072367 * invT + 2.67 * logT);
+  x198 = 216.0 * sc[4] * exp(-1726.0429999007667 * invT + 1.51 * logT);
+  x201 = 0.5 * exp(-3638.2772271960766 * invT + 2.0 * logT);
+  x216 = sc[0] * x201;
+  x166 = x380 * (x188 * x316 - x217 * x278 - x336 / x166);
+  x188 = g_RT[0] - 2.0 * g_RT[1];
+  x217 = refC * sc[0];
+  x336 = 660.0 * exp(
                    g_RT[0] - g_RT[1] + g_RT[7] - g_RT[8] -
-                   5454.8686573231598 * invT + 1.62 * logT);
-  x50 = (-sc_qss[0] * x66 / x50 + x283) / x54;
-  x54 = 117906976744186.0 * x7 * exp(-2390.2791625723985 * invT - 4.92 * logT);
-  x66 = log(
-    exp(-10300.0 * invT) + 0.068 * exp(-0.0050761421319797002 * T) +
-    0.932 * exp(-0.00064935064935064902 * T));
-  x223 = -0.29097730287517898 * x66 + 0.43429448190325198 * log(x54) - 0.4;
-  x283 = -0.14 * x223 - 0.55155399201712996 * x66 + 0.75;
-  x342 = exp(
-           M_LN10 * (0.43429448190325198 * x66 /
-                     (((x223) * (x223)) / ((x283) * (x283)) + 1.0))) /
-         (x54 + 1.0);
-  x382 = -42446.325760628104 * invT - 3.42 * logT;
-  const amrex::Real x815 = exp(-g_RT[0] + g_RT[11] - g_RT[9] + x382);
-  x54 = exp(
-          M_LN10 * (0.43429448190325198 * x66 /
-                    (((x223) * (x223)) / ((x283) * (x283)) + 1.0))) /
-        ((x54 + 1.0) * (x54 + 1.0));
-  const amrex::Real x822 =
-    x314 * x7 *
+                   5454.8997431266216 * invT + 1.62 * logT);
+  x380 = exp(-logT + x188);
+  x58 = sc_qss[0] * x125;
+  x392 = -x316 - x58;
+  x51 = (-sc_qss[0] * x65 / x51 + x278) / x55;
+  x55 = 117906976744186.06 * x7 * exp(-2390.2927841191413 * invT - 4.92 * logT);
+  x65 = log(
+    exp(-10300.0 * invT) + 0.068 * exp(-0.005076142131979695 * T) +
+    0.932 * exp(-0.00064935064935064935 * T));
+  x278 = -0.2909773028751787 * x65 + 0.43429448190325176 * log(x55) - 0.4;
+  amrex::Real x805 = -0.14 * x278 - 0.55155399201712974 * x65 + 0.75;
+  amrex::Real x810 = x129 * ((x278) * (x278)) / ((x805) * (x805) * (x805));
+  amrex::Real x812 = x65 / ((((x278) * (x278)) / ((x805) * (x805)) + 1.0) *
+                            (((x278) * (x278)) / ((x805) * (x805)) + 1.0));
+  amrex::Real x813 =
+    x812 * (4.0 * x129 * x278 / ((x805) * (x805)) + 0.56 * x810);
+  const amrex::Real x816 =
     exp(
-      -g_RT[0] + g_RT[11] - g_RT[9] - 44836.604923200604 * invT - 8.34 * logT);
-  amrex::Real x826 = x140 * ((x223) * (x223)) / ((x283) * (x283) * (x283));
-  amrex::Real x827 = 4.0 * x140 * x223 / ((x283) * (x283)) + 0.56 * x826;
-  x66 = x66 / ((((x223) * (x223)) / ((x283) * (x283)) + 1.0) *
-               (((x223) * (x223)) / ((x283) * (x283)) + 1.0));
-  const amrex::Real x831 = 5070000000000000.0 * x314 * x342 * x815;
-  const amrex::Real x833 = x66 * x7 * x831;
-  const amrex::Real x837 = sc[0] * sc[9] * exp(x382);
-  const amrex::Real x839 = 5070000000000000.0 * x342 * x7;
-  const amrex::Real x841 = x66 * x837 * x839;
-  const amrex::Real x843 =
-    sc[0] * sc[9] * x7 * exp(-44836.604923200604 * invT - 8.34 * logT);
-  const amrex::Real x845 =
-    1.014e+16 * x314 * x342 * x815 - 1.014e+16 * x342 * x837 -
-    1.19557674418605e+30 * x54 * x822 + 1.19557674418605e+30 * x54 * x843 -
-    x827 * x833 + x827 * x841;
-  const amrex::Real x853 =
-    73400000.0 * sc[1] * x186 + 15000000.0 * sc[2] * x222 -
-    15000000.0 * sc[2] * x327 - 15000000.0 * sc[9] * x256 -
-    73400000.0 * sc[9] * x292 - sc[9] * x839 * exp(x382);
-  const amrex::Real x856 = 28000000.0 * exp(-537.43539907944103 * invT);
-  const amrex::Real x858 =
+      M_LN10 * (0.43429448190325176 * x65 /
+                (((x278) * (x278)) / ((x805) * (x805)) + 1.0))) /
+    (x55 + 1.0);
+  const amrex::Real x819 = -42446.567650620898 * invT - 3.42 * logT;
+  const amrex::Real x821 = x350 * exp(-g_RT[0] + g_RT[11] - g_RT[9] + x819);
+  const amrex::Real x829 =
+    sc[0] * sc[9] * exp(-44836.86043474004 * invT - 8.34 * logT);
+  x55 = exp(
+          M_LN10 * (0.43429448190325176 * x65 /
+                    (((x278) * (x278)) / ((x805) * (x805)) + 1.0))) *
+        x7 / ((x55 + 1.0) * (x55 + 1.0));
+  x65 = sc[0] * sc[9] * exp(x819);
+  const amrex::Real x838 =
+    x350 *
+    exp(-g_RT[0] + g_RT[11] - g_RT[9] - 44836.86043474004 * invT - 8.34 * logT);
+  const amrex::Real x841 = 1.1955767441860469e+30 * x55 * x829 -
+                           1.1955767441860469e+30 * x55 * x838 +
+                           5070000000000001.0 * x65 * x7 * x813 * x816 -
+                           1.0140000000000002e+16 * x65 * x816 -
+                           5070000000000001.0 * x7 * x813 * x816 * x821 +
+                           1.0140000000000002e+16 * x816 * x821;
+  const amrex::Real x850 =
+    73400000.0 * sc[1] * x186 - 15000000.0 * sc[2] * x213 +
+    15000000.0 * sc[2] * x219 - 15000000.0 * sc[9] * x251 -
+    73400000.0 * sc[9] * x311 -
+    5070000000000001.0 * sc[9] * x7 * x816 * exp(x819);
+  const amrex::Real x853 = 28000000.0 * exp(-537.43846177668183 * invT);
+  const amrex::Real x855 =
     0.05 *
-    exp(-g_RT[0] + g_RT[1] - 3165.23282791169 * invT + 2.67 * logT - x92);
-  const amrex::Real x861 = exp(-2.0 * logT);
-  const amrex::Real x866 = exp(-logT);
-  const amrex::Real x869 = 0.5 * exp(
+    exp(-g_RT[0] + g_RT[1] - 3165.2508657072367 * invT + 2.67 * logT - x114);
+  const amrex::Real x857 = 0.5 * exp(
                                    -g_RT[0] + g_RT[1] + g_RT[7] - g_RT_qss[0] -
-                                   3638.25649376812 * invT + 2.0 * logT);
-  const amrex::Real x871 =
+                                   3638.2772271960766 * invT + 2.0 * logT);
+  const amrex::Real x861 =
     216.0 *
-    exp(-g_RT[0] + g_RT[1] - 1726.0331637101899 * invT + 1.51 * logT - x43);
-  const amrex::Real x877 =
-    23000.0 * exp(-1648.03458051046 * invT + 1.05 * logT);
+    exp(-g_RT[0] + g_RT[1] - 1726.0429999007667 * invT + 1.51 * logT - x44);
+  const amrex::Real x863 = exp(-2.0 * logT);
+  const amrex::Real x874 =
+    660.0 * sc[8] * exp(-5454.8997431266216 * invT + 1.62 * logT);
+  const amrex::Real x876 = exp(-logT);
   const amrex::Real x880 =
-    660.0 * sc[8] * exp(-5454.8686573231598 * invT + 1.62 * logT);
-  amrex::Real x890 = 2.0 * x140 * x223 / ((x283) * (x283)) + 0.28 * x826;
-  const amrex::Real x894 =
-    -5070000000000000.0 * x342 * x837 - 5.9778837209302301e+29 * x54 * x822 +
-    5.9778837209302301e+29 * x54 * x843 + x831 - x833 * x890 + x841 * x890;
+    23000.0 * exp(-1648.0439722084579 * invT + 1.05 * logT);
+  amrex::Real x888 = 2.0 * x129 * x278 / ((x805) * (x805)) + 0.28 * x810;
+  const amrex::Real x889 = 5070000000000001.0 * x65 * x7 * x812 * x816;
+  x812 = 5070000000000001.0 * x7 * x812 * x816 * x821;
+  const amrex::Real x894 = 5.9778837209302344e+29 * x55 * x829 -
+                           5.9778837209302344e+29 * x55 * x838 -
+                           5070000000000001.0 * x65 * x816 - x812 * x888 +
+                           5070000000000001.0 * x816 * x821 + x888 * x889;
   const amrex::Real x895 =
-    -1000000.0 * sc[0] * x775 + 1000000.0 * ((sc[1]) * (sc[1])) * x866 + x894;
+    1000000.0 * ((sc[1]) * (sc[1])) * x876 - 1000000.0 * x217 * x380 + x894;
   const amrex::Real x901 =
-    73400000.0 * sc[1] * x381 - 15000000.0 * sc[2] * x345 +
-    15000000.0 * sc[2] * x413 - 73400000.0 * x299 - 73400000.0 * x322;
-  const amrex::Real x902 = sc_qss[1] * x41;
-  const amrex::Real x934 =
-    216.0 * sc[0] * exp(-1726.0331637101899 * invT + 1.51 * logT);
-  x66 = x66 * (12.0 * x140 * x223 / ((x283) * (x283)) + 1.68 * x826);
+    73400000.0 * sc[1] * x210 - 15000000.0 * sc[2] * x221 +
+    15000000.0 * sc[2] * x408 - 73400000.0 * x316 - 73400000.0 * x58;
+  const amrex::Real x902 = sc_qss[1] * x42;
+  const amrex::Real x931 =
+    216.0 * sc[0] * exp(-1726.0429999007667 * invT + 1.51 * logT);
+  const amrex::Real x959 = 12.0 * x129 * x278 / ((x805) * (x805)) + 1.68 * x810;
   const amrex::Real x963 =
-    73400000.0 * sc[1] * x399 - 15000000.0 * sc[2] * x167 +
-    15000000.0 * sc[2] * x361 + 3.042e+16 * x314 * x342 * x815 -
-    3.042e+16 * x342 * x837 - 3.5867302325581401e+30 * x54 * x822 +
-    3.5867302325581401e+30 * x54 * x843 - x66 * x7 * x831 + x66 * x837 * x839;
+    73400000.0 * sc[1] * x379 + 15000000.0 * sc[2] * x105 -
+    15000000.0 * sc[2] * x348 + 3.5867302325581406e+30 * x55 * x829 -
+    3.5867302325581406e+30 * x55 * x838 - 3.042000000000001e+16 * x65 * x816 -
+    x812 * x959 + 3.042000000000001e+16 * x816 * x821 + x889 * x959;
   const amrex::Real x973 =
-    70000000.0 * sc[0] * x25 - 15000000.0 * sc[2] * x25 + x895;
-  const amrex::Real x994 =
-    660.0 * sc[1] * exp(-5454.8686573231598 * invT + 1.62 * logT);
-  x223 = 3.0 * x140 * x223 / ((x283) * (x283)) + 0.42 * x826;
-  x283 = -15000000.0 * sc[0] * x256 - 73400000.0 * sc[0] * x292 -
-         sc[0] * x839 * exp(x382) + 73400000.0 * sc[1] * x417 -
-         15000000.0 * sc[2] * x210 + 15000000.0 * sc[2] * x378 - x223 * x833 +
-         x223 * x841 + 7605000000000000.0 * x314 * x342 * x815 -
-         7605000000000000.0 * x342 * x837 -
-         8.9668255813953501e+29 * x54 * x822 +
-         8.9668255813953501e+29 * x54 * x843;
-  x826 = x438 * exp(x316 + x427);
-  amrex::Real x1062 =
-    128000.0 * x7 * exp(-618.95649893980499 * invT - 2.34 * logT);
-  amrex::Real x1063 =
-    -0.29097730287517898 * x131 + 0.43429448190325198 * log(x1062) - 0.4;
-  amrex::Real x1065 = -0.14 * x1063 - 0.55155399201712996 * x131 + 0.75;
-  const amrex::Real x1067 =
-    ((x1063) * (x1063)) * x140 / ((x1065) * (x1065) * (x1065));
-  const amrex::Real x1069 = x1063 * x140 / ((x1065) * (x1065));
-  amrex::Real x1071 =
-    x131 / ((((x1063) * (x1063)) / ((x1065) * (x1065)) + 1.0) *
-            (((x1063) * (x1063)) / ((x1065) * (x1065)) + 1.0));
-  amrex::Real x1078 =
+    70000000.0 * sc[0] * x351 - 15000000.0 * sc[2] * x351 + x895;
+  const amrex::Real x995 =
+    660.0 * sc[1] * exp(-5454.8997431266216 * invT + 1.62 * logT);
+  x278 = 3.0 * x129 * x278 / ((x805) * (x805)) + 0.42 * x810;
+  x805 = -15000000.0 * sc[0] * x251 - 73400000.0 * sc[0] * x311 -
+         5070000000000001.0 * sc[0] * x7 * x816 * exp(x819) +
+         73400000.0 * sc[1] * x395 - 15000000.0 * sc[2] * x369 +
+         15000000.0 * sc[2] * x371 - x278 * x812 + x278 * x889 +
+         8.9668255813953516e+29 * x55 * x829 -
+         8.9668255813953516e+29 * x55 * x838 - 7605000000000002.0 * x65 * x816 +
+         7605000000000002.0 * x816 * x821;
+  x810 = 5070000000000001.0 * refC * x7 * x816 *
+           exp(-g_RT[0] + g_RT[11] - g_RT[9] + x819) +
+         73400000.0 * sc[1] * x355 + 15000000.0 * sc[2] * x20;
+  const amrex::Real x1057 = sc[1] * x392 * x412 * exp(x413) / (x91 + 1.0);
+  const amrex::Real x1061 =
+    x350 * exp(-1565.0127491811616 * invT - 5.62 * logT + x292);
+  const amrex::Real x1062 = x412 * x7 / ((x91 + 1.0) * (x91 + 1.0));
+  const amrex::Real x1067 = x129 * x416 / ((x424) * (x424));
+  const amrex::Real x1068 =
+    x129 * ((x416) * (x416)) / ((x424) * (x424) * (x424));
+  x96 = x96 / ((((x416) * (x416)) / ((x424) * (x424)) + 1.0) *
+               (((x416) * (x416)) / ((x424) * (x424)) + 1.0));
+  x416 = 1350000000000.0 * x1057 * x7;
+  x424 = x416 * x96 * (4.0 * x1067 + 0.56 * x1068);
+  x292 = x412 * exp(x292 + x413) / (x91 + 1.0);
+  x413 = sc[1] * x392 * exp(-1565.0127491811616 * invT - 5.62 * logT);
+  x91 = 127999.99999999999 * x7 * exp(-618.9600262034819 * invT - 2.34 * logT);
+  x412 = -0.2909773028751787 * x135 + 0.43429448190325176 * log(x91) - 0.4;
+  amrex::Real x1081 = -0.55155399201712974 * x135 - 0.14 * x412 + 0.75;
+  const amrex::Real x1087 =
     exp(
-      M_LN10 * (0.43429448190325198 * x131 /
-                (((x1063) * (x1063)) / ((x1065) * (x1065)) + 1.0))) /
-    (x1062 + 1.0);
-  const amrex::Real x1079 =
-    3200000000000000.0 * x1078 * exp(-618.95649893980499 * invT - 3.14 * logT);
-  const amrex::Real x1082 =
-    sc[1] * x1071 * x1079 * x165 * x7 * (0.56 * x1067 + 4.0 * x1069);
-  amrex::Real x1084 =
-    1.7777777777777777 * x429 /
-    ((-0.18666666666666668 * x429 - 0.73540532268950665 * x75 + 1) *
-     (-0.18666666666666668 * x429 - 0.73540532268950665 * x75 + 1));
-  x429 = 2.3703703703703702 * ((x429) * (x429)) /
-         ((-0.18666666666666668 * x429 - 0.73540532269 * x75 + 1) *
-          (-0.18666666666666668 * x429 - 0.73540532269 * x75 + 1) *
-          (-0.18666666666666668 * x429 - 0.73540532269 * x75 + 1));
-  const amrex::Real x1086 = 4.0 * x1084 * x140 + 0.56 * x140 * x429;
-  const amrex::Real x1089 =
-    1350000000000.0 * x314 * x7 * x75 * x826 / ((x432) * (x432));
-  const amrex::Real x1092 =
-    sc[1] * x1078 * x165 * exp(-618.95649893980499 * invT - 3.14 * logT);
-  x70 = exp(M_LN10 * (0.43429448190325198 * x75 / x432)) /
-        ((x70 + 1.0) * (x70 + 1.0));
-  x316 = x314 * x7 * exp(-1565.003830652674 * invT - 5.62 * logT + x316);
-  const amrex::Real x1102 =
-    refC * sc[7] * x1078 * exp(-618.95649893980499 * invT - 3.14 * logT + x326);
-  const amrex::Real x1105 =
-    sc[1] * x379 * x7 * exp(-1565.003830652674 * invT - 5.62 * logT);
-  x1078 = 3200000000000000.0 * x1078 * x204 *
-          exp(-618.95649893980499 * invT - 3.14 * logT + x326);
-  const amrex::Real x1109 =
-    sc[7] * x1071 * x1078 * (0.56 * x1067 + 4.0 * x1069);
-  x131 = exp(
-           M_LN10 * (0.43429448190325198 * x131 /
-                     (((x1063) * (x1063)) / ((x1065) * (x1065)) + 1.0))) /
-         ((x1062 + 1.0) * (x1062 + 1.0));
-  x326 = sc[7] * x204 * exp(-1237.91299787961 * invT - 5.48 * logT + x326);
-  x1062 = sc[1] * x165 * x7 * exp(-1237.91299787961 * invT - 5.48 * logT);
-  x1063 = sc[1] * x379 * x438 * exp(x427);
-  x75 = 1350000000000.0 * x1063 * x7 * x75 / ((x432) * (x432));
-  x432 = sc[1] * x1079 * x7;
-  x1065 = refC * sc[6];
-  const amrex::Real x1142 = exp(-g_RT[1] - 0.86 * logT - x110);
-  const amrex::Real x1147 = sc[1] * sc[3] * exp(-0.86 * logT);
-  const amrex::Real x1149 = 2800000.0 * x1065 * x1142 - 2800000.0 * x1147;
-  const amrex::Real x1150 = refC * exp(-g_RT[1] - logT - x92);
-  const amrex::Real x1151 = sc[4] * x1150;
-  const amrex::Real x1154 = sc[1] * sc[2] * x866;
-  const amrex::Real x1156 = 1000000.0 * x1151 - 1000000.0 * x1154;
-  amrex::Real x1158 = exp(g_RT[1] - 8554.6833186802305 * invT - logT - x286);
-  const amrex::Real x1160 =
-    -374000000000.0 * x1158 * x270 + 374000000000.0 * x379 * x450;
-  const amrex::Real x1163 = refC * exp(-g_RT[1] - 2.0 * logT - x43);
-  const amrex::Real x1166 = sc[1] * sc[4] * x861;
-  const amrex::Real x1168 =
-    sc[2] * x217 + 28000000.0 * sc[3] * x222 - 28000000.0 * sc[3] * x327 +
-    16060000000.0 * sc[5] * x1163 - 16060000000.0 * x1166;
-  amrex::Real x1172 =
-    195039370078.74 * x7 * exp(-1035.1166815603121 * invT - 4.13 * logT);
-  amrex::Real x1173 = log(
-    exp(-6964.0 * invT) + 0.217 * exp(-0.0135135135135135 * T) +
-    0.783 * exp(-0.00034002040122407302 * T));
+      M_LN10 * (0.43429448190325176 * x135 /
+                (1.0 + ((x412) * (x412)) / ((x1081) * (x1081))))) /
+    (x91 + 1.0);
+  const amrex::Real x1089 = exp(-618.9600262034819 * invT - 3.14 * logT + x321);
+  const amrex::Real x1091 = refC * sc[7] * x1087 * x1089;
+  amrex::Real x1094 = x129 * ((x412) * (x412)) / ((x1081) * (x1081) * (x1081));
+  const amrex::Real x1096 =
+    0.56 * x1094 + 4.0 * x129 * x412 / ((x1081) * (x1081));
+  amrex::Real x1097 = x135 / ((1.0 + ((x412) * (x412)) / ((x1081) * (x1081))) *
+                              (1.0 + ((x412) * (x412)) / ((x1081) * (x1081))));
+  const amrex::Real x1100 = x166 * exp(-618.9600262034819 * invT - 3.14 * logT);
+  const amrex::Real x1101 = 3199999999999999.5 * x1087 * x1100;
+  const amrex::Real x1103 = sc[1] * x1097 * x1101 * x7;
+  const amrex::Real x1107 = 1350000000000.0 * refC * sc[11] * x292 * x7;
+  const amrex::Real x1109 = x1107 * x96 * (4.0 * x1067 + 0.56 * x1068);
+  x135 = exp(
+           M_LN10 * (0.43429448190325176 * x135 /
+                     (1.0 + ((x412) * (x412)) / ((x1081) * (x1081))))) /
+         ((x91 + 1.0) * (x91 + 1.0));
+  x321 =
+    refC * sc[7] * x7 * exp(-1237.9200524069638 * invT - 5.48 * logT + x321);
+  x91 = 3199999999999999.5 * x1091 * x1097 * x7;
+  const amrex::Real x1122 =
+    sc[1] * x166 * x7 * exp(-1237.9200524069638 * invT - 5.48 * logT);
+  const amrex::Real x1136 = 3199999999999999.5 * sc[1] * x1087 * x7 *
+                            exp(-618.9600262034819 * invT - 3.14 * logT);
+  const amrex::Real x1143 =
+    refC * exp(-g_RT[1] - g_RT[3] + g_RT[6] - 0.86 * logT);
+  const amrex::Real x1148 = sc[1] * sc[3] * exp(-0.86 * logT);
+  const amrex::Real x1150 = 2800000.0 * sc[6] * x1143 - 2800000.0 * x1148;
+  const amrex::Real x1151 = exp(-g_RT[1] - logT - x114);
+  const amrex::Real x1155 = sc[1] * sc[2] * x876;
+  const amrex::Real x1157 =
+    1000000.0 * refC * sc[4] * x1151 - 1000000.0 * x1155;
+  amrex::Real x1159 = exp(g_RT[1] - 8554.7320694790178 * invT - logT - x281);
+  const amrex::Real x1161 =
+    -374000000000.0 * x1159 * x265 + 374000000000.0 * x392 * x437;
+  const amrex::Real x1164 = sc[1] * sc[4] * x863;
+  const amrex::Real x1166 = exp(-g_RT[1] - 2.0 * logT - x44);
+  const amrex::Real x1167 = refC * sc[5] * x1166;
+  const amrex::Real x1169 = sc[2] * x193 - 28000000.0 * sc[3] * x213 +
+                            28000000.0 * sc[3] * x219 - 16060000000.0 * x1164 +
+                            16060000000.0 * x1167;
+  amrex::Real x1173 =
+    195039370078.74014 * x7 * exp(-1035.1225804069613 * invT - 4.13 * logT);
+  amrex::Real x1174 = log(
+    exp(-6964.0 * invT) + 0.217 * exp(-0.013513513513513514 * T) +
+    0.783 * exp(-0.00034002040122407346 * T));
   amrex::Real x1175 =
-    -0.29097730287517898 * x1173 + 0.43429448190325198 * log(x1172) - 0.4;
-  amrex::Real x1176 = -0.55155399201712996 * x1173 - 0.14 * x1175 + 0.75;
-  amrex::Real x1179 = ((x1175) * (x1175)) / ((x1176) * (x1176)) + 1.0;
-  const amrex::Real x1182 =
-    exp(M_LN10 * (0.43429448190325198 * x1173 / x1179)) / (x1172 + 1.0);
-  const amrex::Real x1185 = -1227.8486645635121 * invT - 4.76 * logT;
-  const amrex::Real x1186 = exp(-g_RT[1] + x1185 - x97);
-  x1172 = exp(M_LN10 * (0.43429448190325198 * x1173 / x1179)) /
-          ((x1172 + 1.0) * (x1172 + 1.0));
-  const amrex::Real x1192 =
-    sc[1] * sc[7] * x7 * exp(-2262.965346123824 * invT - 8.89 * logT);
-  amrex::Real x1197 =
-    ((x1175) * (x1175)) * x140 / ((x1176) * (x1176) * (x1176));
-  amrex::Real x1200 = 4.0 * x1175 * x140 / ((x1176) * (x1176)) + 0.56 * x1197;
-  const amrex::Real x1201 = refC * sc[8] * x1182 * x1186;
-  const amrex::Real x1204 =
-    2.477e+21 * x1173 * x1201 * x7 / ((x1179) * (x1179));
-  const amrex::Real x1210 = sc[1] * sc[7] * x1182 * exp(x1185);
-  x1173 = 2.477e+21 * x1173 * x1210 * x7 / ((x1179) * (x1179));
-  x1179 = refC * sc[8] * x7 *
-          exp(-g_RT[1] - 2262.965346123824 * invT - 8.89 * logT - x97);
-  amrex::Real x1217 = 4.954e+21 * refC * sc[8] * x1182 * x1186 -
-                      4.954e+21 * sc[1] * sc[7] * x1182 * exp(x1185) -
-                      9.6622503937007901e+32 * x1172 * x1179 +
-                      9.6622503937007901e+32 * x1172 * x1192 + x1173 * x1200 -
-                      x1200 * x1204;
-  const amrex::Real x1218 = 70000000.0 * sc[0] * x222 -
-                            70000000.0 * sc[0] * x327 + x1217 + x165 * x53 -
-                            x220 * x346 + x220 * x383 + 70000000.0 * x50;
-  amrex::Real x1225 =
-    1.7777777777777777 * x463 /
-    ((-0.73540532268950665 * x17 - 0.18666666666666668 * x463 + 1) *
-     (-0.73540532268950665 * x17 - 0.18666666666666668 * x463 + 1));
-  x463 = 2.3703703703703702 * ((x463) * (x463)) /
-         ((-0.73540532269 * x17 - 0.18666666666666668 * x463 + 1) *
-          (-0.73540532269 * x17 - 0.18666666666666668 * x463 + 1) *
-          (-0.73540532269 * x17 - 0.18666666666666668 * x463 + 1));
-  amrex::Real x1229 = sc[11] * sc[1] * exp(x462);
-  amrex::Real x1230 = 1.27e+20 * x17 * x471 * x7 / ((x468) * (x468));
-  x17 = exp(M_LN10 * (0.43429448190325198 * x17 / x468)) /
+    -0.2909773028751787 * x1174 + 0.43429448190325176 * log(x1173) - 0.4;
+  amrex::Real x1176 = -0.55155399201712974 * x1174 - 0.14 * x1175 + 0.75;
+  const amrex::Real x1180 = x1175 * x129 / ((x1176) * (x1176));
+  const amrex::Real x1183 =
+    ((x1175) * (x1175)) * x129 / ((x1176) * (x1176) * (x1176));
+  amrex::Real x1185 = ((x1175) * (x1175)) / ((x1176) * (x1176)) + 1.0;
+  const amrex::Real x1188 =
+    exp(M_LN10 * (0.43429448190325176 * x1174 / x1185)) / (x1173 + 1.0);
+  const amrex::Real x1191 = -1227.8556617369886 * invT - 4.76 * logT;
+  const amrex::Real x1194 = refC * sc[8] * exp(-g_RT[1] + x1191 - x68);
+  const amrex::Real x1197 =
+    2.477e+21 * x1174 * x1188 * x1194 * x7 / ((x1185) * (x1185));
+  x1173 = exp(M_LN10 * (0.43429448190325176 * x1174 / x1185)) * x7 /
+          ((x1173 + 1.0) * (x1173 + 1.0));
+  const amrex::Real x1203 =
+    refC * sc[8] * exp(-g_RT[1] - 2262.97824214395 * invT - 8.89 * logT - x68);
+  const amrex::Real x1209 = sc[1] * sc[7] * x1188 * exp(x1191);
+  x1174 = 2.477e+21 * x1174 * x1209 * x7 / ((x1185) * (x1185));
+  x1185 = sc[1] * sc[7] * exp(-2262.97824214395 * invT - 8.89 * logT);
+  amrex::Real x1217 = 9.6622503937007858e+32 * x1173 * x1185 -
+                      9.6622503937007858e+32 * x1173 * x1203 +
+                      x1174 * (4.0 * x1180 + 0.56 * x1183) +
+                      4.954e+21 * x1188 * x1194 -
+                      x1197 * (4.0 * x1180 + 0.56 * x1183) - 4.954e+21 * x1209;
+  const amrex::Real x1218 = -70000000.0 * sc[0] * x213 +
+                            70000000.0 * sc[0] * x219 + x1217 + x166 * x201 -
+                            x216 * x340 + x216 * x381 + 70000000.0 * x51;
+  x11 = exp(M_LN10 * (0.43429448190325176 * x17 / x456)) /
         ((x11 + 1.0) * (x11 + 1.0));
-  x11 = -x249 - x902;
-  x468 = x11 * x204 * exp(-4760.4296585126494 * invT - 10.094 * logT + x10);
-  amrex::Real x1238 = refC * x11 * exp(x10 + x462);
-  amrex::Real x1240 =
-    sc[11] * sc[1] * x7 * exp(-4760.4296585126494 * invT - 10.094 * logT);
-  x10 = 2.54e+20 * refC * x11 * x471 * exp(x10 + x462) +
-        x1229 * x1230 * (4.0 * x1225 * x140 + 0.56 * x140 * x463) -
-        2.54e+20 * x1229 * x471 -
-        x1230 * x1238 * (4.0 * x1225 * x140 + 0.56 * x140 * x463) +
-        5.9737037037037004e+34 * x1240 * x17 -
-        5.9737037037037004e+34 * x17 * x468;
-  const amrex::Real x1243 =
-    30000000.0 * sc[4] * x222 - 30000000.0 * sc[4] * x327 -
-    20000000.0 * sc[4] * x346 + 20000000.0 * sc[4] * x383 + x10 + x117 * x379 +
-    x186 * x375 + x321 * x472;
-  const amrex::Real x1250 = 28000000.0 * sc[4] * x271;
-  const amrex::Real x1267 = 47.6 * exp(
+  const amrex::Real x1225 = -x245 - x902;
+  amrex::Real x1227 =
+    refC * x1225 * x7 * exp(-4760.456786898324 * invT - 10.094 * logT + x10);
+  amrex::Real x1230 = x129 * x184 /
+                      ((-0.55155399201712974 * x17 - 0.14 * x184 + 0.75) *
+                       (-0.55155399201712974 * x17 - 0.14 * x184 + 0.75));
+  x184 =
+    ((x184) * (x184)) / ((-0.55155399201712974 * x17 - 0.14 * x184 + 0.75) *
+                         (-0.55155399201712974 * x17 - 0.14 * x184 + 0.75) *
+                         (-0.55155399201712974 * x17 - 0.14 * x184 + 0.75));
+  x17 = x17 / ((x456) * (x456));
+  x456 = sc[11] * exp(x99);
+  amrex::Real x1240 = refC * x1225 * exp(x10 + x99);
+  amrex::Real x1244 =
+    sc[11] * sc[1] * x7 * exp(-4760.456786898324 * invT - 10.094 * logT);
+  amrex::Real x1247 =
+    sc[1] * x17 * x456 * x459 * (4.0 * x1230 + 0.56 * x129 * x184) -
+    2.54e+20 * sc[1] * x456 * x458 - 5.973703703703705e+34 * x11 * x1227 +
+    5.973703703703705e+34 * x11 * x1244 -
+    x1240 * x17 * x459 * (4.0 * x1230 + 0.56 * x129 * x184) +
+    2.54e+20 * x1240 * x458;
+  const amrex::Real x1248 =
+    -30000000.0 * sc[4] * x213 + 30000000.0 * sc[4] * x219 -
+    20000000.0 * sc[4] * x340 + 20000000.0 * sc[4] * x381 + x102 * x315 +
+    x118 * x392 + x1247 + x186 * x372;
+  const amrex::Real x1255 = 28000000.0 * sc[4] * x266;
+  const amrex::Real x1272 = 47.6 * exp(
                                      g_RT[10] + g_RT[1] - g_RT[4] - g_RT[9] -
-                                     35.225166606330397 * invT + 1.228 * logT);
-  const amrex::Real x1275 = 3970000.0 * exp(-337.65838275496702 * invT);
-  const amrex::Real x1277 =
-    -sc[6] * x1275 - sc[6] * x856 -
-    134000000.0 * sc[6] * exp(-319.54258278599701 * invT);
-  const amrex::Real x1278 = sc[0] + 1.5 * sc[10] + sc[11] + sc[1] + sc[2] +
-                            sc[4] + sc[6] + sc[7] + sc[8] + 0.75 * sc[9];
-  const amrex::Real x1279 = 2800000.0 * x1278 * exp(-0.86 * logT);
-  const amrex::Real x1282 = 9380000.0 * exp(-0.76 * logT);
-  const amrex::Real x1285 = exp(-1.72 * logT);
-  const amrex::Real x1291 = 83000000.0 * exp(-7252.86180424342 * invT);
-  const amrex::Real x1293 = -375000000.0 * sc[12] * sc[3] * x1285 -
-                            300000000.0 * ((sc[3]) * (sc[3])) * x1285 -
-                            sc[3] * sc[5] * x1282 - sc[3] * x1279 -
-                            sc[3] * x1291;
-  const amrex::Real x1296 = -2244000000000.0 * refCinv * sc[5] * sc[9] * x1158 -
-                            187000000000.0 * refCinv * sc[9] * x1158 * x6 +
-                            x183 * x381 + x381 * x460;
-  const amrex::Real x1300 =
-    -70000000.0 * sc[0] * x345 + 70000000.0 * sc[0] * x413 -
-    2.477e+21 * sc[7] * x1182 * x7 * exp(x1185) - 70000000.0 * sc[7] * x279 -
-    sc[7] * x869 + x128 * x220 - x220 * x400;
-  const amrex::Real x1301 = 16060000000.0 * sc[0] + 22000000000.0 * sc[10] +
+                                     35.225367344913607 * invT + 1.228 * logT);
+  const amrex::Real x1280 = 3970000.0 * exp(-337.66030697767184 * invT);
+  const amrex::Real x1282 =
+    -sc[6] * x1280 - sc[6] * x853 -
+    134000000.0 * sc[6] * exp(-319.5444037717163 * invT);
+  const amrex::Real x1283 = 2800000.0 * sc[0] + 4200000.0 * sc[10] +
+                            2800000.0 * sc[11] + 2800000.0 * sc[1] +
+                            2800000.0 * sc[2] + 2800000.0 * sc[4] +
+                            2800000.0 * sc[6] + 2800000.0 * sc[7] +
+                            2800000.0 * sc[8] + 2100000.0 * sc[9];
+  const amrex::Real x1286 = 9380000.0 * exp(-0.76 * logT);
+  const amrex::Real x1292 = 83000000.0 * exp(-7252.9031363177119 * invT);
+  const amrex::Real x1295 = 375000000.0 * sc[12] * exp(-1.72 * logT);
+  const amrex::Real x1297 =
+    -300000000.0 * ((sc[3]) * (sc[3])) * exp(-1.72 * logT) -
+    sc[3] * sc[5] * x1286 - sc[3] * x1283 * exp(-0.86 * logT) - sc[3] * x1292 -
+    sc[3] * x1295;
+  const amrex::Real x1301 = -2244000000000.0 * refCinv * sc[5] * sc[9] * x1159 -
+                            187000000000.0 * refCinv * sc[9] * x1159 * x6 +
+                            2244000000000.0 * sc[5] * x210 * x437 +
+                            187000000000.0 * x210 * x437 * x6;
+  const amrex::Real x1304 =
+    -70000000.0 * sc[0] * x221 + 70000000.0 * sc[0] * x408 -
+    2.477e+21 * sc[7] * x1188 * x7 * exp(x1191) - 70000000.0 * sc[7] * x274 -
+    sc[7] * x857 + x132 * x216 - x216 * x396;
+  const amrex::Real x1305 = 16060000000.0 * sc[0] + 22000000000.0 * sc[10] +
                             22000000000.0 * sc[3] + 80300000000.0 * sc[5] +
                             22000000000.0 * sc[9] + 22000000000.0 * x2;
-  const amrex::Real x1303 = -28000000.0 * sc[3] * x345 +
-                            28000000.0 * sc[3] * x413 - sc[4] * x1301 * x861 -
-                            sc[4] * x858;
-  const amrex::Real x1311 =
+  const amrex::Real x1307 = -28000000.0 * sc[3] * x221 +
+                            28000000.0 * sc[3] * x408 - sc[4] * x1305 * x863 -
+                            sc[4] * x855;
+  const amrex::Real x1309 =
     84300000.0 * exp(g_RT[11] + g_RT[1] - g_RT[2] - g_RT[7]);
-  const amrex::Real x1315 =
-    -sc[11] * x1311 - 30000000.0 * sc[11] * x265 - 20000000.0 * sc[11] * x323 -
-    1.27e+20 * sc[11] * x471 * x7 * exp(x462) - sc[11] * x877 +
-    20000000.0 * sc[4] * x128 - 30000000.0 * sc[4] * x345 -
-    20000000.0 * sc[4] * x400 + 30000000.0 * sc[4] * x413 + x15 * x472 +
-    x375 * x381;
-  amrex::Real x1316 = 2.0 * x1175 * x140 / ((x1176) * (x1176)) + 0.28 * x1197;
-  const amrex::Real x1322 = -4.83112519685039e+32 * x1172 * x1179 +
-                            4.83112519685039e+32 * x1172 * x1192 +
-                            x1173 * x1316 + 2.477e+21 * x1201 - x1204 * x1316 -
-                            2.477e+21 * x1210;
-  const amrex::Real x1325 =
-    x1229 * x1230 * (2.0 * x1225 * x140 + 0.28 * x140 * x463) -
-    1.27e+20 * x1229 * x471 -
-    x1230 * x1238 * (2.0 * x1225 * x140 + 0.28 * x140 * x463) +
-    1.27e+20 * x1238 * x471 + 2.9868518518518502e+34 * x1240 * x17 -
-    2.9868518518518502e+34 * x17 * x468;
-  const amrex::Real x1328 = 2.0 * x1084 * x140 + 0.28 * x140 * x429;
-  const amrex::Real x1334 = sc[1] * x1071 * x1079 * x165 * x7;
-  x1071 = sc[7] * x1071 * x1078;
-  const amrex::Real x1344 =
-    -187000000000.0 * x1158 * x270 + 187000000000.0 * x379 * x450;
-  const amrex::Real x1347 =
-    22000000000.0 * sc[5] * x1163 - 22000000000.0 * x1166;
+  const amrex::Real x1317 =
+    -sc[11] * x1309 - 30000000.0 * sc[11] * x260 - 20000000.0 * sc[11] * x317 -
+    sc[11] * x880 + 20000000.0 * sc[4] * x132 - 30000000.0 * sc[4] * x221 -
+    20000000.0 * sc[4] * x396 + 30000000.0 * sc[4] * x408 + x102 * x15 +
+    x210 * x372 - x456 * x459;
+  const amrex::Real x1324 =
+    4.8311251968503929e+32 * x1173 * x1185 -
+    4.8311251968503929e+32 * x1173 * x1203 +
+    x1174 * (2.0 * x1180 + 0.28 * x1183) + 2.477e+21 * x1188 * x1194 -
+    x1197 * (2.0 * x1180 + 0.28 * x1183) - 2.477e+21 * x1209;
+  x10 = 1.27e+20 * refC * x1225 * x458 * exp(x10 + x99) +
+        sc[1] * x17 * x456 * x459 * (2.0 * x1230 + 0.28 * x129 * x184) -
+        1.27e+20 * sc[1] * x456 * x458 - 2.9868518518518525e+34 * x11 * x1227 +
+        2.9868518518518525e+34 * x11 * x1244 -
+        x1240 * x17 * x459 * (2.0 * x1230 + 0.28 * x129 * x184);
+  amrex::Real x1342 = 0.28 * x1094 + 2.0 * x129 * x412 / ((x1081) * (x1081));
+  const amrex::Real x1345 = refC * sc[4] * x1151;
   const amrex::Real x1349 =
-    2000000.0 * sc[0] * x775 - 2000000.0 * ((sc[1]) * (sc[1])) * x866 -
-    sc[1] * x1079 * x165 + 4.096e+20 * x1062 * x131 - 1350000000000.0 * x1063 -
-    x1071 * (0.28 * x1067 + 2.0 * x1069) - x1089 * x1328 +
-    3200000000000000.0 * x1102 + 1.67201834862385e+18 * x1105 * x70 +
-    500000.0 * x1151 - 500000.0 * x1154 - 4.096e+20 * x131 * x326 +
-    x1328 * x75 + x1334 * (0.28 * x1067 + 2.0 * x1069) + x1344 + x1347 +
-    1350000000000.0 * x314 * x826 - 1.67201834862385e+18 * x316 * x70;
+    -187000000000.0 * x1159 * x265 + 187000000000.0 * x392 * x437;
+  const amrex::Real x1352 = -22000000000.0 * x1164 + 22000000000.0 * x1167;
   const amrex::Real x1354 =
+    1350000000000.0 * refC * sc[11] * x292 -
+    2000000.0 * ((sc[1]) * (sc[1])) * x876 - sc[1] * x1101 -
+    1350000000000.0 * x1057 - 1.6720183486238531e+18 * x1061 * x1062 +
+    1.6720183486238531e+18 * x1062 * x413 + 3199999999999999.5 * x1091 +
+    x1103 * x1342 - x1107 * x96 * (2.0 * x1067 + 0.28 * x1068) +
+    4.096e+20 * x1122 * x135 - 500000.0 * x1155 - x1342 * x91 +
+    500000.0 * x1345 + x1349 - 4.096e+20 * x135 * x321 + x1352 +
+    2000000.0 * x217 * x380 + x416 * x96 * (2.0 * x1067 + 0.28 * x1068);
+  const amrex::Real x1359 =
     3970000.0 *
-    exp(-g_RT[1] + g_RT[2] + g_RT[5] - g_RT[6] - 337.65838275496702 * invT);
-  const amrex::Real x1356 =
+    exp(-g_RT[1] + g_RT[2] + g_RT[5] - g_RT[6] - 337.66030697767184 * invT);
+  const amrex::Real x1361 =
     83000000.0 *
-    exp(-g_RT[1] + g_RT[2] - g_RT[3] + g_RT[4] - 7252.86180424342 * invT);
-  const amrex::Real x1369 =
-    30000000.0 * sc[2] * x72 - 30000000.0 * x299 - 30000000.0 * x322;
-  const amrex::Real x1378 =
-    -30000000.0 * sc[4] * x134 + 30000000.0 * sc[4] * x347 -
-    20000000.0 * sc[4] * x420 + 20000000.0 * sc[4] * x428 + 84300000.0 * sc[7] +
-    x28 * x472 + x375 * x72;
-  const amrex::Real x1389 = exp(-g_RT[1] - 1.72 * logT - x110);
-  const amrex::Real x1398 = -375000000.0 * sc[12] * sc[1] * x1285 -
-                            600000000.0 * sc[1] * sc[3] * x1285 -
-                            sc[1] * sc[5] * x1282 - sc[1] * x1279 -
-                            sc[1] * x1291 + 300000000.0 * x1065 * x1389;
-  const amrex::Real x1405 =
-    30000000.0 * sc[4] * x351 - 30000000.0 * sc[4] * x352 -
-    20000000.0 * sc[4] * x434 + 20000000.0 * sc[4] * x439 + x375 * x392 +
-    x389 * x472;
-  const amrex::Real x1407 =
-    47.6 * sc[9] * exp(-35.225166606330397 * invT + 1.228 * logT);
-  const amrex::Real x1409 =
-    sc[4] * exp(-g_RT[1] + 2.0 * g_RT[4] - g_RT[6] - 319.54258278599701 * invT);
-  const amrex::Real x1434 =
-    20000000.0 * sc[4] * x103 - 30000000.0 * sc[4] * x356 -
-    20000000.0 * sc[4] * x445 + 30000000.0 * sc[4] * x84 + 20000000.0 * x165 +
-    x375 * x393 + x397 * x472 + 30000000.0 * x50;
-  const amrex::Real x1436 = -sc[1] * x1301 * x861 - sc[1] * x858 -
-                            28000000.0 * sc[3] * x356 +
-                            28000000.0 * sc[3] * x84;
-  const amrex::Real x1442 = 12.0 * x1084 * x140 + 1.68 * x140 * x429;
-  const amrex::Real x1463 = 9380000.0 * exp(-g_RT[1] - 0.76 * logT - x110);
-  const amrex::Real x1472 = 30000000.0 * sc[2] * x399 -
-                            2244000000000.0 * x1158 * x270 + x183 * x399 +
-                            2244000000000.0 * x379 * x450 + x399 * x460;
-  const amrex::Real x1473 =
-    12.0 * x1175 * x140 / ((x1176) * (x1176)) + 1.68 * x1197;
-  const amrex::Real x1480 = -70000000.0 * sc[0] * x167 +
-                            70000000.0 * sc[0] * x361 -
-                            2.8986751181102398e+33 * x1172 * x1179 +
-                            2.8986751181102398e+33 * x1172 * x1192 +
-                            x1173 * x1473 + 1.4862e+22 * x1201 - x1204 * x1473 -
-                            1.4862e+22 * x1210 + x220 * x457 - x220 * x466;
-  const amrex::Real x1484 =
-    -28000000.0 * sc[3] * x167 + 28000000.0 * sc[3] * x361 +
-    80300000000.0 * sc[5] * x1163 + x1163 * x1301 - 80300000000.0 * x1166;
-  const amrex::Real x1492 =
-    -30000000.0 * sc[4] * x167 + 30000000.0 * sc[4] * x361 +
-    20000000.0 * sc[4] * x457 - 20000000.0 * sc[4] * x466 +
-    x1229 * x1230 * (12.0 * x1225 * x140 + 1.68 * x140 * x463) -
-    7.62e+20 * x1229 * x471 -
-    x1230 * x1238 * (12.0 * x1225 * x140 + 1.68 * x140 * x463) +
-    7.62e+20 * x1238 * x471 + 1.7921111111111101e+35 * x1240 * x17 -
-    1.7921111111111101e+35 * x17 * x468 + x375 * x399 + x472 * x78;
-  const amrex::Real x1501 =
-    -sc[1] * x1275 - sc[1] * x856 -
-    134000000.0 * sc[1] * exp(-319.54258278599701 * invT);
+    exp(-g_RT[1] + g_RT[2] - g_RT[3] + g_RT[4] - 7252.9031363177119 * invT);
+  const amrex::Real x1374 =
+    30000000.0 * sc[2] * x277 - 30000000.0 * x316 - 30000000.0 * x58;
+  const amrex::Real x1383 =
+    20000000.0 * sc[4] * x168 - 30000000.0 * sc[4] * x283 +
+    30000000.0 * sc[4] * x322 - 20000000.0 * sc[4] * x417 + 84300000.0 * sc[7] +
+    x102 * x28 + x277 * x372;
+  const amrex::Real x1395 = sc[1] * sc[3] * exp(-1.72 * logT);
+  const amrex::Real x1401 = exp(-g_RT[1] - g_RT[3] + g_RT[6] - 1.72 * logT);
+  const amrex::Real x1405 = 300000000.0 * refC * sc[6] * x1401 -
+                            sc[1] * sc[5] * x1286 -
+                            sc[1] * x1283 * exp(-0.86 * logT) - sc[1] * x1292 -
+                            sc[1] * x1295 - 600000000.0 * x1395;
+  const amrex::Real x1412 =
+    -30000000.0 * sc[4] * x339 + 30000000.0 * sc[4] * x341 -
+    20000000.0 * sc[4] * x431 + 20000000.0 * sc[4] * x436 + x102 * x388 +
+    x372 * x374;
+  const amrex::Real x1414 =
+    47.6 * sc[9] * exp(-35.225367344913607 * invT + 1.228 * logT);
+  const amrex::Real x1416 =
+    sc[4] * exp(-g_RT[1] + 2.0 * g_RT[4] - g_RT[6] - 319.5444037717163 * invT);
+  const amrex::Real x1441 =
+    -30000000.0 * sc[4] * x147 + 30000000.0 * sc[4] * x344 -
+    20000000.0 * sc[4] * x441 + 20000000.0 * sc[4] * x79 + x102 * x393 +
+    20000000.0 * x166 + x372 * x376 + 30000000.0 * x51;
+  const amrex::Real x1443 = -sc[1] * x1305 * x863 - sc[1] * x855 -
+                            28000000.0 * sc[3] * x147 +
+                            28000000.0 * sc[3] * x344;
+  const amrex::Real x1454 = x96 * (12.0 * x1067 + 1.68 * x1068);
+  x1097 = x1097 * (1.68 * x1094 + 12.0 * x129 * x412 / ((x1081) * (x1081)));
+  const amrex::Real x1470 =
+    9380000.0 * exp(-g_RT[1] - g_RT[3] + g_RT[6] - 0.76 * logT);
+  const amrex::Real x1478 = 30000000.0 * sc[2] * x379 -
+                            2244000000000.0 * x1159 * x265 + x379 * x440 +
+                            x379 * x446 + 2244000000000.0 * x392 * x437;
+  x1175 = 1.68 * ((x1175) * (x1175)) * x129 / ((x1176) * (x1176) * (x1176)) +
+          12.0 * x1180;
+  x1176 = 70000000.0 * sc[0] * x105 - 70000000.0 * sc[0] * x348 -
+          1.4862e+22 * sc[1] * sc[7] * x1188 * exp(x1191) +
+          2.8986751181102357e+33 * x1173 * x1185 -
+          2.8986751181102357e+33 * x1173 * x1203 + x1174 * x1175 -
+          x1175 * x1197 + 1.4862e+22 * x1188 * x1194 + x138 * x216 -
+          x216 * x462;
+  const amrex::Real x1491 = refC * x1166 * x1305 + 28000000.0 * sc[3] * x105 -
+                            28000000.0 * sc[3] * x348 - 80300000000.0 * x1164 +
+                            80300000000.0 * x1167;
+  const amrex::Real x1498 =
+    sc[1] * x17 * x456 * x459 * (12.0 * x1230 + 1.68 * x129 * x184) -
+    7.62e+20 * sc[1] * x456 * x458 + 30000000.0 * sc[4] * x105 +
+    20000000.0 * sc[4] * x138 - 30000000.0 * sc[4] * x348 -
+    20000000.0 * sc[4] * x462 + x102 * x397 -
+    1.7921111111111116e+35 * x11 * x1227 +
+    1.7921111111111116e+35 * x11 * x1244 -
+    x1240 * x17 * x459 * (12.0 * x1230 + 1.68 * x129 * x184) +
+    7.62e+20 * x1240 * x458 + x372 * x379;
   const amrex::Real x1507 =
-    375000000.0 * refC * sc[12] * x1389 + 300000000.0 * refC * sc[3] * x1389 +
-    refC * sc[5] * x1463 + 2800000.0 * refC * x1142 * x1278;
-  const amrex::Real x1511 = -28000000.0 * sc[3] * x25;
-  const amrex::Real x1516 =
-    -20000000.0 * sc[4] * x477 + 30000000.0 * sc[4] * x483 +
-    20000000.0 * sc[4] * x486 + x232 * x472 + x304 * x375;
-  const amrex::Real x1521 = -70000000.0 * sc[0] * x25 -
-                            30000000.0 * sc[4] * x25 + x1149 + x1322 + x1325 +
-                            x1349 - x20 * x25;
-  const amrex::Real x1539 =
-    84300000.0 * sc[2] + 20000000.0 * sc[4] * x339 - 20000000.0 * sc[4] * x489 +
-    30000000.0 * sc[4] * x494 + x375 * x402 + x419 * x472;
-  const amrex::Real x1541 =
-    70000000.0 * sc[0] * x494 - 2.477e+21 * sc[1] * x1182 * x7 * exp(x1185) -
-    70000000.0 * sc[1] * x279 - sc[1] * x869 + x220 * x339 - x220 * x489;
-  const amrex::Real x1561 =
-    30000000.0 * sc[4] * x371 - 30000000.0 * sc[4] * x373 -
-    20000000.0 * sc[4] * x500 + 20000000.0 * sc[4] * x506 + x10 + x207 * x472 +
-    x375 * x81;
-  const amrex::Real x1563 =
-    70000000.0 * sc[0] * x371 - 70000000.0 * sc[0] * x373 +
-    2.477e+21 * x1182 * x1186 * x204 + x1217 - x220 * x500 + x220 * x506;
-  const amrex::Real x1564 =
-    -38000000.0 * sc[1] * x207 + 8.192e+20 * x1062 * x131 -
-    2700000000000.0 * x1063 + x1082 - x1086 * x1089 + x1086 * x75 -
-    6400000000000000.0 * x1092 + 6400000000000000.0 * x1102 +
-    3.3440366972477102e+18 * x1105 * x70 - x1109 + x1156 + x1160 -
-    8.192e+20 * x131 * x326 + 2700000000000.0 * x314 * x826 -
-    3.3440366972477102e+18 * x316 * x70;
-  const amrex::Real x1565 =
-    47.6 * sc[4] * exp(-35.225166606330397 * invT + 1.228 * logT);
-  x1084 = 3.0 * x1084 * x140 + 0.42 * x140 * x429;
-  x429 = 3.0 * x1175 * x140 / ((x1176) * (x1176)) + 0.42 * x1197;
-  x1175 = -70000000.0 * sc[0] * x210 + 70000000.0 * sc[0] * x378 -
-          7.2466877952755894e+32 * x1172 * x1179 +
-          7.2466877952755894e+32 * x1172 * x1192 + x1173 * x429 +
-          3.7155e+21 * x1201 - x1204 * x429 - 3.7155e+21 * x1210 + x139 * x220 -
-          x179 * x220;
-  x1158 = 30000000.0 * sc[2] * x417 - 2244000000000.0 * sc[5] * x1158 * x269 -
-          187000000000.0 * x1158 * x269 * x6 - 280500000000.0 * x1158 * x270 +
-          x183 * x417 + 280500000000.0 * x379 * x450 + x417 * x460;
-  x140 = 20000000.0 * sc[4] * x139 - 20000000.0 * sc[4] * x179 -
-         30000000.0 * sc[4] * x210 + 30000000.0 * sc[4] * x378 +
-         x1229 * x1230 * (3.0 * x1225 * x140 + 0.42 * x140 * x463) -
-         1.905e+20 * x1229 * x471 -
-         x1230 * x1238 * (3.0 * x1225 * x140 + 0.42 * x140 * x463) +
-         1.905e+20 * x1238 * x471 + 4.4802777777777799e+34 * x1240 * x17 -
-         4.4802777777777799e+34 * x17 * x468 + x209 * x472 + x375 * x417;
-  x1176 = -70000000.0 * sc[0] * x214 + 70000000.0 * sc[0] * x52 + x1217 -
-          x161 * x220 + x195 * x220;
-  x1197 = -20000000.0 * sc[4] * x161 + 20000000.0 * sc[4] * x195 -
-          30000000.0 * sc[4] * x214 + 30000000.0 * sc[4] * x52 + x10 +
-          x185 * x375 + x207 * x472;
-  x462 = -sc[1] * x1311 - 30000000.0 * sc[1] * x265 -
-         20000000.0 * sc[1] * x323 - 1.27e+20 * sc[1] * x471 * x7 * exp(x462) -
-         sc[1] * x877 - 20000000.0 * sc[4] * x197 + 30000000.0 * sc[4] * x202 +
-         20000000.0 * sc[4] * x205 + x248 * x472 + x359 * x375;
-  x471 = -70000000.0 * sc[0] * x282 + 70000000.0 * sc[0] * x57 + x1322 -
-         x169 * x220 + x191 * x220;
-  x1217 = -20000000.0 * sc[4] * x169 + 20000000.0 * sc[4] * x191 -
-          30000000.0 * sc[4] * x282 + 30000000.0 * sc[4] * x57 + x119 * x375 +
-          x1325 + x33 * x472;
-  x1225 = ((sc[2]) * (sc[2])) * x866;
-  x463 = refC * exp(-2.0 * g_RT[2] + g_RT[3] - logT);
-  x1229 = sc[3] * x463;
-  x1230 = exp(g_RT[10] - g_RT[2] - g_RT[9] - 1509.64999741416 * invT);
-  x17 = refC * sc[10] * x1230;
-  x468 = exp(-1509.64999741416 * invT);
-  x1238 = sc[2] * sc[9] * x468;
-  x1240 = 500000.0 * x1151 - 500000.0 * x1154 - 240000.0 * x1225 +
-          240000.0 * x1229 - 602.0 * x1238 + 602.0 * x17;
-  x10 = 2500000.0 *
-        exp(g_RT[10] + g_RT[2] - g_RT[3] - g_RT[9] - 24053.756625465601 * invT);
-  const amrex::Real x1709 =
-    1020.0 * exp(-4327.6633259205901 * invT + 1.5 * logT);
-  const amrex::Real x1712 = 1204.0 * sc[0] + 2107.0 * sc[10] + 3612.0 * sc[3] +
+    -sc[1] * x1280 - sc[1] * x853 -
+    134000000.0 * sc[1] * exp(-319.5444037717163 * invT);
+  const amrex::Real x1513 = 375000000.0 * refC * sc[12] * x1401 +
+                            300000000.0 * refC * sc[3] * x1401 +
+                            refC * sc[5] * x1470 + x1143 * x1283;
+  const amrex::Real x1517 = -28000000.0 * sc[3] * x351;
+  const amrex::Real x1522 =
+    -20000000.0 * sc[4] * x474 + 30000000.0 * sc[4] * x480 +
+    20000000.0 * sc[4] * x483 + x102 * x228 + x286 * x372;
+  const amrex::Real x1527 = -70000000.0 * sc[0] * x351 -
+                            30000000.0 * sc[4] * x351 + x10 + x1150 + x1324 +
+                            x1354 - x351 * x405;
+  const amrex::Real x1545 =
+    84300000.0 * sc[2] + 20000000.0 * sc[4] * x333 - 20000000.0 * sc[4] * x486 +
+    30000000.0 * sc[4] * x490 + x102 * x401 + x372 * x384;
+  const amrex::Real x1547 =
+    70000000.0 * sc[0] * x490 - 2.477e+21 * sc[1] * x1188 * x7 * exp(x1191) -
+    70000000.0 * sc[1] * x274 - sc[1] * x857 + x216 * x333 - x216 * x486;
+  const amrex::Real x1567 =
+    30000000.0 * sc[4] * x25 - 30000000.0 * sc[4] * x360 -
+    20000000.0 * sc[4] * x497 + 20000000.0 * sc[4] * x503 + x102 * x203 +
+    x1247 + x372 * x93;
+  const amrex::Real x1569 =
+    2.477e+21 * refC * x1188 * x7 * exp(-g_RT[1] + x1191 - x68) +
+    70000000.0 * sc[0] * x25 - 70000000.0 * sc[0] * x360 + x1217 - x216 * x497 +
+    x216 * x503;
+  const amrex::Real x1570 =
+    -6399999999999999.0 * sc[1] * x1087 * x1100 - 38000000.0 * sc[1] * x203 -
+    2700000000000.0 * x1057 - 3.3440366972477061e+18 * x1061 * x1062 +
+    3.3440366972477061e+18 * x1062 * x413 + 6399999999999999.0 * x1091 +
+    x1096 * x1103 - x1096 * x91 - x1109 + 8.192e+20 * x1122 * x135 + x1157 +
+    x1161 - 8.192e+20 * x135 * x321 + 2700000000000.0 * x292 * x350 + x424;
+  const amrex::Real x1571 =
+    47.6 * sc[4] * exp(-35.225367344913607 * invT + 1.228 * logT);
+  x412 = 0.42 * x1094 + 3.0 * x129 * x412 / ((x1081) * (x1081));
+  x1081 = x96 * (3.0 * x1067 + 0.42 * x1068);
+  x1094 = -70000000.0 * sc[0] * x369 + 70000000.0 * sc[0] * x371 +
+          7.2466877952755894e+32 * x1173 * x1185 -
+          7.2466877952755894e+32 * x1173 * x1203 +
+          x1174 * (3.0 * x1180 + 0.42 * x1183) + 3.7155e+21 * x1188 * x1194 -
+          x1197 * (3.0 * x1180 + 0.42 * x1183) - 3.7155e+21 * x1209 +
+          x143 * x216 - x156 * x216;
+  x129 = sc[1] * x17 * x456 * x459 * (3.0 * x1230 + 0.42 * x129 * x184) -
+         1.905e+20 * sc[1] * x456 * x458 + 20000000.0 * sc[4] * x143 -
+         20000000.0 * sc[4] * x156 - 30000000.0 * sc[4] * x369 +
+         30000000.0 * sc[4] * x371 + x102 * x205 -
+         4.480277777777779e+34 * x11 * x1227 +
+         4.480277777777779e+34 * x11 * x1244 -
+         x1240 * x17 * x459 * (3.0 * x1230 + 0.42 * x129 * x184) +
+         1.905e+20 * x1240 * x458 + x372 * x395;
+  x6 = 30000000.0 * sc[2] * x395 - 2244000000000.0 * sc[5] * x1159 * x264 -
+       187000000000.0 * x1159 * x264 * x6 - 280500000000.0 * x1159 * x265 +
+       280500000000.0 * x392 * x437 + x395 * x440 + x395 * x446;
+  x437 = -70000000.0 * sc[0] * x375 + 70000000.0 * sc[0] * x53 + x1217 -
+         x157 * x216 + x162 * x216;
+  x458 = -20000000.0 * sc[4] * x157 + 20000000.0 * sc[4] * x162 -
+         30000000.0 * sc[4] * x375 + 30000000.0 * sc[4] * x53 + x102 * x203 +
+         x1247 + x185 * x372;
+  x459 = -sc[1] * x1309 - 30000000.0 * sc[1] * x260 -
+         20000000.0 * sc[1] * x317 - sc[1] * x459 * exp(x99) - sc[1] * x880 -
+         20000000.0 * sc[4] * x181 + 20000000.0 * sc[4] * x197 +
+         30000000.0 * sc[4] * x20 + x102 * x244 + x355 * x372;
+  x99 = -70000000.0 * sc[0] * x206 + 70000000.0 * sc[0] * x54 + x1324 -
+        x170 * x216 + x191 * x216;
+  x1159 = -20000000.0 * sc[4] * x170 + 20000000.0 * sc[4] * x191 -
+          30000000.0 * sc[4] * x206 + 30000000.0 * sc[4] * x54 + x10 +
+          x102 * x33 + x120 * x372;
+  x1217 = exp(-2.0 * g_RT[2] + g_RT[3] - logT);
+  x11 = refC * sc[3] * x1217;
+  x1227 = ((sc[2]) * (sc[2])) * x876;
+  x1230 = exp(g_RT[10] - g_RT[2] - g_RT[9] - 1509.6586004962974 * invT);
+  x184 = refC * sc[10] * x1230;
+  x17 = exp(-1509.6586004962974 * invT);
+  x456 = sc[2] * sc[9] * x17;
+  x1240 = 240000.0 * x11 - 500000.0 * x1155 - 240000.0 * x1227 +
+          500000.0 * x1345 + 602.0 * x184 - 602.0 * x456;
+  x1244 =
+    2500000.0 *
+    exp(g_RT[10] + g_RT[2] - g_RT[3] - g_RT[9] - 24053.893701241006 * invT);
+  x1247 = 1020.0 * exp(-4327.6879880893857 * invT + 1.5 * logT);
+  const amrex::Real x1716 = 1204.0 * sc[0] + 2107.0 * sc[10] + 3612.0 * sc[3] +
                             3612.0 * sc[5] + 903.0 * sc[9] + 602.0 * x2;
-  const amrex::Real x1716 =
+  const amrex::Real x1722 =
     2.4 * sc[0] + 3.6 * sc[10] + sc[3] + 15.4 * sc[5] + 1.75 * sc[9] + x2;
-  const amrex::Real x1722 = exp(
-    g_RT[2] - 2.0 * g_RT[4] + g_RT[5] + 1061.78716484796 * invT + 2.4 * logT);
-  const amrex::Real x1725 = 39000000.0 * exp(-1781.38699694871 * invT);
-  const amrex::Real x1730 = 2500000.0 * sc[9] * exp(-24053.756625465601 * invT);
-  const amrex::Real x1732 = 20000000.0 * exp(g_RT[3] - g_RT[6] - x92);
-  x92 = 1020.0 *
-        exp(g_RT[7] - g_RT[8] - 4327.6633259205901 * invT + 1.5 * logT - x92);
-  const amrex::Real x1750 = sc[4] * exp(1061.78716484796 * invT + 2.4 * logT);
-  const amrex::Real x1772 = 2500000.0 * sc[3] * exp(-24053.756625465601 * invT);
-  const amrex::Real x1795 = 13200000.0 * sc[3] * exp(-754.82499870708 * invT);
-  const amrex::Real x1812 = 120000.0 * x1225 - 120000.0 * x1229;
-  x97 = 1000000.0 * exp(g_RT[3] - g_RT[6] - x97);
-  const amrex::Real x1826 =
-    29000000.0 * exp(g_RT[3] - g_RT[6] + 251.60833290235999 * invT - x43);
-  const amrex::Real x1834 = 36000.0 * exp(-4498.7569922941902 * invT);
-  const amrex::Real x1847 = 100000000.0 * exp(-20128.666632188801 * invT);
-  const amrex::Real x1850 =
+  const amrex::Real x1728 = exp(
+    g_RT[2] - 2.0 * g_RT[4] + g_RT[5] + 1061.7932156823958 * invT + 2.4 * logT);
+  const amrex::Real x1732 = 39000000.0 * exp(-1781.3971485856309 * invT);
+  const amrex::Real x1736 = 2500000.0 * sc[9] * exp(-24053.893701241006 * invT);
+  const amrex::Real x1738 = 20000000.0 * exp(g_RT[3] - g_RT[6] - x114);
+  x114 = 1020.0 *
+         exp(g_RT[7] - g_RT[8] - 4327.6879880893857 * invT + 1.5 * logT - x114);
+  const amrex::Real x1755 = sc[4] * exp(1061.7932156823958 * invT + 2.4 * logT);
+  const amrex::Real x1778 = 2500000.0 * sc[3] * exp(-24053.893701241006 * invT);
+  const amrex::Real x1803 =
+    13200000.0 * sc[3] * exp(-754.82930024814868 * invT);
+  const amrex::Real x1818 = -120000.0 * x11 + 120000.0 * x1227;
+  const amrex::Real x1828 = 1000000.0 * exp(g_RT[3] - g_RT[6] - x68);
+  const amrex::Real x1832 =
+    29000000.0 * exp(g_RT[3] - g_RT[6] + 251.60976674938291 * invT - x44);
+  const amrex::Real x1842 = 36000.0 * exp(-4498.7826294789666 * invT);
+  const amrex::Real x1853 = 100000000.0 * exp(-20128.78133995063 * invT);
+  const amrex::Real x1857 = 29000000.0 * sc[6] * exp(251.60976674938291 * invT);
+  const amrex::Real x1867 =
     36000.0 *
-    exp(g_RT[11] - g_RT[3] + g_RT[4] - g_RT[7] - 4498.7569922941902 * invT);
-  const amrex::Real x1854 = 29000000.0 * sc[6] * exp(251.60833290235999 * invT);
-  const amrex::Real x1877 = 29000000.0 * sc[4] * exp(251.60833290235999 * invT);
-  x286 = 7600000.0 * exp(-201.28666632188799 * invT - x110 - x286);
-  x110 =
-    18000000.0 * exp(g_RT[11] - g_RT_qss[3] - 452.89499922424801 * invT - x110);
-  const amrex::Real x1961 =
+    exp(g_RT[11] - g_RT[3] + g_RT[4] - g_RT[7] - 4498.7826294789666 * invT);
+  const amrex::Real x1883 = 29000000.0 * sc[4] * exp(251.60976674938291 * invT);
+  x281 = 7600000.0 * exp(-201.28781339950632 * invT - x281 - x88);
+  x88 =
+    18000000.0 * exp(g_RT[11] - g_RT_qss[3] - 452.89758014888923 * invT - x88);
+  const amrex::Real x1966 =
     56.0 *
-    exp(-g_RT[7] + g_RT_qss[0] - 2727.4343286615799 * invT + 1.6 * logT - x43);
-  const amrex::Real x1962 = sc[5] * x1961;
-  const amrex::Real x1966 = 12000000.0 * sc[1] * x321 + x175 * x222 -
-                            x175 * x327 - x1962 * x346 + x1962 * x383;
-  const amrex::Real x1970 = -500000.0 * x1151 + 500000.0 * x1154 + x1347;
-  const amrex::Real x1976 = 12000000.0 * sc[1] * x15 + x128 * x1962 -
-                            x175 * x345 + x175 * x413 - x1962 * x400 -
-                            12000000.0 * x249 - 12000000.0 * x902;
-  const amrex::Real x1988 = 12000000.0 * sc[1] * x28 + sc[8] * x1709 -
-                            x134 * x175 + x175 * x347 - x1962 * x420 +
-                            x1962 * x428;
-  const amrex::Real x1992 = 10000000.0 * sc[2] * x28 -
-                            20000000.0 * sc[6] * x420 +
-                            20000000.0 * sc[6] * x428 + x143 * x72 -
-                            10000000.0 * x249 - 10000000.0 * x902;
-  const amrex::Real x1999 = 12000000.0 * sc[1] * x389 + x175 * x351 -
-                            x175 * x352 - x1962 * x434 + x1962 * x439;
-  const amrex::Real x2003 =
-    10000000.0 * sc[2] * x389 - 20000000.0 * sc[6] * x434 +
-    20000000.0 * sc[6] * x439 + sc[7] * x1834 + x143 * x392;
-  const amrex::Real x2007 =
-    100.0 * sc[8] * exp(-1570.03599731073 * invT + 1.6 * logT);
-  const amrex::Real x2017 =
+    exp(-g_RT[7] + g_RT_qss[0] - 2727.4498715633108 * invT + 1.6 * logT - x44);
+  const amrex::Real x1967 = sc[5] * x1966;
+  const amrex::Real x1972 = 12000000.0 * sc[1] * x315 - x155 * x213 +
+                            x155 * x219 - x1967 * x340 + x1967 * x381;
+  const amrex::Real x1976 = 500000.0 * x1155 - 500000.0 * x1345 + x1352;
+  const amrex::Real x1982 = 12000000.0 * sc[1] * x15 + x132 * x1967 -
+                            x155 * x221 + x155 * x408 - x1967 * x396 -
+                            12000000.0 * x245 - 12000000.0 * x902;
+  const amrex::Real x1994 = 12000000.0 * sc[1] * x28 + sc[8] * x1247 -
+                            x155 * x283 + x155 * x322 + x168 * x1967 -
+                            x1967 * x417;
+  const amrex::Real x1998 = 10000000.0 * sc[2] * x28 +
+                            20000000.0 * sc[6] * x168 -
+                            20000000.0 * sc[6] * x417 + x175 * x277 -
+                            10000000.0 * x245 - 10000000.0 * x902;
+  const amrex::Real x2005 = 12000000.0 * sc[1] * x388 - x155 * x339 +
+                            x155 * x341 - x1967 * x431 + x1967 * x436;
+  const amrex::Real x2009 =
+    10000000.0 * sc[2] * x388 - 20000000.0 * sc[6] * x431 +
+    20000000.0 * sc[6] * x436 + sc[7] * x1842 + x175 * x374;
+  const amrex::Real x2013 =
+    100.0 * sc[8] * exp(-1570.0449445161494 * invT + 1.6 * logT);
+  const amrex::Real x2023 =
     150000000.0 *
-    exp(g_RT[10] + g_RT[4] - g_RT[6] - g_RT[9] - 11875.913312991401 * invT);
-  const amrex::Real x2026 = 56.0 * exp(-2727.4343286615799 * invT + 1.6 * logT);
-  const amrex::Real x2028 = 12000000.0 * sc[1] * x397 - sc[7] * x2026 -
-                            12000000.0 * sc[7] * x245 - sc[7] * x92 -
-                            25010000.0 * sc[7] + x103 * x1962 - x175 * x356 +
-                            x175 * x84 - x1962 * x445;
-  const amrex::Real x2030 =
-    3430.0 * exp(224.93784961470999 * invT + 1.18 * logT);
-  const amrex::Real x2035 =
-    -sc[11] * x1850 - sc[11] * x2030 - 10000000.0 * sc[11] * x237 -
-    20000000.0 * sc[11] * x333 + 10000000.0 * sc[2] * x397 +
-    20000000.0 * sc[6] * x103 - 20000000.0 * sc[6] * x445 + x143 * x393;
-  x43 =
-    100.0 * exp(g_RT[7] - g_RT[8] - 1570.03599731073 * invT + 1.6 * logT - x43);
-  const amrex::Real x2050 = 12000000.0 * sc[1] * x78 + x165 * x1961 -
-                            x167 * x175 + x175 * x361 + x1962 * x457 -
-                            x1962 * x466 + 25010000.0 * x45 * x50;
-  const amrex::Real x2055 =
-    10000000.0 * sc[2] * x78 + 20000000.0 * sc[6] * x457 -
-    20000000.0 * sc[6] * x466 + x143 * x399 + x180 * x379;
-  const amrex::Real x2059 = 150000000.0 * exp(-11875.913312991401 * invT);
-  const amrex::Real x2067 = 12000000.0 * sc[1] * x232 - x175 * x25 +
-                            x175 * x483 - x1962 * x477 + x1962 * x486;
-  const amrex::Real x2072 =
-    10000000.0 * sc[2] * x232 - 20000000.0 * sc[6] * x477 +
-    20000000.0 * sc[6] * x486 + x143 * x304 + 20000000.0 * x165;
-  const amrex::Real x2080 = 10000000.0 * sc[2] * x419 + sc[3] * x1834 +
-                            20000000.0 * sc[6] * x339 -
-                            20000000.0 * sc[6] * x489 + x143 * x402;
-  const amrex::Real x2086 = 12000000.0 * sc[1] * x419 - sc[4] * x2026 -
-                            12000000.0 * sc[4] * x245 - sc[4] * x92 -
-                            25010000.0 * sc[4] + x175 * x494 + x1962 * x339 -
-                            x1962 * x489;
-  const amrex::Real x2087 =
-    100.0 * sc[4] * exp(-1570.03599731073 * invT + 1.6 * logT);
-  const amrex::Real x2101 =
-    sc[2] * x1709 + x175 * x371 - x175 * x373 - x1962 * x500 + x1962 * x506;
-  const amrex::Real x2111 = 12000000.0 * sc[1] * x209 + x139 * x1962 -
-                            x175 * x210 + x175 * x378 - x179 * x1962;
-  const amrex::Real x2141 =
-    10000000.0 * sc[2] * x248 - sc[4] * x1850 - sc[4] * x2030 -
-    10000000.0 * sc[4] * x237 - 20000000.0 * sc[4] * x333 -
-    20000000.0 * sc[6] * x197 + 20000000.0 * sc[6] * x205 + x143 * x359;
-  const amrex::Real x2152 = 12000000.0 * sc[1] * x33 - x169 * x1962 -
-                            x175 * x282 + x175 * x57 + x191 * x1962;
-  const amrex::Real x2153 =
-    -22000000000.0 * sc[5] * x1163 + 22000000000.0 * x1166;
-  const amrex::Real x2159 =
-    -12000000.0 * sc[3] * x25 + x175 * x25 + x20 * x25 + x2153;
-  const amrex::Real x2164 = -2800000.0 * x1065 * x1142 + 2800000.0 * x1147;
-  const amrex::Real x2176 = -4161.6018262050302 * invT + 2.0 * logT;
-  const amrex::Real x2179 = 4.92 * sc[8] * exp(x2176);
-  const amrex::Real x2181 =
-    -8.192e+20 * x1062 * x131 - x1082 + 6400000000000000.0 * x1092 -
-    6400000000000000.0 * x1102 + x1109 + 8.192e+20 * x131 * x326;
-  const amrex::Real x2184 =
-    sc[1] * x1079 * x165 - 4.096e+20 * x1062 * x131 +
-    x1071 * (0.28 * x1067 + 2.0 * x1069) - 3200000000000000.0 * x1102 +
-    4.096e+20 * x131 * x326 - x1334 * (0.28 * x1067 + 2.0 * x1069);
-  const amrex::Real x2196 =
-    -70000000.0 * sc[0] * x25 + x1322 - x149 * x25 + x2184;
-  const amrex::Real x2204 =
-    0.00332 * exp(-2948.8496616156599 * invT + 2.81 * logT);
-  const amrex::Real x2227 = 2.46 * sc[8] * exp(x2176);
-  x1200 = -4.954e+21 * refC * sc[8] * x1182 * x1186 +
-          4.954e+21 * sc[1] * sc[7] * x1182 * exp(x1185) +
-          9.6622503937007901e+32 * x1172 * x1179 -
-          9.6622503937007901e+32 * x1172 * x1192 - x1173 * x1200 +
-          x1200 * x1204;
-  x1316 = 4.83112519685039e+32 * x1172 * x1179 -
-          4.83112519685039e+32 * x1172 * x1192 - x1173 * x1316 -
-          2.477e+21 * x1201 + x1204 * x1316 + 2.477e+21 * x1210;
-  const amrex::Real x2240 = -602.0 * x1238 + x1344 + 602.0 * x17 + x894;
-  const amrex::Real x2258 = -14000000.0 * sc[10] * x25;
-  const amrex::Real x2260 =
-    -15000000.0 * sc[2] * x25 - 40000000.0 * sc[3] * x25 + x2240;
-  const amrex::Real x2281 = 602.0 * x1238 - 602.0 * x17;
-  x827 = 2700000000000.0 * x1063 + x1086 * x1089 - x1086 * x75 -
-         3.3440366972477102e+18 * x1105 * x70 - 1.014e+16 * x314 * x342 * x815 -
-         2700000000000.0 * x314 * x826 + 3.3440366972477102e+18 * x316 * x70 +
-         1.014e+16 * x342 * x837 + 1.19557674418605e+30 * x54 * x822 -
-         1.19557674418605e+30 * x54 * x843 + x827 * x833 - x827 * x841;
-  x890 = 1350000000000.0 * x1063 + x1089 * x1328 -
-         1.67201834862385e+18 * x1105 * x70 - x1328 * x75 -
-         1350000000000.0 * x314 * x826 + 1.67201834862385e+18 * x316 * x70 +
-         5070000000000000.0 * x342 * x837 +
-         5.9778837209302301e+29 * x54 * x822 -
-         5.9778837209302301e+29 * x54 * x843 - x831 + x833 * x890 - x841 * x890;
+    exp(g_RT[10] + g_RT[4] - g_RT[6] - g_RT[9] - 11875.980990570873 * invT);
+  const amrex::Real x2030 = 56.0 * exp(-2727.4498715633108 * invT + 1.6 * logT);
+  const amrex::Real x2034 = 12000000.0 * sc[1] * x393 - sc[7] * x114 -
+                            sc[7] * x2030 - 12000000.0 * sc[7] * x235 -
+                            25010000.0 * sc[7] - x147 * x155 + x155 * x344 -
+                            x1967 * x441 + x1967 * x79;
+  const amrex::Real x2036 =
+    3430.0 * exp(224.93913147394832 * invT + 1.18 * logT);
+  const amrex::Real x2041 =
+    -sc[11] * x1867 - sc[11] * x2036 - 10000000.0 * sc[11] * x224 -
+    20000000.0 * sc[11] * x327 + 10000000.0 * sc[2] * x393 -
+    20000000.0 * sc[6] * x441 + 20000000.0 * sc[6] * x79 + x175 * x376;
+  x44 = 100.0 *
+        exp(g_RT[7] - g_RT[8] - 1570.0449445161494 * invT + 1.6 * logT - x44);
+  const amrex::Real x2056 = 12000000.0 * sc[1] * x397 + x105 * x155 +
+                            x138 * x1967 - x155 * x348 + x166 * x1966 -
+                            x1967 * x462 + 25010000.0 * x46 * x51;
+  const amrex::Real x2061 =
+    10000000.0 * sc[2] * x397 + 20000000.0 * sc[6] * x138 -
+    20000000.0 * sc[6] * x462 + x161 * x392 + x175 * x379;
+  const amrex::Real x2065 = 150000000.0 * exp(-11875.980990570873 * invT);
+  const amrex::Real x2073 = 12000000.0 * sc[1] * x228 - x155 * x351 +
+                            x155 * x480 - x1967 * x474 + x1967 * x483;
+  const amrex::Real x2078 =
+    10000000.0 * sc[2] * x228 - 20000000.0 * sc[6] * x474 +
+    20000000.0 * sc[6] * x483 + 20000000.0 * x166 + x175 * x286;
+  const amrex::Real x2086 = 10000000.0 * sc[2] * x401 + sc[3] * x1842 +
+                            20000000.0 * sc[6] * x333 -
+                            20000000.0 * sc[6] * x486 + x175 * x384;
+  const amrex::Real x2092 = 12000000.0 * sc[1] * x401 - sc[4] * x114 -
+                            sc[4] * x2030 - 12000000.0 * sc[4] * x235 -
+                            25010000.0 * sc[4] + x155 * x490 + x1967 * x333 -
+                            x1967 * x486;
+  const amrex::Real x2093 =
+    100.0 * sc[4] * exp(-1570.0449445161494 * invT + 1.6 * logT);
+  const amrex::Real x2098 = -1000000.0 * refC * sc[4] * x1151 +
+                            12000000.0 * sc[1] * x203 -
+                            5000000.0 * sc[4] * x203 + 1000000.0 * x1155;
+  const amrex::Real x2107 =
+    sc[2] * x1247 + x155 * x25 - x155 * x360 - x1967 * x497 + x1967 * x503;
+  const amrex::Real x2117 = 12000000.0 * sc[1] * x205 + x143 * x1967 -
+                            x155 * x369 + x155 * x371 - x156 * x1967;
+  const amrex::Real x2147 =
+    10000000.0 * sc[2] * x244 - sc[4] * x1867 - sc[4] * x2036 -
+    10000000.0 * sc[4] * x224 - 20000000.0 * sc[4] * x327 -
+    20000000.0 * sc[6] * x181 + 20000000.0 * sc[6] * x197 + x175 * x355;
+  const amrex::Real x2158 = 12000000.0 * sc[1] * x33 - x155 * x206 +
+                            x155 * x54 - x170 * x1967 + x191 * x1967;
+  const amrex::Real x2159 = 22000000000.0 * x1164 - 22000000000.0 * x1167;
+  const amrex::Real x2165 =
+    -12000000.0 * sc[3] * x351 + x155 * x351 + x2159 + x351 * x405;
+  const amrex::Real x2170 = -2800000.0 * sc[6] * x1143 + 2800000.0 * x1148;
+  const amrex::Real x2182 = -4161.6255420347934 * invT + 2.0 * logT;
+  const amrex::Real x2185 = 4.92 * sc[8] * exp(x2182);
+  const amrex::Real x2187 = 6399999999999999.0 * sc[1] * x1087 * x1100 -
+                            6399999999999999.0 * x1091 - x1096 * x1103 +
+                            x1096 * x91 - 8.192e+20 * x1122 * x135 +
+                            8.192e+20 * x135 * x321;
+  x1342 = sc[1] * x1101 - 3199999999999999.5 * x1091 - x1103 * x1342 -
+          4.096e+20 * x1122 * x135 + x1342 * x91 + 4.096e+20 * x135 * x321;
+  const amrex::Real x2202 =
+    -70000000.0 * sc[0] * x351 + x1324 + x1342 - x176 * x351;
+  const amrex::Real x2209 =
+    0.00332 * exp(-2948.8664663027675 * invT + 2.81 * logT);
+  const amrex::Real x2233 = 2.46 * sc[8] * exp(x2182);
+  const amrex::Real x2234 =
+    -9.6622503937007858e+32 * x1173 * x1185 +
+    9.6622503937007858e+32 * x1173 * x1203 -
+    x1174 * (4.0 * x1180 + 0.56 * x1183) - 4.954e+21 * x1188 * x1194 +
+    x1197 * (4.0 * x1180 + 0.56 * x1183) + 4.954e+21 * x1209;
+  const amrex::Real x2235 =
+    -4.8311251968503929e+32 * x1173 * x1185 +
+    4.8311251968503929e+32 * x1173 * x1203 -
+    x1174 * (2.0 * x1180 + 0.28 * x1183) - 2.477e+21 * x1188 * x1194 +
+    x1197 * (2.0 * x1180 + 0.28 * x1183) + 2.477e+21 * x1209;
+  const amrex::Real x2246 = x1349 + 602.0 * x184 - 602.0 * x456 + x894;
+  const amrex::Real x2264 = -14000000.0 * sc[10] * x351;
+  const amrex::Real x2265 =
+    -15000000.0 * sc[2] * x351 - 40000000.0 * sc[3] * x351 + x2246;
+  const amrex::Real x2286 = -602.0 * x184 + 602.0 * x456;
+  x813 = 2700000000000.0 * x1057 + 3.3440366972477061e+18 * x1061 * x1062 -
+         3.3440366972477061e+18 * x1062 * x413 + x1109 -
+         2700000000000.0 * x292 * x350 - x424 -
+         1.1955767441860469e+30 * x55 * x829 +
+         1.1955767441860469e+30 * x55 * x838 -
+         5070000000000001.0 * x65 * x7 * x813 * x816 +
+         1.0140000000000002e+16 * x65 * x816 +
+         5070000000000001.0 * x7 * x813 * x816 * x821 -
+         1.0140000000000002e+16 * x816 * x821;
+  x888 = -1350000000000.0 * refC * sc[11] * x292 + 1350000000000.0 * x1057 +
+         1.6720183486238531e+18 * x1061 * x1062 -
+         1.6720183486238531e+18 * x1062 * x413 +
+         x1107 * x96 * (2.0 * x1067 + 0.28 * x1068) -
+         x416 * x96 * (2.0 * x1067 + 0.28 * x1068) -
+         5.9778837209302344e+29 * x55 * x829 +
+         5.9778837209302344e+29 * x55 * x838 + 5070000000000001.0 * x65 * x816 +
+         x812 * x888 - 5070000000000001.0 * x816 * x821 - x888 * x889;
   // Write the full Jacobian expression...
-  J[0] = -180000.0 * refC * sc[0] * exp(-0.6 * logT + x22) -
-         550000000.0 * refC * sc[10] * exp(-2.0 * logT + x22) -
-         60000000.0 * refC * sc[5] * exp(-1.25 * logT + x22) -
-         70000000.0 * sc[0] * x222 + 70000000.0 * sc[0] * x327 -
-         20000000.0 * sc[11] * x234 +
-         90000.0 * ((sc[1]) * (sc[1])) * exp(-0.6 * logT) +
-         20000000.0 * sc[1] * x321 - sc[2] * x217 - sc[3] * x200 -
-         sc[7] * x188 - x117 * x379 - x165 * x53 - x186 * x375 + x220 * x346 -
-         x220 * x383 - x225 - 70000000.0 * x50 -
-         1000000.0 * x775 * (sc[3] + sc[9] + x2) + x845 + x853 +
-         (70000000.0 * sc[0] * x68 - 73400000.0 * sc[1] * x124 -
-          15000000.0 * sc[2] * x68 + x124 * x375) *
-           (-x346 + x383) +
-         (-20000000.0 * sc[1] * x41) * (x222 - x327 + (-x68) * (-x346 + x383));
+  J[0] =
+    -550000000.0 * refC * sc[10] * exp(-2.0 * logT + x188) -
+    60000000.0 * refC * sc[5] * exp(-1.25 * logT + x188) -
+    1000000.0 * refC * x380 * (sc[3] + sc[9] + x2) + 70000000.0 * sc[0] * x213 -
+    70000000.0 * sc[0] * x219 - 20000000.0 * sc[11] * x230 +
+    90000.0 * ((sc[1]) * (sc[1])) * exp(-0.6 * logT) +
+    20000000.0 * sc[1] * x315 - sc[2] * x193 - sc[3] * x109 - sc[7] * x336 -
+    x118 * x392 - x166 * x201 - x186 * x372 - x198 + x216 * x340 - x216 * x381 -
+    180000.0 * x217 * exp(-0.6 * logT + x188) - 70000000.0 * x51 + x841 + x850 +
+    (70000000.0 * sc[0] * x67 - 73400000.0 * sc[1] * x125 -
+     15000000.0 * sc[2] * x67 + x125 * x372) *
+      (-x340 + x381) +
+    (-20000000.0 * sc[1] * x42) * (-x213 + x219 + (-x67) * (-x340 + x381));
   J[14] =
-    180000.0 * sc[0] * sc[1] * exp(-0.6 * logT) + 70000000.0 * sc[0] * x345 -
-    70000000.0 * sc[0] * x413 + 1100000000.0 * sc[10] * sc[1] * x861 +
-    sc[11] * x877 + 120000000.0 * sc[1] * sc[5] * exp(-1.25 * logT) +
-    20000000.0 * sc[1] * x15 + 2000000.0 * sc[1] * x866 * (sc[3] + sc[9] + x2) +
-    sc[4] * x858 + sc[5] * x871 + sc[6] * x856 + 70000000.0 * sc[7] * x279 +
-    sc[7] * x869 - x128 * x220 + x220 * x400 - 20000000.0 * x249 - x375 * x381 +
-    x880 + x895 + x901 - 20000000.0 * x902 +
-    (70000000.0 * sc[0] * x68 - 73400000.0 * sc[1] * x124 -
-     15000000.0 * sc[2] * x68 + x124 * x375) *
-      (x128 - x400) +
-    (-20000000.0 * sc[1] * x41) * (-x345 + x413 + (-x68) * (x128 - x400));
-  J[28] =
-    70000000.0 * sc[0] * x134 - sc[0] * x217 - 70000000.0 * sc[0] * x347 +
-    20000000.0 * sc[1] * x28 + 73400000.0 * sc[1] * x72 -
-    15000000.0 * sc[2] * x134 + 15000000.0 * sc[2] * x347 + x220 * x420 -
-    x220 * x428 - x375 * x72 + 15000000.0 * x50 + x895 +
-    (70000000.0 * sc[0] * x68 - 73400000.0 * sc[1] * x124 -
-     15000000.0 * sc[2] * x68 + x124 * x375) *
-      (-x420 + x428) +
-    (-20000000.0 * sc[1] * x41) * (-x134 + x347 + (-x68) * (-x420 + x428));
-  J[42] = -sc[0] * x200 - 70000000.0 * sc[0] * x351 +
-          70000000.0 * sc[0] * x352 + 20000000.0 * sc[1] * x389 +
-          73400000.0 * sc[1] * x392 + 15000000.0 * sc[2] * x351 -
-          15000000.0 * sc[2] * x352 + x220 * x434 - x220 * x439 - x375 * x392 +
-          x895 +
-          (70000000.0 * sc[0] * x68 - 73400000.0 * sc[1] * x124 -
-           15000000.0 * sc[2] * x68 + x124 * x375) *
-            (-x434 + x439) +
-          (-20000000.0 * sc[1] * x41) * (x351 - x352 + (-x68) * (-x434 + x439));
-  J[56] = 70000000.0 * sc[0] * x356 - 70000000.0 * sc[0] * x84 +
-          73400000.0 * sc[1] * x393 + 20000000.0 * sc[1] * x397 + sc[1] * x858 -
-          15000000.0 * sc[2] * x356 + 15000000.0 * sc[2] * x84 - x103 * x220 +
-          x220 * x445 - x375 * x393 + x895 - x934 +
-          (70000000.0 * sc[0] * x68 - 73400000.0 * sc[1] * x124 -
-           15000000.0 * sc[2] * x68 + x124 * x375) *
-            (x103 - x445) +
-          (-20000000.0 * sc[1] * x41) * (-x356 + x84 + (-x68) * (x103 - x445));
-  J[70] = -60000000.0 * refC * sc[0] * exp(-1.25 * logT + x22) +
-          70000000.0 * sc[0] * x167 - 70000000.0 * sc[0] * x361 +
+    180000.0 * sc[0] * sc[1] * exp(-0.6 * logT) + 70000000.0 * sc[0] * x221 -
+    70000000.0 * sc[0] * x408 + 1100000000.0 * sc[10] * sc[1] * x863 +
+    sc[11] * x880 + 120000000.0 * sc[1] * sc[5] * exp(-1.25 * logT) +
+    20000000.0 * sc[1] * x15 + 2000000.0 * sc[1] * x876 * (sc[3] + sc[9] + x2) +
+    sc[4] * x855 + sc[5] * x861 + sc[6] * x853 + 70000000.0 * sc[7] * x274 +
+    sc[7] * x857 - x132 * x216 - x210 * x372 + x216 * x396 - 20000000.0 * x245 +
+    x874 + x895 + x901 - 20000000.0 * x902 +
+    (70000000.0 * sc[0] * x67 - 73400000.0 * sc[1] * x125 -
+     15000000.0 * sc[2] * x67 + x125 * x372) *
+      (x132 - x396) +
+    (-20000000.0 * sc[1] * x42) * (-x221 + x408 + (-x67) * (x132 - x396));
+  J[28] = -sc[0] * x193 + 70000000.0 * sc[0] * x283 -
+          70000000.0 * sc[0] * x322 + 73400000.0 * sc[1] * x277 +
+          20000000.0 * sc[1] * x28 - 15000000.0 * sc[2] * x283 +
+          15000000.0 * sc[2] * x322 - x168 * x216 + x216 * x417 - x277 * x372 +
+          15000000.0 * x51 + x895 +
+          (70000000.0 * sc[0] * x67 - 73400000.0 * sc[1] * x125 -
+           15000000.0 * sc[2] * x67 + x125 * x372) *
+            (x168 - x417) +
+          (-20000000.0 * sc[1] * x42) * (-x283 + x322 + (-x67) * (x168 - x417));
+  J[42] =
+    -sc[0] * x109 + 70000000.0 * sc[0] * x339 - 70000000.0 * sc[0] * x341 +
+    73400000.0 * sc[1] * x374 + 20000000.0 * sc[1] * x388 -
+    15000000.0 * sc[2] * x339 + 15000000.0 * sc[2] * x341 + x216 * x431 -
+    x216 * x436 - x372 * x374 + x895 +
+    (70000000.0 * sc[0] * x67 - 73400000.0 * sc[1] * x125 -
+     15000000.0 * sc[2] * x67 + x125 * x372) *
+      (-x431 + x436) +
+    (-20000000.0 * sc[1] * x42) * (-x339 + x341 + (-x67) * (-x431 + x436));
+  J[56] = 70000000.0 * sc[0] * x147 - 70000000.0 * sc[0] * x344 +
+          73400000.0 * sc[1] * x376 + 20000000.0 * sc[1] * x393 + sc[1] * x855 -
+          15000000.0 * sc[2] * x147 + 15000000.0 * sc[2] * x344 + x216 * x441 -
+          x216 * x79 - x372 * x376 + x895 - x931 +
+          (70000000.0 * sc[0] * x67 - 73400000.0 * sc[1] * x125 -
+           15000000.0 * sc[2] * x67 + x125 * x372) *
+            (-x441 + x79) +
+          (-20000000.0 * sc[1] * x42) * (-x147 + x344 + (-x67) * (-x441 + x79));
+  J[70] = -70000000.0 * sc[0] * x105 + 70000000.0 * sc[0] * x348 +
           60000000.0 * ((sc[1]) * (sc[1])) * exp(-1.25 * logT) +
-          20000000.0 * sc[1] * x78 + sc[1] * x871 - x220 * x457 + x220 * x466 -
-          x375 * x399 + x963 +
-          (70000000.0 * sc[0] * x68 - 73400000.0 * sc[1] * x124 -
-           15000000.0 * sc[2] * x68 + x124 * x375) *
-            (x457 - x466) +
-          (-20000000.0 * sc[1] * x41) * (-x167 + x361 + (-x68) * (x457 - x466));
-  J[84] = -70000000.0 * sc[0] * x483 + 20000000.0 * sc[1] * x232 +
-          73400000.0 * sc[1] * x304 + sc[1] * x856 + 15000000.0 * sc[2] * x483 +
-          x220 * x477 - x220 * x486 - x304 * x375 + x973 +
-          (70000000.0 * sc[0] * x68 - 73400000.0 * sc[1] * x124 -
-           15000000.0 * sc[2] * x68 + x124 * x375) *
-            (-x477 + x486) +
-          (-20000000.0 * sc[1] * x41) * (-x25 + x483 + (-x68) * (-x477 + x486));
-  J[98] = -sc[0] * x188 - 70000000.0 * sc[0] * x494 +
-          70000000.0 * sc[1] * x279 + 73400000.0 * sc[1] * x402 +
-          20000000.0 * sc[1] * x419 + sc[1] * x869 + 15000000.0 * sc[2] * x494 -
-          x220 * x339 + x220 * x489 - x375 * x402 + x973 +
-          (70000000.0 * sc[0] * x68 - 73400000.0 * sc[1] * x124 -
-           15000000.0 * sc[2] * x68 + x124 * x375) *
-            (x339 - x489) +
-          (-20000000.0 * sc[1] * x41) * (-x25 + x494 + (-x68) * (x339 - x489));
-  J[112] =
-    -70000000.0 * sc[0] * x371 + 70000000.0 * sc[0] * x373 -
-    2000000.0 * sc[0] * x775 + 2000000.0 * ((sc[1]) * (sc[1])) * x866 +
-    20000000.0 * sc[1] * x207 + 73400000.0 * sc[1] * x81 +
-    15000000.0 * sc[2] * x371 - 15000000.0 * sc[2] * x373 + x220 * x500 -
-    x220 * x506 - x375 * x81 + x845 + x994 +
-    (70000000.0 * sc[0] * x68 - 73400000.0 * sc[1] * x124 -
-     15000000.0 * sc[2] * x68 + x124 * x375) *
-      (-x500 + x506) +
-    (-20000000.0 * sc[1] * x41) * (x371 - x373 + (-x68) * (-x500 + x506));
+          20000000.0 * sc[1] * x397 + sc[1] * x861 - x138 * x216 + x216 * x462 -
+          60000000.0 * x217 * exp(-1.25 * logT + x188) - x372 * x379 + x963 +
+          (70000000.0 * sc[0] * x67 - 73400000.0 * sc[1] * x125 -
+           15000000.0 * sc[2] * x67 + x125 * x372) *
+            (x138 - x462) +
+          (-20000000.0 * sc[1] * x42) * (x105 - x348 + (-x67) * (x138 - x462));
+  J[84] =
+    -70000000.0 * sc[0] * x480 + 20000000.0 * sc[1] * x228 +
+    73400000.0 * sc[1] * x286 + sc[1] * x853 + 15000000.0 * sc[2] * x480 +
+    x216 * x474 - x216 * x483 - x286 * x372 + x973 +
+    (70000000.0 * sc[0] * x67 - 73400000.0 * sc[1] * x125 -
+     15000000.0 * sc[2] * x67 + x125 * x372) *
+      (-x474 + x483) +
+    (-20000000.0 * sc[1] * x42) * (-x351 + x480 + (-x67) * (-x474 + x483));
+  J[98] = -sc[0] * x336 - 70000000.0 * sc[0] * x490 +
+          70000000.0 * sc[1] * x274 + 73400000.0 * sc[1] * x384 +
+          20000000.0 * sc[1] * x401 + sc[1] * x857 + 15000000.0 * sc[2] * x490 -
+          x216 * x333 + x216 * x486 - x372 * x384 + x973 +
+          (70000000.0 * sc[0] * x67 - 73400000.0 * sc[1] * x125 -
+           15000000.0 * sc[2] * x67 + x125 * x372) *
+            (x333 - x486) +
+          (-20000000.0 * sc[1] * x42) * (-x351 + x490 + (-x67) * (x333 - x486));
+  J[112] = -70000000.0 * sc[0] * x25 + 70000000.0 * sc[0] * x360 +
+           2000000.0 * ((sc[1]) * (sc[1])) * x876 + 20000000.0 * sc[1] * x203 +
+           73400000.0 * sc[1] * x93 + 15000000.0 * sc[2] * x25 -
+           15000000.0 * sc[2] * x360 + x216 * x497 - x216 * x503 -
+           2000000.0 * x217 * x380 - x372 * x93 + x841 + x995 +
+           (70000000.0 * sc[0] * x67 - 73400000.0 * sc[1] * x125 -
+            15000000.0 * sc[2] * x67 + x125 * x372) *
+             (-x497 + x503) +
+           (-20000000.0 * sc[1] * x42) * (x25 - x360 + (-x67) * (-x497 + x503));
   J[126] =
-    70000000.0 * sc[0] * x210 - 70000000.0 * sc[0] * x378 -
-    1000000.0 * sc[0] * x775 + 1000000.0 * ((sc[1]) * (sc[1])) * x866 +
-    20000000.0 * sc[1] * x209 - x139 * x220 + x179 * x220 + x283 - x375 * x417 +
-    (70000000.0 * sc[0] * x68 - 73400000.0 * sc[1] * x124 -
-     15000000.0 * sc[2] * x68 + x124 * x375) *
-      (x139 - x179) +
-    (-20000000.0 * sc[1] * x41) * (-x210 + x378 + (-x68) * (x139 - x179));
+    70000000.0 * sc[0] * x369 - 70000000.0 * sc[0] * x371 +
+    1000000.0 * ((sc[1]) * (sc[1])) * x876 + 20000000.0 * sc[1] * x205 -
+    x143 * x216 + x156 * x216 - 1000000.0 * x217 * x380 - x372 * x395 + x805 +
+    (70000000.0 * sc[0] * x67 - 73400000.0 * sc[1] * x125 -
+     15000000.0 * sc[2] * x67 + x125 * x372) *
+      (x143 - x156) +
+    (-20000000.0 * sc[1] * x42) * (-x369 + x371 + (-x67) * (x143 - x156));
   J[140] =
-    -550000000.0 * refC * sc[0] * exp(-2.0 * logT + x22) +
-    70000000.0 * sc[0] * x214 - 70000000.0 * sc[0] * x52 +
-    550000000.0 * ((sc[1]) * (sc[1])) * x861 + 73400000.0 * sc[1] * x185 +
-    20000000.0 * sc[1] * x207 - 15000000.0 * sc[2] * x214 +
-    15000000.0 * sc[2] * x52 + x161 * x220 - x185 * x375 - x195 * x220 + x845 +
-    (70000000.0 * sc[0] * x68 - 73400000.0 * sc[1] * x124 -
-     15000000.0 * sc[2] * x68 + x124 * x375) *
-      (-x161 + x195) +
-    (-20000000.0 * sc[1] * x41) * (-x214 + x52 + (-x68) * (-x161 + x195));
-  J[154] = -70000000.0 * sc[0] * x202 - 20000000.0 * sc[0] * x234 +
-           20000000.0 * sc[1] * x248 + 73400000.0 * sc[1] * x359 +
-           sc[1] * x877 + 15000000.0 * sc[2] * x202 + x197 * x220 +
-           5070000000000000.0 * x204 * x342 * x815 - x205 * x220 - x359 * x375 +
-           x973 +
-           (70000000.0 * sc[0] * x68 - 73400000.0 * sc[1] * x124 -
-            15000000.0 * sc[2] * x68 + x124 * x375) *
-             (-x197 + x205) +
-           (-20000000.0 * sc[1] * x41) * (x202 - x25 + (-x68) * (-x197 + x205));
+    70000000.0 * sc[0] * x375 - 70000000.0 * sc[0] * x53 +
+    550000000.0 * ((sc[1]) * (sc[1])) * x863 + 73400000.0 * sc[1] * x185 +
+    20000000.0 * sc[1] * x203 - 15000000.0 * sc[2] * x375 +
+    15000000.0 * sc[2] * x53 + x157 * x216 - x162 * x216 - x185 * x372 -
+    550000000.0 * x217 * exp(-2.0 * logT + x188) + x841 +
+    (70000000.0 * sc[0] * x67 - 73400000.0 * sc[1] * x125 -
+     15000000.0 * sc[2] * x67 + x125 * x372) *
+      (-x157 + x162) +
+    (-20000000.0 * sc[1] * x42) * (-x375 + x53 + (-x67) * (-x157 + x162));
+  J[154] = -70000000.0 * sc[0] * x20 - 20000000.0 * sc[0] * x230 +
+           20000000.0 * sc[1] * x244 + sc[1] * x880 + x181 * x216 -
+           x197 * x216 - x355 * x372 + x810 + x973 +
+           (70000000.0 * sc[0] * x67 - 73400000.0 * sc[1] * x125 -
+            15000000.0 * sc[2] * x67 + x125 * x372) *
+             (-x181 + x197) +
+           (-20000000.0 * sc[1] * x42) * (x20 - x351 + (-x67) * (-x181 + x197));
   J[168] =
-    70000000.0 * sc[0] * x282 - 70000000.0 * sc[0] * x57 +
-    73400000.0 * sc[1] * x119 + 20000000.0 * sc[1] * x33 -
-    15000000.0 * sc[2] * x282 + 15000000.0 * sc[2] * x57 - x119 * x375 +
-    x169 * x220 - x191 * x220 + x895 +
-    (70000000.0 * sc[0] * x68 - 73400000.0 * sc[1] * x124 -
-     15000000.0 * sc[2] * x68 + x124 * x375) *
-      (-x169 + x191) +
-    (-20000000.0 * sc[1] * x41) * (-x282 + x57 + (-x68) * (-x169 + x191));
-  J[1] = 360000.0 * refC * sc[0] * exp(-0.6 * logT + x22) +
-         1100000000.0 * refC * sc[10] * exp(-2.0 * logT + x22) +
-         120000000.0 * refC * sc[5] * exp(-1.25 * logT + x22) +
-         20000000.0 * sc[11] * x234 -
+    70000000.0 * sc[0] * x206 - 70000000.0 * sc[0] * x54 +
+    73400000.0 * sc[1] * x120 + 20000000.0 * sc[1] * x33 -
+    15000000.0 * sc[2] * x206 + 15000000.0 * sc[2] * x54 - x120 * x372 +
+    x170 * x216 - x191 * x216 + x895 +
+    (70000000.0 * sc[0] * x67 - 73400000.0 * sc[1] * x125 -
+     15000000.0 * sc[2] * x67 + x125 * x372) *
+      (-x170 + x191) +
+    (-20000000.0 * sc[1] * x42) * (-x206 + x54 + (-x67) * (-x170 + x191));
+  J[1] = 1100000000.0 * refC * sc[10] * exp(-2.0 * logT + x188) +
+         120000000.0 * refC * sc[5] * exp(-1.25 * logT + x188) +
+         2000000.0 * refC * x380 * (sc[3] + sc[9] + x2) +
+         20000000.0 * sc[11] * x230 -
          180000.0 * ((sc[1]) * (sc[1])) * exp(-0.6 * logT) -
-         73400000.0 * sc[1] * x186 - 38000000.0 * sc[1] * x321 +
-         30000000.0 * sc[2] * x186 - 80000000.0 * sc[2] * x346 +
-         80000000.0 * sc[2] * x383 + sc[3] * x200 + sc[7] * x188 +
-         73400000.0 * sc[9] * x292 + 8.192e+20 * x1062 * x131 -
-         2700000000000.0 * x1063 + x1082 - x1086 * x1089 + x1086 * x75 -
-         6400000000000000.0 * x1092 + 6400000000000000.0 * x1102 +
-         3.3440366972477102e+18 * x1105 * x70 - x1109 + x1149 + x1156 + x1160 +
-         x1168 + x1218 + x1243 - 8.192e+20 * x131 * x326 + x183 * x186 -
-         x186 * x443 - x186 * x444 + x186 * x460 + x20 * x222 - x20 * x327 +
-         x225 + 2700000000000.0 * x314 * x826 -
-         3.3440366972477102e+18 * x316 * x70 + x346 * x432 - x383 * x432 +
-         2000000.0 * x775 * (sc[3] + sc[9] + x2) +
-         (-70000000.0 * sc[0] * x68 + 73400000.0 * sc[1] * x124 -
-          30000000.0 * sc[2] * x124 - 28000000.0 * sc[3] * x68 -
-          30000000.0 * sc[4] * x68 - x124 * x183 - x124 * x375 + x124 * x443 +
-          x124 * x444 - x124 * x460 - x20 * x68) *
-           (-x346 + x383) +
-         (38000000.0 * sc[1] * x41 - x41 * x472) *
-           (x222 - x327 + (-x68) * (-x346 + x383));
-  J[15] =
-    -refCinv * sc[9] * x1250 - 360000.0 * sc[0] * sc[1] * exp(-0.6 * logT) -
-    2200000000.0 * sc[10] * sc[1] * x861 - sc[10] * x1267 -
-    30000000.0 * sc[10] * x308 -
-    240000000.0 * sc[1] * sc[5] * exp(-1.25 * logT) - 38000000.0 * sc[1] * x15 -
-    73400000.0 * sc[1] * x381 -
-    4000000.0 * sc[1] * x866 * (sc[3] + sc[9] + x2) +
-    80000000.0 * sc[2] * x128 + 30000000.0 * sc[2] * x381 -
-    80000000.0 * sc[2] * x400 - 500000.0 * sc[2] * x7 * x866 - sc[5] * x871 -
-    80000000.0 * x107 * x379 - x1079 * x165 * x7 + x1149 + x1277 - x128 * x432 +
-    x1293 + x1296 + x1300 + x1303 + x1315 + x1322 + x1325 + x1349 - x20 * x345 +
-    x20 * x413 + 38000000.0 * x249 + 73400000.0 * x299 + 73400000.0 * x322 -
-    1350000000000.0 * x379 * x438 * x7 * exp(x427) - x381 * x443 - x381 * x444 +
-    x400 * x432 - x880 + 38000000.0 * x902 +
-    (-70000000.0 * sc[0] * x68 + 73400000.0 * sc[1] * x124 -
-     30000000.0 * sc[2] * x124 - 28000000.0 * sc[3] * x68 -
-     30000000.0 * sc[4] * x68 - x124 * x183 - x124 * x375 + x124 * x443 +
-     x124 * x444 - x124 * x460 - x20 * x68) *
-      (x128 - x400) +
-    (38000000.0 * sc[1] * x41 - x41 * x472) *
-      (-x345 + x413 + (-x68) * (x128 - x400));
-  J[29] = -70000000.0 * sc[0] * x134 + sc[0] * x217 +
-          70000000.0 * sc[0] * x347 - 38000000.0 * sc[1] * x28 -
-          500000.0 * sc[1] * x7 * x866 - 73400000.0 * sc[1] * x72 -
-          80000000.0 * sc[2] * x420 + 80000000.0 * sc[2] * x428 -
-          28000000.0 * sc[3] * x134 + 28000000.0 * sc[3] * x347 +
-          sc[4] * x1356 + sc[5] * x1354 + x1149 + x1322 + x1325 - x134 * x20 +
-          x1349 + x1369 + x1378 + 80000000.0 * x165 + x183 * x72 + x20 * x347 -
-          x220 * x420 + x220 * x428 + x420 * x432 - x428 * x432 - x443 * x72 -
-          x444 * x72 + x460 * x72 +
-          (-70000000.0 * sc[0] * x68 + 73400000.0 * sc[1] * x124 -
-           30000000.0 * sc[2] * x124 - 28000000.0 * sc[3] * x68 -
-           30000000.0 * sc[4] * x68 - x124 * x183 - x124 * x375 + x124 * x443 +
-           x124 * x444 - x124 * x460 - x20 * x68) *
-            (-x420 + x428) +
-          (38000000.0 * sc[1] * x41 - x41 * x472) *
-            (-x134 + x347 + (-x68) * (-x420 + x428));
-  J[43] = sc[0] * x200 + 70000000.0 * sc[0] * x351 - 70000000.0 * sc[0] * x352 -
-          38000000.0 * sc[1] * x389 - 73400000.0 * sc[1] * x392 +
-          30000000.0 * sc[2] * x392 - 80000000.0 * sc[2] * x434 +
-          80000000.0 * sc[2] * x439 + 28000000.0 * sc[3] * x351 -
-          28000000.0 * sc[3] * x352 + x1322 + x1325 + x1349 + x1398 + x1405 +
-          x183 * x392 + x20 * x351 - x20 * x352 - x220 * x434 + x220 * x439 -
-          x392 * x443 - x392 * x444 + x392 * x460 + x432 * x434 - x432 * x439 +
-          28000000.0 * x50 +
-          (-70000000.0 * sc[0] * x68 + 73400000.0 * sc[1] * x124 -
-           30000000.0 * sc[2] * x124 - 28000000.0 * sc[3] * x68 -
-           30000000.0 * sc[4] * x68 - x124 * x183 - x124 * x375 + x124 * x443 +
-           x124 * x444 - x124 * x460 - x20 * x68) *
-            (-x434 + x439) +
-          (38000000.0 * sc[1] * x41 - x41 * x472) *
-            (x351 - x352 + (-x68) * (-x434 + x439));
-  J[57] = -70000000.0 * sc[0] * x356 + 70000000.0 * sc[0] * x84 -
-          73400000.0 * sc[1] * x393 - 38000000.0 * sc[1] * x397 +
-          80000000.0 * sc[2] * x103 + sc[2] * x1356 +
-          30000000.0 * sc[2] * x393 - 80000000.0 * sc[2] * x445 +
-          12000000.0 * sc[7] * x245 + x103 * x220 - x103 * x432 + x1149 +
-          500000.0 * x1150 * x7 + x1322 + x1325 + x1349 + x1407 +
-          268000000.0 * x1409 + x1434 + x1436 + x183 * x393 - x20 * x356 +
-          x20 * x84 - x220 * x445 - 28000000.0 * x270 * x271 - x393 * x443 -
-          x393 * x444 + x393 * x460 + x432 * x445 + x934 +
-          (-70000000.0 * sc[0] * x68 + 73400000.0 * sc[1] * x124 -
-           30000000.0 * sc[2] * x124 - 28000000.0 * sc[3] * x68 -
-           30000000.0 * sc[4] * x68 - x124 * x183 - x124 * x375 + x124 * x443 +
-           x124 * x444 - x124 * x460 - x20 * x68) *
-            (x103 - x445) +
-          (38000000.0 * sc[1] * x41 - x41 * x472) *
-            (-x356 + x84 + (-x68) * (x103 - x445));
+         6399999999999999.0 * sc[1] * x1087 * x1100 -
+         73400000.0 * sc[1] * x186 - 38000000.0 * sc[1] * x315 +
+         30000000.0 * sc[2] * x186 - 80000000.0 * sc[2] * x340 +
+         80000000.0 * sc[2] * x381 + sc[3] * x109 + sc[7] * x336 +
+         73400000.0 * sc[9] * x311 - 2700000000000.0 * x1057 -
+         3.3440366972477061e+18 * x1061 * x1062 +
+         3.3440366972477061e+18 * x1062 * x413 + 6399999999999999.0 * x1091 +
+         x1096 * x1103 - x1096 * x91 - x1109 + 8.192e+20 * x1122 * x135 +
+         x1136 * x340 - x1136 * x381 + x1150 + x1157 + x1161 + x1169 + x1218 +
+         x1248 - 8.192e+20 * x135 * x321 - x186 * x402 - x186 * x435 +
+         x186 * x440 + x186 * x446 + x198 - x213 * x405 +
+         360000.0 * x217 * exp(-0.6 * logT + x188) + x219 * x405 +
+         2700000000000.0 * x292 * x350 + x424 +
+         (-70000000.0 * sc[0] * x67 + 73400000.0 * sc[1] * x125 -
+          30000000.0 * sc[2] * x125 - 28000000.0 * sc[3] * x67 -
+          30000000.0 * sc[4] * x67 - x125 * x372 + x125 * x402 + x125 * x435 -
+          x125 * x440 - x125 * x446 - x405 * x67) *
+           (-x340 + x381) +
+         (38000000.0 * sc[1] * x42 - x102 * x42) *
+           (-x213 + x219 + (-x67) * (-x340 + x381));
+  J[15] = -refCinv * sc[9] * x1255 -
+          360000.0 * sc[0] * sc[1] * exp(-0.6 * logT) -
+          2200000000.0 * sc[10] * sc[1] * x863 - sc[10] * x1272 -
+          30000000.0 * sc[10] * x299 -
+          240000000.0 * sc[1] * sc[5] * exp(-1.25 * logT) -
+          38000000.0 * sc[1] * x15 - 73400000.0 * sc[1] * x210 -
+          4000000.0 * sc[1] * x876 * (sc[3] + sc[9] + x2) +
+          80000000.0 * sc[2] * x132 + 30000000.0 * sc[2] * x210 -
+          80000000.0 * sc[2] * x396 - 500000.0 * sc[2] * x7 * x876 -
+          sc[5] * x861 + x10 - x1101 * x7 - x1136 * x132 + x1136 * x396 +
+          x1150 + x1282 + x1297 + x1301 + x1304 + x1307 + x1317 + x1324 +
+          x1354 - x210 * x402 - x210 * x435 - x221 * x405 + 38000000.0 * x245 +
+          73400000.0 * x316 - x392 * x430 - 80000000.0 * x392 * x83 +
+          x405 * x408 + 73400000.0 * x58 - x874 + 38000000.0 * x902 +
+          (-70000000.0 * sc[0] * x67 + 73400000.0 * sc[1] * x125 -
+           30000000.0 * sc[2] * x125 - 28000000.0 * sc[3] * x67 -
+           30000000.0 * sc[4] * x67 - x125 * x372 + x125 * x402 + x125 * x435 -
+           x125 * x440 - x125 * x446 - x405 * x67) *
+            (x132 - x396) +
+          (38000000.0 * sc[1] * x42 - x102 * x42) *
+            (-x221 + x408 + (-x67) * (x132 - x396));
+  J[29] = sc[0] * x193 - 70000000.0 * sc[0] * x283 + 70000000.0 * sc[0] * x322 -
+          73400000.0 * sc[1] * x277 - 38000000.0 * sc[1] * x28 -
+          500000.0 * sc[1] * x7 * x876 + 80000000.0 * sc[2] * x168 -
+          80000000.0 * sc[2] * x417 - 28000000.0 * sc[3] * x283 +
+          28000000.0 * sc[3] * x322 + sc[4] * x1361 + sc[5] * x1359 + x10 -
+          x1136 * x168 + x1136 * x417 + x1150 + x1324 + x1354 + x1374 + x1383 +
+          80000000.0 * x166 + x168 * x216 - x216 * x417 - x277 * x402 -
+          x277 * x435 + x277 * x440 + x277 * x446 - x283 * x405 + x322 * x405 +
+          (-70000000.0 * sc[0] * x67 + 73400000.0 * sc[1] * x125 -
+           30000000.0 * sc[2] * x125 - 28000000.0 * sc[3] * x67 -
+           30000000.0 * sc[4] * x67 - x125 * x372 + x125 * x402 + x125 * x435 -
+           x125 * x440 - x125 * x446 - x405 * x67) *
+            (x168 - x417) +
+          (38000000.0 * sc[1] * x42 - x102 * x42) *
+            (-x283 + x322 + (-x67) * (x168 - x417));
+  J[43] = sc[0] * x109 - 70000000.0 * sc[0] * x339 + 70000000.0 * sc[0] * x341 -
+          73400000.0 * sc[1] * x374 - 38000000.0 * sc[1] * x388 +
+          30000000.0 * sc[2] * x374 - 80000000.0 * sc[2] * x431 +
+          80000000.0 * sc[2] * x436 - 28000000.0 * sc[3] * x339 +
+          28000000.0 * sc[3] * x341 + x10 + x1136 * x431 - x1136 * x436 +
+          x1324 + x1354 + x1405 + x1412 - x216 * x431 + x216 * x436 -
+          x339 * x405 + x341 * x405 - x374 * x402 - x374 * x435 + x374 * x440 +
+          x374 * x446 + 28000000.0 * x51 +
+          (-70000000.0 * sc[0] * x67 + 73400000.0 * sc[1] * x125 -
+           30000000.0 * sc[2] * x125 - 28000000.0 * sc[3] * x67 -
+           30000000.0 * sc[4] * x67 - x125 * x372 + x125 * x402 + x125 * x435 -
+           x125 * x440 - x125 * x446 - x405 * x67) *
+            (-x431 + x436) +
+          (38000000.0 * sc[1] * x42 - x102 * x42) *
+            (-x339 + x341 + (-x67) * (-x431 + x436));
+  J[57] = 500000.0 * refC * x1151 * x7 - 70000000.0 * sc[0] * x147 +
+          70000000.0 * sc[0] * x344 - 73400000.0 * sc[1] * x376 -
+          38000000.0 * sc[1] * x393 + sc[2] * x1361 +
+          30000000.0 * sc[2] * x376 - 80000000.0 * sc[2] * x441 +
+          80000000.0 * sc[2] * x79 + 12000000.0 * sc[7] * x235 + x10 +
+          x1136 * x441 - x1136 * x79 + x1150 + x1324 + x1354 + x1414 +
+          268000000.0 * x1416 + x1441 + x1443 - x147 * x405 - x216 * x441 +
+          x216 * x79 - 28000000.0 * x265 * x266 + x344 * x405 - x376 * x402 -
+          x376 * x435 + x376 * x440 + x376 * x446 + x931 +
+          (-70000000.0 * sc[0] * x67 + 73400000.0 * sc[1] * x125 -
+           30000000.0 * sc[2] * x125 - 28000000.0 * sc[3] * x67 -
+           30000000.0 * sc[4] * x67 - x125 * x372 + x125 * x402 + x125 * x435 -
+           x125 * x440 - x125 * x446 - x405 * x67) *
+            (-x441 + x79) +
+          (38000000.0 * sc[1] * x42 - x102 * x42) *
+            (-x147 + x344 + (-x67) * (-x441 + x79));
   J[71] =
-    120000000.0 * refC * sc[0] * exp(-1.25 * logT + x22) -
+    refC * sc[6] * x1470 -
     120000000.0 * ((sc[1]) * (sc[1])) * exp(-1.25 * logT) -
-    sc[1] * sc[3] * x1282 - 73400000.0 * sc[1] * x399 -
-    38000000.0 * sc[1] * x78 - sc[1] * x871 + sc[2] * x1354 +
-    80000000.0 * sc[2] * x457 - 80000000.0 * sc[2] * x466 +
-    2.4576e+21 * x1062 * x131 - 8100000000000.0 * x1063 + x1065 * x1463 -
-    x1071 * (1.68 * x1067 + 12.0 * x1069) - x1089 * x1442 - 1.92e+16 * x1092 +
-    1.92e+16 * x1102 + 1.0032110091743101e+19 * x1105 * x70 +
-    3000000.0 * x1151 - 3000000.0 * x1154 - 2.4576e+21 * x131 * x326 +
-    x1334 * (1.68 * x1067 + 12.0 * x1069) + x1442 * x75 + x1472 + x1480 +
-    x1484 + x1492 - x167 * x20 + x20 * x361 + 8100000000000.0 * x314 * x826 -
-    1.0032110091743101e+19 * x316 * x70 + 6000000.0 * x37 * x50 - x399 * x443 -
-    x399 * x444 - x432 * x457 + x432 * x466 +
-    (-70000000.0 * sc[0] * x68 + 73400000.0 * sc[1] * x124 -
-     30000000.0 * sc[2] * x124 - 28000000.0 * sc[3] * x68 -
-     30000000.0 * sc[4] * x68 - x124 * x183 - x124 * x375 + x124 * x443 +
-     x124 * x444 - x124 * x460 - x20 * x68) *
-      (x457 - x466) +
-    (38000000.0 * sc[1] * x41 - x41 * x472) *
-      (-x167 + x361 + (-x68) * (x457 - x466));
-  J[85] = 70000000.0 * sc[0] * x483 - 38000000.0 * sc[1] * x232 -
-          73400000.0 * sc[1] * x304 + 30000000.0 * sc[2] * x304 -
-          80000000.0 * sc[2] * x477 + 80000000.0 * sc[2] * x486 +
-          28000000.0 * sc[3] * x483 + x1501 + x1507 + x1511 + x1516 + x1521 +
-          x183 * x304 + x20 * x483 - x220 * x477 + x220 * x486 - x304 * x443 -
-          x304 * x444 + x304 * x460 + x432 * x477 - x432 * x486 +
-          (-70000000.0 * sc[0] * x68 + 73400000.0 * sc[1] * x124 -
-           30000000.0 * sc[2] * x124 - 28000000.0 * sc[3] * x68 -
-           30000000.0 * sc[4] * x68 - x124 * x183 - x124 * x375 + x124 * x443 +
-           x124 * x444 - x124 * x460 - x20 * x68) *
-            (-x477 + x486) +
-          (38000000.0 * sc[1] * x41 - x41 * x472) *
-            (-x25 + x483 + (-x68) * (-x477 + x486));
-  J[99] = sc[0] * x188 - 73400000.0 * sc[1] * x402 - 38000000.0 * sc[1] * x419 +
-          80000000.0 * sc[2] * x339 + 30000000.0 * sc[2] * x402 -
-          80000000.0 * sc[2] * x489 + 28000000.0 * sc[3] * x494 +
-          12000000.0 * sc[4] * x245 + 2244000000000.0 * sc[5] * x402 * x450 +
-          x1078 + x1511 + x1521 + x1539 + x1541 + x20 * x494 - x339 * x432 -
-          x402 * x443 - x402 * x444 + 187000000000.0 * x402 * x450 * x6 +
-          x432 * x489 +
-          (-70000000.0 * sc[0] * x68 + 73400000.0 * sc[1] * x124 -
-           30000000.0 * sc[2] * x124 - 28000000.0 * sc[3] * x68 -
-           30000000.0 * sc[4] * x68 - x124 * x183 - x124 * x375 + x124 * x443 +
-           x124 * x444 - x124 * x460 - x20 * x68) *
-            (x339 - x489) +
-          (38000000.0 * sc[1] * x41 - x41 * x472) *
-            (-x25 + x494 + (-x68) * (x339 - x489));
-  J[113] = 4000000.0 * sc[0] * x775 - 4000000.0 * ((sc[1]) * (sc[1])) * x866 -
-           73400000.0 * sc[1] * x81 - 80000000.0 * sc[2] * x500 +
-           80000000.0 * sc[2] * x506 + 30000000.0 * sc[2] * x81 +
-           28000000.0 * sc[3] * x371 - 28000000.0 * sc[3] * x373 +
-           44000000000.0 * sc[5] * x1163 + x1149 - 44000000000.0 * x1166 +
-           x1561 + x1563 + x1564 + x183 * x81 + x20 * x371 - x20 * x373 +
-           x432 * x500 - x432 * x506 - x443 * x81 - x444 * x81 + x460 * x81 -
-           x994 +
-           (-70000000.0 * sc[0] * x68 + 73400000.0 * sc[1] * x124 -
-            30000000.0 * sc[2] * x124 - 28000000.0 * sc[3] * x68 -
-            30000000.0 * sc[4] * x68 - x124 * x183 - x124 * x375 + x124 * x443 +
-            x124 * x444 - x124 * x460 - x20 * x68) *
-             (-x500 + x506) +
-           (38000000.0 * sc[1] * x41 - x41 * x472) *
-             (x371 - x373 + (-x68) * (-x500 + x506));
-  J[127] = 73400000.0 * sc[0] * x292 + 2000000.0 * sc[0] * x775 -
-           2000000.0 * ((sc[1]) * (sc[1])) * x866 - 38000000.0 * sc[1] * x209 -
-           73400000.0 * sc[1] * x417 + 80000000.0 * sc[2] * x139 -
-           80000000.0 * sc[2] * x179 - 28000000.0 * sc[3] * x210 +
-           28000000.0 * sc[3] * x378 + 6.144e+20 * x1062 * x131 -
-           2025000000000.0 * x1063 + 2100000.0 * x1065 * x1142 -
-           x1071 * (0.42 * x1067 + 3.0 * x1069) - x1084 * x1089 + x1084 * x75 -
-           4800000000000000.0 * x1092 + 4800000000000000.0 * x1102 +
-           2.5080275229357798e+18 * x1105 * x70 - 2100000.0 * x1147 +
-           750000.0 * x1151 - 750000.0 * x1154 + x1158 + x1175 - x1250 * x269 -
-           6.144e+20 * x131 * x326 + x1334 * (0.42 * x1067 + 3.0 * x1069) +
-           x1347 - x139 * x432 + x140 + x1565 + x179 * x432 - x20 * x210 +
-           x20 * x378 + 2025000000000.0 * x314 * x826 -
-           2.5080275229357798e+18 * x316 * x70 - x417 * x443 - x417 * x444 +
-           (-70000000.0 * sc[0] * x68 + 73400000.0 * sc[1] * x124 -
-            30000000.0 * sc[2] * x124 - 28000000.0 * sc[3] * x68 -
-            30000000.0 * sc[4] * x68 - x124 * x183 - x124 * x375 + x124 * x443 +
-            x124 * x444 - x124 * x460 - x20 * x68) *
-             (x139 - x179) +
-           (38000000.0 * sc[1] * x41 - x41 * x472) *
-             (-x210 + x378 + (-x68) * (x139 - x179));
-  J[141] = 1100000000.0 * refC * sc[0] * exp(-2.0 * logT + x22) -
-           1100000000.0 * ((sc[1]) * (sc[1])) * x861 - sc[1] * x1267 -
-           73400000.0 * sc[1] * x185 - 30000000.0 * sc[1] * x308 -
-           80000000.0 * sc[2] * x161 + 30000000.0 * sc[2] * x185 +
-           80000000.0 * sc[2] * x195 - 28000000.0 * sc[3] * x214 +
-           28000000.0 * sc[3] * x52 + 4200000.0 * x1065 * x1142 -
-           4200000.0 * x1147 + x1176 + x1197 + x1347 + x1564 + x161 * x432 +
-           x183 * x185 - x185 * x443 - x185 * x444 + x185 * x460 - x195 * x432 -
-           x20 * x214 + x20 * x52 +
-           (-70000000.0 * sc[0] * x68 + 73400000.0 * sc[1] * x124 -
-            30000000.0 * sc[2] * x124 - 28000000.0 * sc[3] * x68 -
-            30000000.0 * sc[4] * x68 - x124 * x183 - x124 * x375 + x124 * x443 +
-            x124 * x444 - x124 * x460 - x20 * x68) *
-             (-x161 + x195) +
-           (38000000.0 * sc[1] * x41 - x41 * x472) *
-             (-x214 + x52 + (-x68) * (-x161 + x195));
-  J[155] = 70000000.0 * sc[0] * x202 + 20000000.0 * sc[0] * x234 -
-           38000000.0 * sc[1] * x248 - 73400000.0 * sc[1] * x359 -
-           80000000.0 * sc[2] * x197 + 80000000.0 * sc[2] * x205 +
-           30000000.0 * sc[2] * x359 + 28000000.0 * sc[3] * x202 +
-           2244000000000.0 * sc[5] * x359 * x450 + x1511 + x1521 - x197 * x220 +
-           x197 * x432 + x20 * x202 + 1350000000000.0 * x204 * x826 +
-           x205 * x220 - x205 * x432 - x359 * x443 - x359 * x444 +
-           187000000000.0 * x359 * x450 * x6 + x462 +
-           (-70000000.0 * sc[0] * x68 + 73400000.0 * sc[1] * x124 -
-            30000000.0 * sc[2] * x124 - 28000000.0 * sc[3] * x68 -
-            30000000.0 * sc[4] * x68 - x124 * x183 - x124 * x375 + x124 * x443 +
-            x124 * x444 - x124 * x460 - x20 * x68) *
-             (-x197 + x205) +
-           (38000000.0 * sc[1] * x41 - x41 * x472) *
-             (x202 - x25 + (-x68) * (-x197 + x205));
-  J[169] = -375000000.0 * sc[1] * sc[3] * x1285 - 73400000.0 * sc[1] * x119 -
-           38000000.0 * sc[1] * x33 + 30000000.0 * sc[2] * x119 -
-           80000000.0 * sc[2] * x169 + 80000000.0 * sc[2] * x191 -
-           28000000.0 * sc[3] * x282 + 28000000.0 * sc[3] * x57 +
-           375000000.0 * x1065 * x1389 + x119 * x183 - x119 * x443 -
-           x119 * x444 + x119 * x460 + x1217 + x1349 + x169 * x432 -
-           x191 * x432 - x20 * x282 + x20 * x57 + x471 +
-           (-70000000.0 * sc[0] * x68 + 73400000.0 * sc[1] * x124 -
-            30000000.0 * sc[2] * x124 - 28000000.0 * sc[3] * x68 -
-            30000000.0 * sc[4] * x68 - x124 * x183 - x124 * x375 + x124 * x443 +
-            x124 * x444 - x124 * x460 - x20 * x68) *
-             (-x169 + x191) +
-           (38000000.0 * sc[1] * x41 - x41 * x472) *
-             (-x282 + x57 + (-x68) * (-x169 + x191));
-  J[2] = -60000000.0 * sc[2] * x186 - sc[2] * x217 - 15000000.0 * sc[2] * x222 -
-         10000000.0 * sc[2] * x321 + 15000000.0 * sc[2] * x327 +
-         80000000.0 * sc[2] * x346 - 80000000.0 * sc[2] * x383 +
-         15000000.0 * sc[9] * x256 + x1156 - 576000.0 * x1225 +
-         576000.0 * x1229 - 1204.0 * x1238 + 1204.0 * x17 + x186 * x444 +
-         x186 * x476 +
-         (60000000.0 * sc[2] * x124 + 15000000.0 * sc[2] * x68 - x124 * x444 -
-          x124 * x476) *
-           (-x346 + x383) +
-         (10000000.0 * sc[2] * x41) * (x222 - x327 + (-x68) * (-x346 + x383));
-  J[16] = 30000000.0 * sc[10] * x308 + sc[11] * x1311 -
-          80000000.0 * sc[2] * x128 - 10000000.0 * sc[2] * x15 +
-          15000000.0 * sc[2] * x345 - 60000000.0 * sc[2] * x381 +
-          80000000.0 * sc[2] * x400 - 15000000.0 * sc[2] * x413 -
-          500000.0 * sc[2] * x7 * x866 + sc[3] * x1291 + sc[4] * x858 +
-          sc[6] * x1275 + 80000000.0 * x107 * x379 + x1240 + x381 * x444 +
-          x381 * x476 +
-          (60000000.0 * sc[2] * x124 + 15000000.0 * sc[2] * x68 - x124 * x444 -
-           x124 * x476) *
-            (x128 - x400) +
-          (10000000.0 * sc[2] * x41) * (-x345 + x413 + (-x68) * (x128 - x400));
-  J[30] = -sc[0] * x217 - sc[10] * x10 - sc[11] * x1725 -
-          500000.0 * sc[1] * x7 * x866 + 15000000.0 * sc[2] * x134 -
-          480000.0 * sc[2] * x1716 * x866 - 10000000.0 * sc[2] * x28 -
-          15000000.0 * sc[2] * x347 + 80000000.0 * sc[2] * x420 -
-          80000000.0 * sc[2] * x428 - 60000000.0 * sc[2] * x72 - sc[4] * x1356 -
-          sc[5] * x1354 - 0.0357 * sc[5] * x1722 - 20000000.0 * sc[6] -
-          84300000.0 * sc[7] - sc[8] * x1709 - sc[9] * x1712 * x468 + x1240 -
-          80000000.0 * x165 + 10000000.0 * x249 + 60000000.0 * x299 +
-          60000000.0 * x322 + x444 * x72 + x476 * x72 - 15000000.0 * x50 +
-          10000000.0 * x902 +
-          (60000000.0 * sc[2] * x124 + 15000000.0 * sc[2] * x68 - x124 * x444 -
-           x124 * x476) *
-            (-x420 + x428) +
-          (10000000.0 * sc[2] * x41) * (-x134 + x347 + (-x68) * (-x420 + x428));
-  J[44] = sc[1] * x1291 - 15000000.0 * sc[2] * x351 +
-          15000000.0 * sc[2] * x352 - 10000000.0 * sc[2] * x389 -
-          60000000.0 * sc[2] * x392 + 80000000.0 * sc[2] * x434 -
-          80000000.0 * sc[2] * x439 + sc[4] * x1732 + 500000.0 * x1151 -
-          500000.0 * x1154 - 240000.0 * x1225 + 240000.0 * x1229 -
-          3612.0 * x1238 + 3612.0 * x17 + 240000.0 * x1716 * x463 + x1730 +
-          x392 * x444 + x392 * x476 +
-          (60000000.0 * sc[2] * x124 + 15000000.0 * sc[2] * x68 - x124 * x444 -
-           x124 * x476) *
-            (-x434 + x439) +
-          (10000000.0 * sc[2] * x41) * (x351 - x352 + (-x68) * (-x434 + x439));
-  J[58] = 10000000.0 * sc[11] * x237 + sc[1] * x858 -
-          80000000.0 * sc[2] * x103 - sc[2] * x1356 +
-          15000000.0 * sc[2] * x356 - 60000000.0 * sc[2] * x393 -
-          10000000.0 * sc[2] * x397 + 80000000.0 * sc[2] * x445 -
-          15000000.0 * sc[2] * x84 + sc[3] * x1732 + sc[7] * x92 +
-          30000000.0 * sc[9] * x295 + 500000.0 * x1150 * x7 + x1240 +
-          0.0714 * x1750 + x379 * x475 + x393 * x444 + x393 * x476 +
-          (60000000.0 * sc[2] * x124 + 15000000.0 * sc[2] * x68 - x124 * x444 -
-           x124 * x476) *
-            (x103 - x445) +
-          (10000000.0 * sc[2] * x41) * (-x356 + x84 + (-x68) * (x103 - x445));
-  J[72] = -sc[2] * x1354 + 15000000.0 * sc[2] * x167 - 0.0357 * sc[2] * x1722 -
-          15000000.0 * sc[2] * x361 - 60000000.0 * sc[2] * x399 -
-          80000000.0 * sc[2] * x457 + 80000000.0 * sc[2] * x466 -
-          10000000.0 * sc[2] * x78 + 3000000.0 * x1151 - 3000000.0 * x1154 -
-          3696000.0 * x1225 + 3696000.0 * x1229 - 3612.0 * x1238 +
-          3612.0 * x17 + x399 * x444 + x399 * x476 +
-          (60000000.0 * sc[2] * x124 + 15000000.0 * sc[2] * x68 - x124 * x444 -
-           x124 * x476) *
-            (x457 - x466) +
-          (10000000.0 * sc[2] * x41) * (-x167 + x361 + (-x68) * (x457 - x466));
-  J[86] = sc[1] * x1275 - 10000000.0 * sc[2] * x232 + 15000000.0 * sc[2] * x25 -
-          60000000.0 * sc[2] * x304 + 80000000.0 * sc[2] * x477 -
-          15000000.0 * sc[2] * x483 - 80000000.0 * sc[2] * x486 -
-          20000000.0 * sc[2] + x1240 + x304 * x444 + x304 * x476 +
-          (60000000.0 * sc[2] * x124 + 15000000.0 * sc[2] * x68 - x124 * x444 -
-           x124 * x476) *
-            (-x477 + x486) +
-          (10000000.0 * sc[2] * x41) * (-x25 + x483 + (-x68) * (-x477 + x486));
-  J[100] = 15000000.0 * sc[2] * x25 - 80000000.0 * sc[2] * x339 -
-           60000000.0 * sc[2] * x402 - 10000000.0 * sc[2] * x419 +
-           80000000.0 * sc[2] * x489 - 15000000.0 * sc[2] * x494 -
-           84300000.0 * sc[2] + sc[4] * x92 + x1240 + x402 * x444 +
-           x402 * x476 +
-           (60000000.0 * sc[2] * x124 + 15000000.0 * sc[2] * x68 - x124 * x444 -
-            x124 * x476) *
-             (x339 - x489) +
-           (10000000.0 * sc[2] * x41) * (-x25 + x494 + (-x68) * (x339 - x489));
-  J[114] = -sc[2] * x1709 - 10000000.0 * sc[2] * x207 -
-           15000000.0 * sc[2] * x371 + 15000000.0 * sc[2] * x373 +
-           80000000.0 * sc[2] * x500 - 80000000.0 * sc[2] * x506 -
-           60000000.0 * sc[2] * x81 + x1156 - 480000.0 * x1225 +
-           480000.0 * x1229 - 1204.0 * x1238 + 1204.0 * x17 + x444 * x81 +
-           x476 * x81 +
-           (60000000.0 * sc[2] * x124 + 15000000.0 * sc[2] * x68 - x124 * x444 -
-            x124 * x476) *
-             (-x500 + x506) +
-           (10000000.0 * sc[2] * x41) * (x371 - x373 + (-x68) * (-x500 + x506));
-  J[128] = 15000000.0 * sc[0] * x256 - 80000000.0 * sc[2] * x139 -
-           sc[2] * x1712 * x468 + 80000000.0 * sc[2] * x179 -
-           10000000.0 * sc[2] * x209 + 15000000.0 * sc[2] * x210 -
-           15000000.0 * sc[2] * x378 - 60000000.0 * sc[2] * x417 +
-           30000000.0 * sc[4] * x295 + 750000.0 * x1151 - 750000.0 * x1154 -
-           420000.0 * x1225 + 420000.0 * x1229 - 903.0 * x1238 + 903.0 * x17 +
-           x1772 + x417 * x444 + x417 * x476 +
-           (60000000.0 * sc[2] * x124 + 15000000.0 * sc[2] * x68 - x124 * x444 -
-            x124 * x476) *
-             (x139 - x179) +
-           (10000000.0 * sc[2] * x41) * (-x210 + x378 + (-x68) * (x139 - x179));
-  J[142] = refC * x1230 * x1712 + 30000000.0 * sc[1] * x308 - sc[2] * x10 +
-           80000000.0 * sc[2] * x161 - 60000000.0 * sc[2] * x185 -
-           80000000.0 * sc[2] * x195 - 10000000.0 * sc[2] * x207 +
-           15000000.0 * sc[2] * x214 - 15000000.0 * sc[2] * x52 + x1156 -
-           864000.0 * x1225 + 864000.0 * x1229 - 2107.0 * x1238 + 2107.0 * x17 +
-           x185 * x444 + x185 * x476 +
-           (60000000.0 * sc[2] * x124 + 15000000.0 * sc[2] * x68 - x124 * x444 -
-            x124 * x476) *
-             (-x161 + x195) +
-           (10000000.0 * sc[2] * x41) * (-x214 + x52 + (-x68) * (-x161 + x195));
-  J[156] = sc[1] * x1311 - sc[2] * x1725 + 80000000.0 * sc[2] * x197 -
-           15000000.0 * sc[2] * x202 - 80000000.0 * sc[2] * x205 -
-           10000000.0 * sc[2] * x248 + 15000000.0 * sc[2] * x25 -
-           60000000.0 * sc[2] * x359 + 10000000.0 * sc[4] * x237 + x1240 +
-           x359 * x444 + x359 * x476 +
-           (60000000.0 * sc[2] * x124 + 15000000.0 * sc[2] * x68 - x124 * x444 -
-            x124 * x476) *
-             (-x197 + x205) +
-           (10000000.0 * sc[2] * x41) * (x202 - x25 + (-x68) * (-x197 + x205));
-  J[170] = -60000000.0 * sc[2] * x119 + 80000000.0 * sc[2] * x169 -
-           80000000.0 * sc[2] * x191 + 15000000.0 * sc[2] * x282 -
-           10000000.0 * sc[2] * x33 - 15000000.0 * sc[2] * x57 + x119 * x444 +
-           x119 * x476 + x1240 +
-           (60000000.0 * sc[2] * x124 + 15000000.0 * sc[2] * x68 - x124 * x444 -
-            x124 * x476) *
-             (-x169 + x191) +
-           (10000000.0 * sc[2] * x41) * (-x282 + x57 + (-x68) * (-x169 + x191));
-  J[3] = -sc[3] * x200 - 40000000.0 * sc[3] * x222 + 40000000.0 * sc[3] * x327 +
-         x1149 + 288000.0 * x1225 - 288000.0 * x1229 + x154 * x186 +
-         x155 * x186 - x174 * x321 + x1795 * x346 - x1795 * x383 - x186 * x497 +
-         (40000000.0 * sc[3] * x68 - x124 * x154 - x124 * x155 + x124 * x497) *
-           (-x346 + x383) +
-         (x174 * x41) * (x222 - x327 + (-x68) * (-x346 + x383));
-  J[17] = refCinv * sc[9] * x1250 + 40000000.0 * sc[3] * x345 -
-          40000000.0 * sc[3] * x413 + sc[6] * x856 + x1149 - x128 * x1795 +
-          x1293 - x15 * x174 + x154 * x381 + x155 * x381 + x1795 * x400 +
-          x1812 - x381 * x497 +
-          (40000000.0 * sc[3] * x68 - x124 * x154 - x124 * x155 + x124 * x497) *
-            (x128 - x400) +
-          (x174 * x41) * (-x345 + x413 + (-x68) * (x128 - x400));
-  J[31] = sc[10] * x10 + 240000.0 * sc[2] * x1716 * x866 +
-          40000000.0 * sc[3] * x134 - 40000000.0 * sc[3] * x347 +
-          sc[4] * x1356 + 20000000.0 * sc[6] + x1149 + x154 * x72 + x155 * x72 -
-          x174 * x28 + x1795 * x420 - x1795 * x428 + x1812 - x497 * x72 +
-          (40000000.0 * sc[3] * x68 - x124 * x154 - x124 * x155 + x124 * x497) *
-            (-x420 + x428) +
-          (x174 * x41) * (-x134 + x347 + (-x68) * (-x420 + x428));
-  J[45] =
-    -sc[0] * x200 - sc[11] * x1847 - 40000000.0 * sc[3] * x351 +
-    40000000.0 * sc[3] * x352 - sc[4] * x1732 - sc[5] * x1826 - sc[7] * x1834 -
-    sc[8] * x97 - 18000000.0 * x11 * exp(-452.89499922424801 * invT) + x1398 +
-    x154 * x392 + x155 * x392 -
-    13200000.0 * x165 * exp(-754.82499870708 * invT) - 120000.0 * x1716 * x463 -
-    x1730 - x174 * x389 + x1795 * x434 - x1795 * x439 + x1812 -
-    7600000.0 * x379 * exp(-201.28666632188799 * invT) - x392 * x497 -
-    40000000.0 * x50 +
-    (40000000.0 * sc[3] * x68 - x124 * x154 - x124 * x155 + x124 * x497) *
-      (-x434 + x439) +
-    (x174 * x41) * (x351 - x352 + (-x68) * (-x434 + x439));
-  J[59] = sc[11] * x1850 + sc[2] * x1356 - sc[3] * x1732 +
-          40000000.0 * sc[3] * x356 - 40000000.0 * sc[3] * x84 - x103 * x1795 +
-          x1149 + x154 * x393 + x155 * x393 - x174 * x397 + x1795 * x445 +
-          x1812 + x1854 + 28000000.0 * x270 * x271 + x379 * x504 - x393 * x497 +
-          (40000000.0 * sc[3] * x68 - x124 * x154 - x124 * x155 + x124 * x497) *
-            (x103 - x445) +
-          (x174 * x41) * (-x356 + x84 + (-x68) * (x103 - x445));
-  J[73] = -sc[1] * sc[3] * x1282 + 40000000.0 * sc[3] * x167 - sc[3] * x1826 -
-          40000000.0 * sc[3] * x361 + 12000000.0 * sc[9] * x253 +
-          x1065 * x1463 + 1848000.0 * x1225 - 1848000.0 * x1229 + x154 * x399 +
-          x155 * x399 - x174 * x78 - x1795 * x457 + x1795 * x466 - x399 * x497 +
-          (40000000.0 * sc[3] * x68 - x124 * x154 - x124 * x155 + x124 * x497) *
-            (x457 - x466) +
-          (x174 * x41) * (-x167 + x361 + (-x68) * (x457 - x466));
-  J[87] = sc[11] * x110 + sc[1] * x856 + 20000000.0 * sc[2] +
-          40000000.0 * sc[3] * x25 - 40000000.0 * sc[3] * x483 +
-          1000000.0 * sc[7] + sc[9] * x286 + x1149 + x1507 + x154 * x304 +
-          x155 * x304 - x174 * x232 + x1795 * x477 - x1795 * x486 + x1812 +
-          x1877 + x30 * x379 - x304 * x497 +
-          (40000000.0 * sc[3] * x68 - x124 * x154 - x124 * x155 + x124 * x497) *
-            (-x477 + x486) +
-          (x174 * x41) * (-x25 + x483 + (-x68) * (-x477 + x486));
+    sc[1] * sc[3] * x1286 - 1.9199999999999996e+16 * sc[1] * x1087 * x1100 +
+    sc[1] * x1097 * x1101 * x7 - 73400000.0 * sc[1] * x379 -
+    38000000.0 * sc[1] * x397 - sc[1] * x861 + sc[2] * x1359 +
+    80000000.0 * sc[2] * x138 - 80000000.0 * sc[2] * x462 + x105 * x405 -
+    8100000000000.0 * x1057 - 1.0032110091743119e+19 * x1061 * x1062 +
+    1.0032110091743119e+19 * x1062 * x413 -
+    3199999999999999.5 * x1091 * x1097 * x7 + 1.9199999999999996e+16 * x1091 -
+    x1107 * x1454 + 2.4576e+21 * x1122 * x135 - x1136 * x138 + x1136 * x462 -
+    3000000.0 * x1155 + x1176 + 3000000.0 * x1345 - 2.4576e+21 * x135 * x321 +
+    x1454 * x416 + x1478 + x1491 + x1498 +
+    120000000.0 * x217 * exp(-1.25 * logT + x188) +
+    8100000000000.0 * x292 * x350 - x348 * x405 - x379 * x402 - x379 * x435 +
+    6000000.0 * x38 * x51 +
+    (-70000000.0 * sc[0] * x67 + 73400000.0 * sc[1] * x125 -
+     30000000.0 * sc[2] * x125 - 28000000.0 * sc[3] * x67 -
+     30000000.0 * sc[4] * x67 - x125 * x372 + x125 * x402 + x125 * x435 -
+     x125 * x440 - x125 * x446 - x405 * x67) *
+      (x138 - x462) +
+    (38000000.0 * sc[1] * x42 - x102 * x42) *
+      (x105 - x348 + (-x67) * (x138 - x462));
+  J[85] = 70000000.0 * sc[0] * x480 - 38000000.0 * sc[1] * x228 -
+          73400000.0 * sc[1] * x286 + 30000000.0 * sc[2] * x286 -
+          80000000.0 * sc[2] * x474 + 80000000.0 * sc[2] * x483 +
+          28000000.0 * sc[3] * x480 + x1136 * x474 - x1136 * x483 + x1507 +
+          x1513 + x1517 + x1522 + x1527 - x216 * x474 + x216 * x483 -
+          x286 * x402 - x286 * x435 + x286 * x440 + x286 * x446 + x405 * x480 +
+          (-70000000.0 * sc[0] * x67 + 73400000.0 * sc[1] * x125 -
+           30000000.0 * sc[2] * x125 - 28000000.0 * sc[3] * x67 -
+           30000000.0 * sc[4] * x67 - x125 * x372 + x125 * x402 + x125 * x435 -
+           x125 * x440 - x125 * x446 - x405 * x67) *
+            (-x474 + x483) +
+          (38000000.0 * sc[1] * x42 - x102 * x42) *
+            (-x351 + x480 + (-x67) * (-x474 + x483));
+  J[99] = 3199999999999999.5 * refC * x1087 * x1089 * x7 + sc[0] * x336 -
+          73400000.0 * sc[1] * x384 - 38000000.0 * sc[1] * x401 +
+          80000000.0 * sc[2] * x333 + 30000000.0 * sc[2] * x384 -
+          80000000.0 * sc[2] * x486 + 28000000.0 * sc[3] * x490 +
+          12000000.0 * sc[4] * x235 - x1136 * x333 + x1136 * x486 + x1517 +
+          x1527 + x1545 + x1547 - x384 * x402 - x384 * x435 + x384 * x440 +
+          x384 * x446 + x405 * x490 +
+          (-70000000.0 * sc[0] * x67 + 73400000.0 * sc[1] * x125 -
+           30000000.0 * sc[2] * x125 - 28000000.0 * sc[3] * x67 -
+           30000000.0 * sc[4] * x67 - x125 * x372 + x125 * x402 + x125 * x435 -
+           x125 * x440 - x125 * x446 - x405 * x67) *
+            (x333 - x486) +
+          (38000000.0 * sc[1] * x42 - x102 * x42) *
+            (-x351 + x490 + (-x67) * (x333 - x486));
+  J[113] = -4000000.0 * ((sc[1]) * (sc[1])) * x876 - 73400000.0 * sc[1] * x93 -
+           80000000.0 * sc[2] * x497 + 80000000.0 * sc[2] * x503 +
+           30000000.0 * sc[2] * x93 + 28000000.0 * sc[3] * x25 -
+           28000000.0 * sc[3] * x360 + x1136 * x497 - x1136 * x503 + x1150 -
+           44000000000.0 * x1164 + 44000000000.0 * x1167 + x1567 + x1569 +
+           x1570 + 4000000.0 * x217 * x380 + x25 * x405 - x360 * x405 -
+           x402 * x93 - x435 * x93 + x440 * x93 + x446 * x93 - x995 +
+           (-70000000.0 * sc[0] * x67 + 73400000.0 * sc[1] * x125 -
+            30000000.0 * sc[2] * x125 - 28000000.0 * sc[3] * x67 -
+            30000000.0 * sc[4] * x67 - x125 * x372 + x125 * x402 + x125 * x435 -
+            x125 * x440 - x125 * x446 - x405 * x67) *
+             (-x497 + x503) +
+           (38000000.0 * sc[1] * x42 - x102 * x42) *
+             (x25 - x360 + (-x67) * (-x497 + x503));
+  J[127] =
+    4799999999999999.0 * refC * sc[7] * x1087 * x1089 +
+    73400000.0 * sc[0] * x311 - 2000000.0 * ((sc[1]) * (sc[1])) * x876 -
+    4799999999999999.0 * sc[1] * x1087 * x1100 - 38000000.0 * sc[1] * x205 -
+    73400000.0 * sc[1] * x395 + 80000000.0 * sc[2] * x143 -
+    80000000.0 * sc[2] * x156 - 28000000.0 * sc[3] * x369 +
+    28000000.0 * sc[3] * x371 + 2100000.0 * sc[6] * x1143 -
+    2025000000000.0 * x1057 - 2.5080275229357798e+18 * x1061 * x1062 +
+    2.5080275229357798e+18 * x1062 * x413 - x1081 * x1107 + x1081 * x416 +
+    x1094 + x1103 * x412 + 6.144e+20 * x1122 * x135 - x1136 * x143 +
+    x1136 * x156 - 2100000.0 * x1148 - 750000.0 * x1155 - x1255 * x264 + x129 +
+    750000.0 * x1345 - 6.144e+20 * x135 * x321 + x1352 + x1571 +
+    2000000.0 * x217 * x380 + 2025000000000.0 * x292 * x350 - x369 * x405 +
+    x371 * x405 - x395 * x402 - x395 * x435 - x412 * x91 + x6 +
+    (-70000000.0 * sc[0] * x67 + 73400000.0 * sc[1] * x125 -
+     30000000.0 * sc[2] * x125 - 28000000.0 * sc[3] * x67 -
+     30000000.0 * sc[4] * x67 - x125 * x372 + x125 * x402 + x125 * x435 -
+     x125 * x440 - x125 * x446 - x405 * x67) *
+      (x143 - x156) +
+    (38000000.0 * sc[1] * x42 - x102 * x42) *
+      (-x369 + x371 + (-x67) * (x143 - x156));
+  J[141] = -1100000000.0 * ((sc[1]) * (sc[1])) * x863 - sc[1] * x1272 -
+           73400000.0 * sc[1] * x185 - 30000000.0 * sc[1] * x299 -
+           80000000.0 * sc[2] * x157 + 80000000.0 * sc[2] * x162 +
+           30000000.0 * sc[2] * x185 - 28000000.0 * sc[3] * x375 +
+           28000000.0 * sc[3] * x53 + 4200000.0 * sc[6] * x1143 + x1136 * x157 -
+           x1136 * x162 - 4200000.0 * x1148 + x1352 + x1570 - x185 * x402 -
+           x185 * x435 + x185 * x440 + x185 * x446 +
+           1100000000.0 * x217 * exp(-2.0 * logT + x188) - x375 * x405 +
+           x405 * x53 + x437 + x458 +
+           (-70000000.0 * sc[0] * x67 + 73400000.0 * sc[1] * x125 -
+            30000000.0 * sc[2] * x125 - 28000000.0 * sc[3] * x67 -
+            30000000.0 * sc[4] * x67 - x125 * x372 + x125 * x402 + x125 * x435 -
+            x125 * x440 - x125 * x446 - x405 * x67) *
+             (-x157 + x162) +
+           (38000000.0 * sc[1] * x42 - x102 * x42) *
+             (-x375 + x53 + (-x67) * (-x157 + x162));
+  J[155] = 1350000000000.0 * refC * x292 * x7 + 70000000.0 * sc[0] * x20 +
+           20000000.0 * sc[0] * x230 - 38000000.0 * sc[1] * x244 -
+           73400000.0 * sc[1] * x355 - 80000000.0 * sc[2] * x181 +
+           80000000.0 * sc[2] * x197 + 30000000.0 * sc[2] * x355 +
+           28000000.0 * sc[3] * x20 + x1136 * x181 - x1136 * x197 + x1517 +
+           x1527 - x181 * x216 + x197 * x216 + x20 * x405 - x355 * x402 -
+           x355 * x435 + x355 * x440 + x355 * x446 + x459 +
+           (-70000000.0 * sc[0] * x67 + 73400000.0 * sc[1] * x125 -
+            30000000.0 * sc[2] * x125 - 28000000.0 * sc[3] * x67 -
+            30000000.0 * sc[4] * x67 - x125 * x372 + x125 * x402 + x125 * x435 -
+            x125 * x440 - x125 * x446 - x405 * x67) *
+             (-x181 + x197) +
+           (38000000.0 * sc[1] * x42 - x102 * x42) *
+             (x20 - x351 + (-x67) * (-x181 + x197));
+  J[169] = 375000000.0 * refC * sc[6] * x1401 - 73400000.0 * sc[1] * x120 -
+           38000000.0 * sc[1] * x33 + 30000000.0 * sc[2] * x120 -
+           80000000.0 * sc[2] * x170 + 80000000.0 * sc[2] * x191 -
+           28000000.0 * sc[3] * x206 + 28000000.0 * sc[3] * x54 + x1136 * x170 -
+           x1136 * x191 + x1159 - x120 * x402 - x120 * x435 + x120 * x440 +
+           x120 * x446 + x1354 - 375000000.0 * x1395 - x206 * x405 +
+           x405 * x54 + x99 +
+           (-70000000.0 * sc[0] * x67 + 73400000.0 * sc[1] * x125 -
+            30000000.0 * sc[2] * x125 - 28000000.0 * sc[3] * x67 -
+            30000000.0 * sc[4] * x67 - x125 * x372 + x125 * x402 + x125 * x435 -
+            x125 * x440 - x125 * x446 - x405 * x67) *
+             (-x170 + x191) +
+           (38000000.0 * sc[1] * x42 - x102 * x42) *
+             (-x206 + x54 + (-x67) * (-x170 + x191));
+  J[2] = -60000000.0 * sc[2] * x186 - sc[2] * x193 + 15000000.0 * sc[2] * x213 -
+         15000000.0 * sc[2] * x219 - 10000000.0 * sc[2] * x315 +
+         80000000.0 * sc[2] * x340 - 80000000.0 * sc[2] * x381 +
+         15000000.0 * sc[9] * x251 + 576000.0 * x11 + x1157 - 576000.0 * x1227 +
+         x141 * x186 + 1204.0 * x184 + x186 * x402 - 1204.0 * x456 +
+         (60000000.0 * sc[2] * x125 + 15000000.0 * sc[2] * x67 - x125 * x141 -
+          x125 * x402) *
+           (-x340 + x381) +
+         (10000000.0 * sc[2] * x42) * (-x213 + x219 + (-x67) * (-x340 + x381));
+  J[16] = 30000000.0 * sc[10] * x299 + sc[11] * x1309 -
+          80000000.0 * sc[2] * x132 - 10000000.0 * sc[2] * x15 -
+          60000000.0 * sc[2] * x210 + 15000000.0 * sc[2] * x221 +
+          80000000.0 * sc[2] * x396 - 15000000.0 * sc[2] * x408 -
+          500000.0 * sc[2] * x7 * x876 + sc[3] * x1292 + sc[4] * x855 +
+          sc[6] * x1280 + x1240 + x141 * x210 + x210 * x402 +
+          80000000.0 * x392 * x83 +
+          (60000000.0 * sc[2] * x125 + 15000000.0 * sc[2] * x67 - x125 * x141 -
+           x125 * x402) *
+            (x132 - x396) +
+          (10000000.0 * sc[2] * x42) * (-x221 + x408 + (-x67) * (x132 - x396));
+  J[30] = -sc[0] * x193 - sc[10] * x1244 - sc[11] * x1732 -
+          500000.0 * sc[1] * x7 * x876 - 80000000.0 * sc[2] * x168 -
+          480000.0 * sc[2] * x1722 * x876 - 60000000.0 * sc[2] * x277 -
+          10000000.0 * sc[2] * x28 + 15000000.0 * sc[2] * x283 -
+          15000000.0 * sc[2] * x322 + 80000000.0 * sc[2] * x417 -
+          sc[4] * x1361 - sc[5] * x1359 - 0.0357 * sc[5] * x1728 -
+          20000000.0 * sc[6] - 84300000.0 * sc[7] - sc[8] * x1247 -
+          sc[9] * x17 * x1716 + x1240 + x141 * x277 - 80000000.0 * x166 +
+          10000000.0 * x245 + x277 * x402 + 60000000.0 * x316 -
+          15000000.0 * x51 + 60000000.0 * x58 + 10000000.0 * x902 +
+          (60000000.0 * sc[2] * x125 + 15000000.0 * sc[2] * x67 - x125 * x141 -
+           x125 * x402) *
+            (x168 - x417) +
+          (10000000.0 * sc[2] * x42) * (-x283 + x322 + (-x67) * (x168 - x417));
+  J[44] = 240000.0 * refC * x1217 * x1722 + sc[1] * x1292 +
+          15000000.0 * sc[2] * x339 - 15000000.0 * sc[2] * x341 -
+          60000000.0 * sc[2] * x374 - 10000000.0 * sc[2] * x388 +
+          80000000.0 * sc[2] * x431 - 80000000.0 * sc[2] * x436 +
+          sc[4] * x1738 + 240000.0 * x11 - 500000.0 * x1155 - 240000.0 * x1227 +
+          500000.0 * x1345 + x141 * x374 + x1736 + 3612.0 * x184 + x374 * x402 -
+          3612.0 * x456 +
+          (60000000.0 * sc[2] * x125 + 15000000.0 * sc[2] * x67 - x125 * x141 -
+           x125 * x402) *
+            (-x431 + x436) +
+          (10000000.0 * sc[2] * x42) * (-x339 + x341 + (-x67) * (-x431 + x436));
+  J[58] = 500000.0 * refC * x1151 * x7 + 10000000.0 * sc[11] * x224 +
+          sc[1] * x855 - sc[2] * x1361 + 15000000.0 * sc[2] * x147 -
+          15000000.0 * sc[2] * x344 - 60000000.0 * sc[2] * x376 -
+          10000000.0 * sc[2] * x393 + 80000000.0 * sc[2] * x441 -
+          80000000.0 * sc[2] * x79 + sc[3] * x1738 + sc[7] * x114 +
+          30000000.0 * sc[9] * x308 + x1240 + x141 * x376 + 0.0714 * x1755 +
+          x376 * x402 + x392 * x467 +
+          (60000000.0 * sc[2] * x125 + 15000000.0 * sc[2] * x67 - x125 * x141 -
+           x125 * x402) *
+            (-x441 + x79) +
+          (10000000.0 * sc[2] * x42) * (-x147 + x344 + (-x67) * (-x441 + x79));
+  J[72] = -15000000.0 * sc[2] * x105 - sc[2] * x1359 -
+          80000000.0 * sc[2] * x138 - 0.0357 * sc[2] * x1728 +
+          15000000.0 * sc[2] * x348 - 60000000.0 * sc[2] * x379 -
+          10000000.0 * sc[2] * x397 + 80000000.0 * sc[2] * x462 +
+          3696000.0 * x11 - 3000000.0 * x1155 - 3696000.0 * x1227 +
+          3000000.0 * x1345 + x141 * x379 + 3612.0 * x184 + x379 * x402 -
+          3612.0 * x456 +
+          (60000000.0 * sc[2] * x125 + 15000000.0 * sc[2] * x67 - x125 * x141 -
+           x125 * x402) *
+            (x138 - x462) +
+          (10000000.0 * sc[2] * x42) * (x105 - x348 + (-x67) * (x138 - x462));
+  J[86] = sc[1] * x1280 - 10000000.0 * sc[2] * x228 -
+          60000000.0 * sc[2] * x286 + 15000000.0 * sc[2] * x351 +
+          80000000.0 * sc[2] * x474 - 15000000.0 * sc[2] * x480 -
+          80000000.0 * sc[2] * x483 - 20000000.0 * sc[2] + x1240 + x141 * x286 +
+          x286 * x402 +
+          (60000000.0 * sc[2] * x125 + 15000000.0 * sc[2] * x67 - x125 * x141 -
+           x125 * x402) *
+            (-x474 + x483) +
+          (10000000.0 * sc[2] * x42) * (-x351 + x480 + (-x67) * (-x474 + x483));
+  J[100] = -80000000.0 * sc[2] * x333 + 15000000.0 * sc[2] * x351 -
+           60000000.0 * sc[2] * x384 - 10000000.0 * sc[2] * x401 +
+           80000000.0 * sc[2] * x486 - 15000000.0 * sc[2] * x490 -
+           84300000.0 * sc[2] + sc[4] * x114 + x1240 + x141 * x384 +
+           x384 * x402 +
+           (60000000.0 * sc[2] * x125 + 15000000.0 * sc[2] * x67 - x125 * x141 -
+            x125 * x402) *
+             (x333 - x486) +
+           (10000000.0 * sc[2] * x42) * (-x351 + x490 + (-x67) * (x333 - x486));
+  J[114] = -sc[2] * x1247 - 10000000.0 * sc[2] * x203 -
+           15000000.0 * sc[2] * x25 + 15000000.0 * sc[2] * x360 +
+           80000000.0 * sc[2] * x497 - 80000000.0 * sc[2] * x503 -
+           60000000.0 * sc[2] * x93 + 480000.0 * x11 + x1157 -
+           480000.0 * x1227 + x141 * x93 + 1204.0 * x184 + x402 * x93 -
+           1204.0 * x456 +
+           (60000000.0 * sc[2] * x125 + 15000000.0 * sc[2] * x67 - x125 * x141 -
+            x125 * x402) *
+             (-x497 + x503) +
+           (10000000.0 * sc[2] * x42) * (x25 - x360 + (-x67) * (-x497 + x503));
+  J[128] = 15000000.0 * sc[0] * x251 - 80000000.0 * sc[2] * x143 +
+           80000000.0 * sc[2] * x156 - sc[2] * x17 * x1716 -
+           10000000.0 * sc[2] * x205 + 15000000.0 * sc[2] * x369 -
+           15000000.0 * sc[2] * x371 - 60000000.0 * sc[2] * x395 +
+           30000000.0 * sc[4] * x308 + 420000.0 * x11 - 750000.0 * x1155 -
+           420000.0 * x1227 + 750000.0 * x1345 + x141 * x395 + x1778 +
+           903.0 * x184 + x395 * x402 - 903.0 * x456 +
+           (60000000.0 * sc[2] * x125 + 15000000.0 * sc[2] * x67 - x125 * x141 -
+            x125 * x402) *
+             (x143 - x156) +
+           (10000000.0 * sc[2] * x42) * (-x369 + x371 + (-x67) * (x143 - x156));
+  J[142] = refC * x1230 * x1716 + 30000000.0 * sc[1] * x299 - sc[2] * x1244 +
+           80000000.0 * sc[2] * x157 - 80000000.0 * sc[2] * x162 -
+           60000000.0 * sc[2] * x185 - 10000000.0 * sc[2] * x203 +
+           15000000.0 * sc[2] * x375 - 15000000.0 * sc[2] * x53 +
+           864000.0 * x11 + x1157 - 864000.0 * x1227 + x141 * x185 +
+           2107.0 * x184 + x185 * x402 - 2107.0 * x456 +
+           (60000000.0 * sc[2] * x125 + 15000000.0 * sc[2] * x67 - x125 * x141 -
+            x125 * x402) *
+             (-x157 + x162) +
+           (10000000.0 * sc[2] * x42) * (-x375 + x53 + (-x67) * (-x157 + x162));
+  J[156] = sc[1] * x1309 - sc[2] * x1732 + 80000000.0 * sc[2] * x181 -
+           80000000.0 * sc[2] * x197 - 15000000.0 * sc[2] * x20 -
+           10000000.0 * sc[2] * x244 + 15000000.0 * sc[2] * x351 -
+           60000000.0 * sc[2] * x355 + 10000000.0 * sc[4] * x224 + x1240 +
+           x141 * x355 + x355 * x402 +
+           (60000000.0 * sc[2] * x125 + 15000000.0 * sc[2] * x67 - x125 * x141 -
+            x125 * x402) *
+             (-x181 + x197) +
+           (10000000.0 * sc[2] * x42) * (x20 - x351 + (-x67) * (-x181 + x197));
+  J[170] = -60000000.0 * sc[2] * x120 + 80000000.0 * sc[2] * x170 -
+           80000000.0 * sc[2] * x191 + 15000000.0 * sc[2] * x206 -
+           10000000.0 * sc[2] * x33 - 15000000.0 * sc[2] * x54 + x120 * x141 +
+           x120 * x402 + x1240 +
+           (60000000.0 * sc[2] * x125 + 15000000.0 * sc[2] * x67 - x125 * x141 -
+            x125 * x402) *
+             (-x170 + x191) +
+           (10000000.0 * sc[2] * x42) * (-x206 + x54 + (-x67) * (-x170 + x191));
+  J[3] = -sc[3] * x109 + 40000000.0 * sc[3] * x213 - 40000000.0 * sc[3] * x219 -
+         288000.0 * x11 + x1150 + 288000.0 * x1227 + x179 * x186 +
+         x1803 * x340 - x1803 * x381 + x186 * x478 - x186 * x495 - x30 * x315 +
+         (40000000.0 * sc[3] * x67 - x125 * x179 - x125 * x478 + x125 * x495) *
+           (-x340 + x381) +
+         (x30 * x42) * (-x213 + x219 + (-x67) * (-x340 + x381));
+  J[17] = refCinv * sc[9] * x1255 + 40000000.0 * sc[3] * x221 -
+          40000000.0 * sc[3] * x408 + sc[6] * x853 + x1150 + x1297 -
+          x132 * x1803 - x15 * x30 + x179 * x210 + x1803 * x396 + x1818 +
+          x210 * x478 - x210 * x495 +
+          (40000000.0 * sc[3] * x67 - x125 * x179 - x125 * x478 + x125 * x495) *
+            (x132 - x396) +
+          (x30 * x42) * (-x221 + x408 + (-x67) * (x132 - x396));
+  J[31] = sc[10] * x1244 + 240000.0 * sc[2] * x1722 * x876 +
+          40000000.0 * sc[3] * x283 - 40000000.0 * sc[3] * x322 +
+          sc[4] * x1361 + 20000000.0 * sc[6] + x1150 - x168 * x1803 +
+          x179 * x277 + x1803 * x417 + x1818 + x277 * x478 - x277 * x495 -
+          x28 * x30 +
+          (40000000.0 * sc[3] * x67 - x125 * x179 - x125 * x478 + x125 * x495) *
+            (x168 - x417) +
+          (x30 * x42) * (-x283 + x322 + (-x67) * (x168 - x417));
+  J[45] = -120000.0 * refC * x1217 * x1722 - sc[0] * x109 - sc[11] * x1853 +
+          40000000.0 * sc[3] * x339 - 40000000.0 * sc[3] * x341 -
+          sc[4] * x1738 - sc[5] * x1832 - sc[7] * x1842 - sc[8] * x1828 -
+          18000000.0 * x1225 * exp(-452.89758014888923 * invT) + x1405 -
+          13200000.0 * x166 * exp(-754.82930024814868 * invT) - x1736 +
+          x179 * x374 + x1803 * x431 - x1803 * x436 + x1818 - x30 * x388 +
+          x374 * x478 - x374 * x495 -
+          7600000.0 * x392 * exp(-201.28781339950632 * invT) -
+          40000000.0 * x51 +
+          (40000000.0 * sc[3] * x67 - x125 * x179 - x125 * x478 + x125 * x495) *
+            (-x431 + x436) +
+          (x30 * x42) * (-x339 + x341 + (-x67) * (-x431 + x436));
+  J[59] = sc[11] * x1867 + sc[2] * x1361 + 40000000.0 * sc[3] * x147 -
+          sc[3] * x1738 - 40000000.0 * sc[3] * x344 + x1150 + x179 * x376 +
+          x1803 * x441 - x1803 * x79 + x1818 + x1857 +
+          28000000.0 * x265 * x266 - x30 * x393 + x376 * x478 - x376 * x495 +
+          x392 * x451 +
+          (40000000.0 * sc[3] * x67 - x125 * x179 - x125 * x478 + x125 * x495) *
+            (-x441 + x79) +
+          (x30 * x42) * (-x147 + x344 + (-x67) * (-x441 + x79));
+  J[73] = refC * sc[6] * x1470 - sc[1] * sc[3] * x1286 -
+          40000000.0 * sc[3] * x105 - sc[3] * x1832 +
+          40000000.0 * sc[3] * x348 + 12000000.0 * sc[9] * x248 -
+          1848000.0 * x11 + 1848000.0 * x1227 - x138 * x1803 + x179 * x379 +
+          x1803 * x462 - x30 * x397 + x379 * x478 - x379 * x495 +
+          (40000000.0 * sc[3] * x67 - x125 * x179 - x125 * x478 + x125 * x495) *
+            (x138 - x462) +
+          (x30 * x42) * (x105 - x348 + (-x67) * (x138 - x462));
+  J[87] = sc[11] * x88 + sc[1] * x853 + 20000000.0 * sc[2] +
+          40000000.0 * sc[3] * x351 - 40000000.0 * sc[3] * x480 +
+          1000000.0 * sc[7] + sc[9] * x281 + x1150 + x1513 + x179 * x286 +
+          x1803 * x474 - x1803 * x483 + x1818 + x1883 - x228 * x30 +
+          x286 * x478 - x286 * x495 + x392 * x501 +
+          (40000000.0 * sc[3] * x67 - x125 * x179 - x125 * x478 + x125 * x495) *
+            (-x474 + x483) +
+          (x30 * x42) * (-x351 + x480 + (-x67) * (-x474 + x483));
   J[101] =
-    -sc[3] * x1834 + 40000000.0 * sc[3] * x25 - 40000000.0 * sc[3] * x494 +
-    1000000.0 * sc[6] + x1149 + x154 * x402 + x155 * x402 - x174 * x419 -
-    x1795 * x339 + x1795 * x489 + x1812 - x402 * x497 +
-    (40000000.0 * sc[3] * x68 - x124 * x154 - x124 * x155 + x124 * x497) *
-      (x339 - x489) +
-    (x174 * x41) * (-x25 + x494 + (-x68) * (x339 - x489));
+    -sc[3] * x1842 + 40000000.0 * sc[3] * x351 - 40000000.0 * sc[3] * x490 +
+    1000000.0 * sc[6] + x1150 + x179 * x384 - x1803 * x333 + x1803 * x486 +
+    x1818 - x30 * x401 + x384 * x478 - x384 * x495 +
+    (40000000.0 * sc[3] * x67 - x125 * x179 - x125 * x478 + x125 * x495) *
+      (x333 - x486) +
+    (x30 * x42) * (-x351 + x490 + (-x67) * (x333 - x486));
   J[115] =
-    -40000000.0 * sc[3] * x371 + 40000000.0 * sc[3] * x373 - sc[3] * x97 +
-    x1149 + 240000.0 * x1225 - 240000.0 * x1229 + x154 * x81 + x155 * x81 -
-    x174 * x207 + x1795 * x500 - x1795 * x506 - x497 * x81 +
-    (40000000.0 * sc[3] * x68 - x124 * x154 - x124 * x155 + x124 * x497) *
-      (-x500 + x506) +
-    (x174 * x41) * (x371 - x373 + (-x68) * (-x500 + x506));
+    -sc[3] * x1828 - 40000000.0 * sc[3] * x25 + 40000000.0 * sc[3] * x360 -
+    240000.0 * x11 + x1150 + 240000.0 * x1227 + x179 * x93 + x1803 * x497 -
+    x1803 * x503 - x203 * x30 + x478 * x93 - x495 * x93 +
+    (40000000.0 * sc[3] * x67 - x125 * x179 - x125 * x478 + x125 * x495) *
+      (-x497 + x503) +
+    (x30 * x42) * (x25 - x360 + (-x67) * (-x497 + x503));
   J[129] =
-    40000000.0 * sc[3] * x210 - 40000000.0 * sc[3] * x378 +
-    12000000.0 * sc[5] * x253 + sc[6] * x286 + 2100000.0 * x1065 * x1142 -
-    2100000.0 * x1147 + 210000.0 * x1225 - 210000.0 * x1229 + x1250 * x269 -
-    x139 * x1795 + x154 * x417 + x155 * x417 - x174 * x209 - x1772 +
-    x179 * x1795 - x417 * x497 +
-    (40000000.0 * sc[3] * x68 - x124 * x154 - x124 * x155 + x124 * x497) *
-      (x139 - x179) +
-    (x174 * x41) * (-x210 + x378 + (-x68) * (x139 - x179));
+    40000000.0 * sc[3] * x369 - 40000000.0 * sc[3] * x371 +
+    12000000.0 * sc[5] * x248 + 2100000.0 * sc[6] * x1143 + sc[6] * x281 -
+    210000.0 * x11 - 2100000.0 * x1148 + 210000.0 * x1227 + x1255 * x264 -
+    x143 * x1803 + x156 * x1803 - x1778 + x179 * x395 - x205 * x30 +
+    x395 * x478 - x395 * x495 +
+    (40000000.0 * sc[3] * x67 - x125 * x179 - x125 * x478 + x125 * x495) *
+      (x143 - x156) +
+    (x30 * x42) * (-x369 + x371 + (-x67) * (x143 - x156));
   J[143] =
-    sc[2] * x10 + 40000000.0 * sc[3] * x214 - 40000000.0 * sc[3] * x52 +
-    4200000.0 * x1065 * x1142 - 4200000.0 * x1147 + 432000.0 * x1225 -
-    432000.0 * x1229 + x154 * x185 + x155 * x185 + x161 * x1795 - x174 * x207 -
-    x1795 * x195 - x185 * x497 +
-    (40000000.0 * sc[3] * x68 - x124 * x154 - x124 * x155 + x124 * x497) *
-      (-x161 + x195) +
-    (x174 * x41) * (-x214 + x52 + (-x68) * (-x161 + x195));
+    sc[2] * x1244 + 40000000.0 * sc[3] * x375 - 40000000.0 * sc[3] * x53 +
+    4200000.0 * sc[6] * x1143 - 432000.0 * x11 - 4200000.0 * x1148 +
+    432000.0 * x1227 + x157 * x1803 - x162 * x1803 + x179 * x185 + x185 * x478 -
+    x185 * x495 - x203 * x30 +
+    (40000000.0 * sc[3] * x67 - x125 * x179 - x125 * x478 + x125 * x495) *
+      (-x157 + x162) +
+    (x30 * x42) * (-x375 + x53 + (-x67) * (-x157 + x162));
   J[157] =
-    -sc[3] * x1847 - 40000000.0 * sc[3] * x202 + 40000000.0 * sc[3] * x25 +
-    sc[4] * x1850 + sc[6] * x110 + x1149 + x154 * x359 + x155 * x359 -
-    x174 * x248 + x1795 * x197 - x1795 * x205 + x1812 - x359 * x497 +
-    (40000000.0 * sc[3] * x68 - x124 * x154 - x124 * x155 + x124 * x497) *
-      (-x197 + x205) +
-    (x174 * x41) * (x202 - x25 + (-x68) * (-x197 + x205));
+    -sc[3] * x1853 - 40000000.0 * sc[3] * x20 + 40000000.0 * sc[3] * x351 +
+    sc[4] * x1867 + sc[6] * x88 + x1150 + x179 * x355 + x1803 * x181 -
+    x1803 * x197 + x1818 - x244 * x30 + x355 * x478 - x355 * x495 +
+    (40000000.0 * sc[3] * x67 - x125 * x179 - x125 * x478 + x125 * x495) *
+      (-x181 + x197) +
+    (x30 * x42) * (x20 - x351 + (-x67) * (-x181 + x197));
   J[171] =
-    -375000000.0 * sc[1] * sc[3] * x1285 + 40000000.0 * sc[3] * x282 -
-    40000000.0 * sc[3] * x57 + 375000000.0 * x1065 * x1389 + x119 * x154 +
-    x119 * x155 - x119 * x497 + x169 * x1795 - x174 * x33 - x1795 * x191 +
-    x1812 +
-    (40000000.0 * sc[3] * x68 - x124 * x154 - x124 * x155 + x124 * x497) *
-      (-x169 + x191) +
-    (x174 * x41) * (-x282 + x57 + (-x68) * (-x169 + x191));
-  J[4] = 30000000.0 * sc[2] * x186 + 10000000.0 * sc[2] * x321 -
-         50000000.0 * sc[4] * x186 - 30000000.0 * sc[4] * x222 -
-         5000000.0 * sc[4] * x321 + 30000000.0 * sc[4] * x327 +
-         20000000.0 * sc[4] * x346 - 20000000.0 * sc[4] * x383 -
-         20000000.0 * sc[6] * x346 + 20000000.0 * sc[6] * x383 -
-         1000000.0 * x1151 + 1000000.0 * x1154 + x1168 + x143 * x186 -
-         x154 * x186 - x1795 * x346 + x1795 * x383 - x186 * x476 + x1966 -
-         x225 +
-         (-30000000.0 * sc[2] * x124 - 28000000.0 * sc[3] * x68 +
-          50000000.0 * sc[4] * x124 + 30000000.0 * sc[4] * x68 - x124 * x143 +
-          x124 * x154 + x124 * x476 - x175 * x68) *
-           (-x346 + x383) +
-         (-12000000.0 * sc[1] * x41 - 10000000.0 * sc[2] * x41 +
-          5000000.0 * sc[4] * x41) *
-           (x222 - x327 + (-x68) * (-x346 + x383));
-  J[18] = -refCinv * sc[9] * x1250 + sc[10] * x1267 +
-          30000000.0 * sc[11] * x265 + 20000000.0 * sc[11] * x323 +
-          10000000.0 * sc[2] * x15 + 30000000.0 * sc[2] * x381 +
-          500000.0 * sc[2] * x7 * x866 + sc[3] * x1291 -
-          20000000.0 * sc[4] * x128 - 5000000.0 * sc[4] * x15 +
-          30000000.0 * sc[4] * x345 - 50000000.0 * sc[4] * x381 +
-          20000000.0 * sc[4] * x400 - 30000000.0 * sc[4] * x413 + sc[5] * x871 +
-          20000000.0 * sc[6] * x128 - 20000000.0 * sc[6] * x400 +
-          268000000.0 * sc[6] * exp(-319.54258278599701 * invT) + x128 * x1795 +
-          x1303 + x143 * x381 - x154 * x381 - x1795 * x400 + x1970 + x1976 -
-          x381 * x476 +
-          (-30000000.0 * sc[2] * x124 - 28000000.0 * sc[3] * x68 +
-           50000000.0 * sc[4] * x124 + 30000000.0 * sc[4] * x68 - x124 * x143 +
-           x124 * x154 + x124 * x476 - x175 * x68) *
-            (x128 - x400) +
-          (-12000000.0 * sc[1] * x41 - 10000000.0 * sc[2] * x41 +
-           5000000.0 * sc[4] * x41) *
-            (-x345 + x413 + (-x68) * (x128 - x400));
-  J[32] = sc[0] * x217 + sc[11] * x1725 + 500000.0 * sc[1] * x7 * x866 -
-          28000000.0 * sc[3] * x134 + 28000000.0 * sc[3] * x347 +
-          30000000.0 * sc[4] * x134 - sc[4] * x1356 - 5000000.0 * sc[4] * x28 -
-          30000000.0 * sc[4] * x347 + 20000000.0 * sc[4] * x420 -
-          20000000.0 * sc[4] * x428 - 50000000.0 * sc[4] * x72 +
-          0.0714 * sc[5] * x1722 + 20000000.0 * sc[6] + x1369 - x154 * x72 -
-          x1795 * x420 + x1795 * x428 + x1970 + x1988 + x1992 - x476 * x72 +
-          (-30000000.0 * sc[2] * x124 - 28000000.0 * sc[3] * x68 +
-           50000000.0 * sc[4] * x124 + 30000000.0 * sc[4] * x68 - x124 * x143 +
-           x124 * x154 + x124 * x476 - x175 * x68) *
-            (-x420 + x428) +
-          (-12000000.0 * sc[1] * x41 - 10000000.0 * sc[2] * x41 +
-           5000000.0 * sc[4] * x41) *
-            (-x134 + x347 + (-x68) * (-x420 + x428));
+    375000000.0 * refC * sc[6] * x1401 + 40000000.0 * sc[3] * x206 -
+    40000000.0 * sc[3] * x54 + x120 * x179 + x120 * x478 - x120 * x495 -
+    375000000.0 * x1395 + x170 * x1803 - x1803 * x191 + x1818 - x30 * x33 +
+    (40000000.0 * sc[3] * x67 - x125 * x179 - x125 * x478 + x125 * x495) *
+      (-x170 + x191) +
+    (x30 * x42) * (-x206 + x54 + (-x67) * (-x170 + x191));
+  J[4] = -1000000.0 * refC * sc[4] * x1151 + 30000000.0 * sc[2] * x186 +
+         10000000.0 * sc[2] * x315 - 50000000.0 * sc[4] * x186 +
+         30000000.0 * sc[4] * x213 - 30000000.0 * sc[4] * x219 -
+         5000000.0 * sc[4] * x315 + 20000000.0 * sc[4] * x340 -
+         20000000.0 * sc[4] * x381 - 20000000.0 * sc[6] * x340 +
+         20000000.0 * sc[6] * x381 + 1000000.0 * x1155 + x1169 - x141 * x186 +
+         x175 * x186 - x1803 * x340 + x1803 * x381 - x186 * x478 + x1972 -
+         x198 +
+         (-30000000.0 * sc[2] * x125 - 28000000.0 * sc[3] * x67 +
+          50000000.0 * sc[4] * x125 + 30000000.0 * sc[4] * x67 + x125 * x141 -
+          x125 * x175 + x125 * x478 - x155 * x67) *
+           (-x340 + x381) +
+         (-12000000.0 * sc[1] * x42 - 10000000.0 * sc[2] * x42 +
+          5000000.0 * sc[4] * x42) *
+           (-x213 + x219 + (-x67) * (-x340 + x381));
+  J[18] = -refCinv * sc[9] * x1255 + sc[10] * x1272 +
+          30000000.0 * sc[11] * x260 + 20000000.0 * sc[11] * x317 +
+          10000000.0 * sc[2] * x15 + 30000000.0 * sc[2] * x210 +
+          500000.0 * sc[2] * x7 * x876 + sc[3] * x1292 -
+          20000000.0 * sc[4] * x132 - 5000000.0 * sc[4] * x15 -
+          50000000.0 * sc[4] * x210 + 30000000.0 * sc[4] * x221 +
+          20000000.0 * sc[4] * x396 - 30000000.0 * sc[4] * x408 + sc[5] * x861 +
+          20000000.0 * sc[6] * x132 - 20000000.0 * sc[6] * x396 +
+          268000000.0 * sc[6] * exp(-319.5444037717163 * invT) + x1307 +
+          x132 * x1803 - x141 * x210 + x175 * x210 - x1803 * x396 + x1976 +
+          x1982 - x210 * x478 +
+          (-30000000.0 * sc[2] * x125 - 28000000.0 * sc[3] * x67 +
+           50000000.0 * sc[4] * x125 + 30000000.0 * sc[4] * x67 + x125 * x141 -
+           x125 * x175 + x125 * x478 - x155 * x67) *
+            (x132 - x396) +
+          (-12000000.0 * sc[1] * x42 - 10000000.0 * sc[2] * x42 +
+           5000000.0 * sc[4] * x42) *
+            (-x221 + x408 + (-x67) * (x132 - x396));
+  J[32] = sc[0] * x193 + sc[11] * x1732 + 500000.0 * sc[1] * x7 * x876 -
+          28000000.0 * sc[3] * x283 + 28000000.0 * sc[3] * x322 -
+          sc[4] * x1361 - 20000000.0 * sc[4] * x168 -
+          50000000.0 * sc[4] * x277 - 5000000.0 * sc[4] * x28 +
+          30000000.0 * sc[4] * x283 - 30000000.0 * sc[4] * x322 +
+          20000000.0 * sc[4] * x417 + 0.0714 * sc[5] * x1728 +
+          20000000.0 * sc[6] + x1374 - x141 * x277 + x168 * x1803 -
+          x1803 * x417 + x1976 + x1994 + x1998 - x277 * x478 +
+          (-30000000.0 * sc[2] * x125 - 28000000.0 * sc[3] * x67 +
+           50000000.0 * sc[4] * x125 + 30000000.0 * sc[4] * x67 + x125 * x141 -
+           x125 * x175 + x125 * x478 - x155 * x67) *
+            (x168 - x417) +
+          (-12000000.0 * sc[1] * x42 - 10000000.0 * sc[2] * x42 +
+           5000000.0 * sc[4] * x42) *
+            (-x283 + x322 + (-x67) * (x168 - x417));
   J[46] =
-    sc[1] * x1291 + 30000000.0 * sc[2] * x392 + 28000000.0 * sc[3] * x351 -
-    28000000.0 * sc[3] * x352 - sc[4] * x1732 - 30000000.0 * sc[4] * x351 +
-    30000000.0 * sc[4] * x352 - 5000000.0 * sc[4] * x389 -
-    50000000.0 * sc[4] * x392 + 20000000.0 * sc[4] * x434 -
-    20000000.0 * sc[4] * x439 + sc[5] * x1826 - x154 * x392 +
-    13200000.0 * x165 * exp(-754.82499870708 * invT) - x1795 * x434 +
-    x1795 * x439 + x1970 + x1999 + x2003 - x392 * x476 + 28000000.0 * x50 +
-    (-30000000.0 * sc[2] * x124 - 28000000.0 * sc[3] * x68 +
-     50000000.0 * sc[4] * x124 + 30000000.0 * sc[4] * x68 - x124 * x143 +
-     x124 * x154 + x124 * x476 - x175 * x68) *
-      (-x434 + x439) +
-    (-12000000.0 * sc[1] * x41 - 10000000.0 * sc[2] * x41 +
-     5000000.0 * sc[4] * x41) *
-      (x351 - x352 + (-x68) * (-x434 + x439));
-  J[60] = -sc[10] * x2017 - sc[2] * x1356 + 30000000.0 * sc[2] * x393 -
-          sc[3] * x1732 - 20000000.0 * sc[4] * x103 +
-          30000000.0 * sc[4] * x356 - 50000000.0 * sc[4] * x393 -
-          5000000.0 * sc[4] * x397 + 20000000.0 * sc[4] * x445 -
-          30000000.0 * sc[4] * x84 - 30000000.0 * sc[9] * x295 + x103 * x1795 -
-          500000.0 * x1150 * x7 - x1407 - 536000000.0 * x1409 + x1436 -
-          x154 * x393 - 20000000.0 * x165 - 0.1428 * x1750 - x1795 * x445 -
-          x1854 + x1970 - x2007 + x2028 + x2035 + 5000000.0 * x249 -
-          28000000.0 * x270 * x271 + 50000000.0 * x299 + 50000000.0 * x322 -
-          x379 * x475 - x379 * x504 - x393 * x476 - 30000000.0 * x50 +
-          5000000.0 * x902 - x934 +
-          (-30000000.0 * sc[2] * x124 - 28000000.0 * sc[3] * x68 +
-           50000000.0 * sc[4] * x124 + 30000000.0 * sc[4] * x68 - x124 * x143 +
-           x124 * x154 + x124 * x476 - x175 * x68) *
-            (x103 - x445) +
-          (-12000000.0 * sc[1] * x41 - 10000000.0 * sc[2] * x41 +
-           5000000.0 * sc[4] * x41) *
-            (-x356 + x84 + (-x68) * (x103 - x445));
-  J[74] = 5000000.0 * sc[11] * x228 + sc[1] * x871 + 0.0714 * sc[2] * x1722 +
-          30000000.0 * sc[2] * x399 + sc[3] * x1826 +
-          30000000.0 * sc[4] * x167 - 30000000.0 * sc[4] * x361 -
-          50000000.0 * sc[4] * x399 - 20000000.0 * sc[4] * x457 +
-          20000000.0 * sc[4] * x466 - 5000000.0 * sc[4] * x78 + sc[7] * x43 +
-          50000000.0 * sc[9] * x287 - 3000000.0 * x1151 + 3000000.0 * x1154 +
-          x1484 - x154 * x399 + x1795 * x457 - x1795 * x466 + x2050 + x2055 -
-          x399 * x476 +
-          (-30000000.0 * sc[2] * x124 - 28000000.0 * sc[3] * x68 +
-           50000000.0 * sc[4] * x124 + 30000000.0 * sc[4] * x68 - x124 * x143 +
-           x124 * x154 + x124 * x476 - x175 * x68) *
-            (x457 - x466) +
-          (-12000000.0 * sc[1] * x41 - 10000000.0 * sc[2] * x41 +
-           5000000.0 * sc[4] * x41) *
-            (-x167 + x361 + (-x68) * (x457 - x466));
-  J[88] = 268000000.0 * sc[1] * exp(-319.54258278599701 * invT) +
-          30000000.0 * sc[2] * x304 + 20000000.0 * sc[2] +
-          28000000.0 * sc[3] * x483 - 5000000.0 * sc[4] * x232 +
-          30000000.0 * sc[4] * x25 - 50000000.0 * sc[4] * x304 +
-          20000000.0 * sc[4] * x477 - 30000000.0 * sc[4] * x483 -
-          20000000.0 * sc[4] * x486 + sc[9] * x2059 + x1511 - x154 * x304 -
-          x1795 * x477 + x1795 * x486 - x1877 + x1970 + x2067 + x2072 -
-          x304 * x476 +
-          (-30000000.0 * sc[2] * x124 - 28000000.0 * sc[3] * x68 +
-           50000000.0 * sc[4] * x124 + 30000000.0 * sc[4] * x68 - x124 * x143 +
-           x124 * x154 + x124 * x476 - x175 * x68) *
-            (-x477 + x486) +
-          (-12000000.0 * sc[1] * x41 - 10000000.0 * sc[2] * x41 +
-           5000000.0 * sc[4] * x41) *
-            (-x25 + x483 + (-x68) * (-x477 + x486));
-  J[102] = 30000000.0 * sc[2] * x402 + 28000000.0 * sc[3] * x494 +
-           30000000.0 * sc[4] * x25 - 20000000.0 * sc[4] * x339 -
-           50000000.0 * sc[4] * x402 - 5000000.0 * sc[4] * x419 +
-           20000000.0 * sc[4] * x489 - 30000000.0 * sc[4] * x494 + sc[5] * x43 +
-           x1511 - x154 * x402 - x175 * x25 + x1795 * x339 - x1795 * x489 +
-           x1970 + x2080 + x2086 - x402 * x476 +
-           (-30000000.0 * sc[2] * x124 - 28000000.0 * sc[3] * x68 +
-            50000000.0 * sc[4] * x124 + 30000000.0 * sc[4] * x68 - x124 * x143 +
-            x124 * x154 + x124 * x476 - x175 * x68) *
-             (x339 - x489) +
-           (-12000000.0 * sc[1] * x41 - 10000000.0 * sc[2] * x41 +
-            5000000.0 * sc[4] * x41) *
-             (-x25 + x494 + (-x68) * (x339 - x489));
-  J[116] = 12000000.0 * sc[1] * x207 + 10000000.0 * sc[2] * x207 +
-           30000000.0 * sc[2] * x81 + 28000000.0 * sc[3] * x371 -
-           28000000.0 * sc[3] * x373 - 5000000.0 * sc[4] * x207 -
-           30000000.0 * sc[4] * x371 + 30000000.0 * sc[4] * x373 +
-           20000000.0 * sc[4] * x500 - 20000000.0 * sc[4] * x506 -
-           50000000.0 * sc[4] * x81 + 44000000000.0 * sc[5] * x1163 -
-           20000000.0 * sc[6] * x500 + 20000000.0 * sc[6] * x506 -
-           1000000.0 * x1151 + 1000000.0 * x1154 - 44000000000.0 * x1166 +
-           x143 * x81 - x154 * x81 - x1795 * x500 + x1795 * x506 - x2087 +
-           x2101 - x476 * x81 +
-           (-30000000.0 * sc[2] * x124 - 28000000.0 * sc[3] * x68 +
-            50000000.0 * sc[4] * x124 + 30000000.0 * sc[4] * x68 - x124 * x143 +
-            x124 * x154 + x124 * x476 - x175 * x68) *
-             (-x500 + x506) +
-           (-12000000.0 * sc[1] * x41 - 10000000.0 * sc[2] * x41 +
-            5000000.0 * sc[4] * x41) *
-             (x371 - x373 + (-x68) * (-x500 + x506));
-  J[130] = 10000000.0 * sc[2] * x209 + 30000000.0 * sc[2] * x417 -
-           28000000.0 * sc[3] * x210 + 28000000.0 * sc[3] * x378 -
-           20000000.0 * sc[4] * x139 + 20000000.0 * sc[4] * x179 -
-           5000000.0 * sc[4] * x209 + 30000000.0 * sc[4] * x210 -
-           30000000.0 * sc[4] * x295 - 30000000.0 * sc[4] * x378 -
-           50000000.0 * sc[4] * x417 + 50000000.0 * sc[5] * x287 +
-           20000000.0 * sc[6] * x139 - 20000000.0 * sc[6] * x179 +
-           sc[6] * x2059 - 750000.0 * x1151 + 750000.0 * x1154 - x1250 * x269 +
-           x1347 + x139 * x1795 + x143 * x417 - x154 * x417 - x1565 -
-           x179 * x1795 + x2111 - x417 * x476 +
-           (-30000000.0 * sc[2] * x124 - 28000000.0 * sc[3] * x68 +
-            50000000.0 * sc[4] * x124 + 30000000.0 * sc[4] * x68 - x124 * x143 +
-            x124 * x154 + x124 * x476 - x175 * x68) *
-             (x139 - x179) +
-           (-12000000.0 * sc[1] * x41 - 10000000.0 * sc[2] * x41 +
-            5000000.0 * sc[4] * x41) *
-             (-x210 + x378 + (-x68) * (x139 - x179));
-  J[144] =
-    sc[1] * x1267 + 12000000.0 * sc[1] * x207 + 30000000.0 * sc[2] * x185 +
-    10000000.0 * sc[2] * x207 - 28000000.0 * sc[3] * x214 +
-    28000000.0 * sc[3] * x52 + 20000000.0 * sc[4] * x161 -
-    50000000.0 * sc[4] * x185 - 20000000.0 * sc[4] * x195 - sc[4] * x2017 -
-    5000000.0 * sc[4] * x207 + 30000000.0 * sc[4] * x214 -
-    30000000.0 * sc[4] * x52 - 20000000.0 * sc[6] * x161 +
-    20000000.0 * sc[6] * x195 - 1000000.0 * x1151 + 1000000.0 * x1154 + x1347 +
-    x143 * x185 - x154 * x185 - x161 * x1795 - x161 * x1962 - x175 * x214 +
-    x175 * x52 + x1795 * x195 - x185 * x476 + x195 * x1962 +
-    (-30000000.0 * sc[2] * x124 - 28000000.0 * sc[3] * x68 +
-     50000000.0 * sc[4] * x124 + 30000000.0 * sc[4] * x68 - x124 * x143 +
-     x124 * x154 + x124 * x476 - x175 * x68) *
-      (-x161 + x195) +
-    (-12000000.0 * sc[1] * x41 - 10000000.0 * sc[2] * x41 +
-     5000000.0 * sc[4] * x41) *
-      (-x214 + x52 + (-x68) * (-x161 + x195));
-  J[158] = 12000000.0 * sc[1] * x248 + 30000000.0 * sc[1] * x265 +
-           20000000.0 * sc[1] * x323 + sc[2] * x1725 +
-           30000000.0 * sc[2] * x359 + 28000000.0 * sc[3] * x202 +
-           20000000.0 * sc[4] * x197 - 30000000.0 * sc[4] * x202 -
-           20000000.0 * sc[4] * x205 - 5000000.0 * sc[4] * x248 +
-           30000000.0 * sc[4] * x25 - 50000000.0 * sc[4] * x359 +
-           5000000.0 * sc[5] * x228 + x1511 - x154 * x359 + x175 * x202 -
-           x175 * x25 - x1795 * x197 + x1795 * x205 - x1962 * x197 +
-           x1962 * x205 + x1970 + x2141 - x359 * x476 +
-           (-30000000.0 * sc[2] * x124 - 28000000.0 * sc[3] * x68 +
-            50000000.0 * sc[4] * x124 + 30000000.0 * sc[4] * x68 - x124 * x143 +
-            x124 * x154 + x124 * x476 - x175 * x68) *
-             (-x197 + x205) +
-           (-12000000.0 * sc[1] * x41 - 10000000.0 * sc[2] * x41 +
-            5000000.0 * sc[4] * x41) *
-             (x202 - x25 + (-x68) * (-x197 + x205));
-  J[172] = 30000000.0 * sc[2] * x119 + 10000000.0 * sc[2] * x33 -
-           28000000.0 * sc[3] * x282 + 28000000.0 * sc[3] * x57 -
-           50000000.0 * sc[4] * x119 + 20000000.0 * sc[4] * x169 -
-           20000000.0 * sc[4] * x191 + 30000000.0 * sc[4] * x282 -
-           5000000.0 * sc[4] * x33 - 30000000.0 * sc[4] * x57 -
-           20000000.0 * sc[6] * x169 + 20000000.0 * sc[6] * x191 + x119 * x143 -
-           x119 * x154 - x119 * x476 - x169 * x1795 + x1795 * x191 + x1970 +
-           x2152 +
-           (-30000000.0 * sc[2] * x124 - 28000000.0 * sc[3] * x68 +
-            50000000.0 * sc[4] * x124 + 30000000.0 * sc[4] * x68 - x124 * x143 +
-            x124 * x154 + x124 * x476 - x175 * x68) *
-             (-x169 + x191) +
-           (-12000000.0 * sc[1] * x41 - 10000000.0 * sc[2] * x41 +
-            5000000.0 * sc[4] * x41) *
-             (-x282 + x57 + (-x68) * (-x169 + x191));
-  J[5] = 6000000.0 * sc[1] * x321 + 12000000.0 * sc[3] * x222 -
-         12000000.0 * sc[3] * x327 + 50000000.0 * sc[4] * x186 +
-         5000000.0 * sc[4] * x321 - 16060000000.0 * sc[5] * x1163 +
-         16060000000.0 * x1166 - x143 * x186 - x175 * x222 + x175 * x327 +
-         x1962 * x346 - x1962 * x383 - x20 * x222 + x20 * x327 + x225 +
-         (-12000000.0 * sc[3] * x68 - 50000000.0 * sc[4] * x124 + x124 * x143 +
-          x175 * x68 + x20 * x68) *
-           (-x346 + x383) +
-         (-6000000.0 * sc[1] * x41 - 5000000.0 * sc[4] * x41) *
-           (x222 - x327 + (-x68) * (-x346 + x383));
-  J[19] = 6000000.0 * sc[1] * x15 - 12000000.0 * sc[3] * x345 +
-          12000000.0 * sc[3] * x413 + sc[4] * x1301 * x861 +
-          5000000.0 * sc[4] * x15 + 50000000.0 * sc[4] * x381 - sc[5] * x871 +
-          sc[6] * x1275 - x128 * x1962 - x143 * x381 + x175 * x345 -
-          x175 * x413 + x1962 * x400 + x20 * x345 - x20 * x413 + x2153 -
-          6000000.0 * x249 - 6000000.0 * x902 +
-          (-12000000.0 * sc[3] * x68 - 50000000.0 * sc[4] * x124 + x124 * x143 +
-           x175 * x68 + x20 * x68) *
-            (x128 - x400) +
-          (-6000000.0 * sc[1] * x41 - 5000000.0 * sc[4] * x41) *
-            (-x345 + x413 + (-x68) * (x128 - x400));
-  J[33] = 6000000.0 * sc[1] * x28 - 12000000.0 * sc[3] * x134 +
-          12000000.0 * sc[3] * x347 + 5000000.0 * sc[4] * x28 +
-          50000000.0 * sc[4] * x72 - sc[5] * x1354 - 0.0357 * sc[5] * x1722 +
-          x134 * x175 + x134 * x20 - x143 * x72 - x175 * x347 + x1962 * x420 -
-          x1962 * x428 - x20 * x347 + x2153 +
-          (-12000000.0 * sc[3] * x68 - 50000000.0 * sc[4] * x124 + x124 * x143 +
-           x175 * x68 + x20 * x68) *
-            (-x420 + x428) +
-          (-6000000.0 * sc[1] * x41 - 5000000.0 * sc[4] * x41) *
-            (-x134 + x347 + (-x68) * (-x420 + x428));
-  J[47] = 6000000.0 * sc[1] * x389 + 12000000.0 * sc[3] * x351 -
-          12000000.0 * sc[3] * x352 + 5000000.0 * sc[4] * x389 +
-          50000000.0 * sc[4] * x392 - sc[5] * x1826 - x143 * x392 -
-          x175 * x351 + x175 * x352 + x1962 * x434 - x1962 * x439 - x20 * x351 +
-          x20 * x352 + x2153 + 12000000.0 * x50 +
-          (-12000000.0 * sc[3] * x68 - 50000000.0 * sc[4] * x124 + x124 * x143 +
-           x175 * x68 + x20 * x68) *
-            (-x434 + x439) +
-          (-6000000.0 * sc[1] * x41 - 5000000.0 * sc[4] * x41) *
-            (x351 - x352 + (-x68) * (-x434 + x439));
-  J[61] = sc[11] * x2030 + sc[1] * x1301 * x861 + 6000000.0 * sc[1] * x397 -
-          12000000.0 * sc[3] * x356 + 12000000.0 * sc[3] * x84 +
-          50000000.0 * sc[4] * x393 + 5000000.0 * sc[4] * x397 + sc[7] * x2026 +
-          25010000.0 * sc[7] - x103 * x1962 - x143 * x393 + x175 * x356 -
-          x175 * x84 + 0.0714 * x1750 + x1854 + x1962 * x445 + x20 * x356 -
-          x20 * x84 + x2007 + x2153 - 5000000.0 * x249 - 50000000.0 * x299 -
-          50000000.0 * x322 - 5000000.0 * x902 + x934 +
-          (-12000000.0 * sc[3] * x68 - 50000000.0 * sc[4] * x124 + x124 * x143 +
-           x175 * x68 + x20 * x68) *
-            (x103 - x445) +
-          (-6000000.0 * sc[1] * x41 - 5000000.0 * sc[4] * x41) *
-            (-x356 + x84 + (-x68) * (x103 - x445));
-  J[75] =
-    -5000000.0 * sc[11] * x228 + 6000000.0 * sc[1] * x78 - sc[1] * x871 -
-    sc[2] * x1354 - 0.0357 * sc[2] * x1722 - 12000000.0 * sc[3] * x167 -
-    sc[3] * x1826 + 12000000.0 * sc[3] * x361 + 50000000.0 * sc[4] * x399 +
-    5000000.0 * sc[4] * x78 - 80300000000.0 * sc[5] * x1163 - sc[7] * x43 -
-    12000000.0 * sc[9] * x253 - 50000000.0 * sc[9] * x287 - x1163 * x1301 +
-    80300000000.0 * x1166 - x143 * x399 - x165 * x1961 + x167 * x175 +
-    x167 * x20 - x175 * x361 - x180 * x379 - x1962 * x457 + x1962 * x466 -
-    x20 * x361 - 6000000.0 * x37 * x50 - 25010000.0 * x45 * x50 +
-    (-12000000.0 * sc[3] * x68 - 50000000.0 * sc[4] * x124 + x124 * x143 +
-     x175 * x68 + x20 * x68) *
-      (x457 - x466) +
-    (-6000000.0 * sc[1] * x41 - 5000000.0 * sc[4] * x41) *
-      (-x167 + x361 + (-x68) * (x457 - x466));
-  J[89] = sc[1] * x1275 + 6000000.0 * sc[1] * x232 + 12000000.0 * sc[3] * x483 +
-          5000000.0 * sc[4] * x232 + 50000000.0 * sc[4] * x304 - x143 * x304 -
-          x175 * x483 + x1877 + x1962 * x477 - x1962 * x486 - x20 * x483 +
-          x2159 +
-          (-12000000.0 * sc[3] * x68 - 50000000.0 * sc[4] * x124 + x124 * x143 +
-           x175 * x68 + x20 * x68) *
-            (-x477 + x486) +
-          (-6000000.0 * sc[1] * x41 - 5000000.0 * sc[4] * x41) *
-            (-x25 + x483 + (-x68) * (-x477 + x486));
-  J[103] = 6000000.0 * sc[1] * x419 + 12000000.0 * sc[3] * x494 +
-           sc[4] * x2026 + 50000000.0 * sc[4] * x402 +
-           5000000.0 * sc[4] * x419 + 25010000.0 * sc[4] - sc[5] * x43 -
-           x143 * x402 - x175 * x494 - x1962 * x339 + x1962 * x489 -
-           x20 * x494 + x2159 +
-           (-12000000.0 * sc[3] * x68 - 50000000.0 * sc[4] * x124 +
-            x124 * x143 + x175 * x68 + x20 * x68) *
-             (x339 - x489) +
-           (-6000000.0 * sc[1] * x41 - 5000000.0 * sc[4] * x41) *
-             (-x25 + x494 + (-x68) * (x339 - x489));
-  J[117] = 6000000.0 * sc[1] * x207 + 12000000.0 * sc[3] * x371 -
-           12000000.0 * sc[3] * x373 + 5000000.0 * sc[4] * x207 +
-           50000000.0 * sc[4] * x81 - 44000000000.0 * sc[5] * x1163 +
-           44000000000.0 * x1166 - x143 * x81 - x175 * x371 + x175 * x373 +
-           x1962 * x500 - x1962 * x506 - x20 * x371 + x20 * x373 + x2087 +
-           (-12000000.0 * sc[3] * x68 - 50000000.0 * sc[4] * x124 +
-            x124 * x143 + x175 * x68 + x20 * x68) *
-             (-x500 + x506) +
-           (-6000000.0 * sc[1] * x41 - 5000000.0 * sc[4] * x41) *
-             (x371 - x373 + (-x68) * (-x500 + x506));
-  J[131] = 6000000.0 * sc[1] * x209 - 12000000.0 * sc[3] * x210 +
-           12000000.0 * sc[3] * x378 + 5000000.0 * sc[4] * x209 +
-           50000000.0 * sc[4] * x417 - 12000000.0 * sc[5] * x253 -
-           50000000.0 * sc[5] * x287 - x139 * x1962 - x143 * x417 +
-           x175 * x210 - x175 * x378 + x179 * x1962 + x20 * x210 - x20 * x378 +
-           x2153 +
-           (-12000000.0 * sc[3] * x68 - 50000000.0 * sc[4] * x124 +
-            x124 * x143 + x175 * x68 + x20 * x68) *
-             (x139 - x179) +
-           (-6000000.0 * sc[1] * x41 - 5000000.0 * sc[4] * x41) *
-             (-x210 + x378 + (-x68) * (x139 - x179));
-  J[145] = 6000000.0 * sc[1] * x207 - 12000000.0 * sc[3] * x214 +
-           12000000.0 * sc[3] * x52 + 50000000.0 * sc[4] * x185 +
-           5000000.0 * sc[4] * x207 - x143 * x185 + x161 * x1962 + x175 * x214 -
-           x175 * x52 - x195 * x1962 + x20 * x214 - x20 * x52 + x2153 +
-           (-12000000.0 * sc[3] * x68 - 50000000.0 * sc[4] * x124 +
-            x124 * x143 + x175 * x68 + x20 * x68) *
-             (-x161 + x195) +
-           (-6000000.0 * sc[1] * x41 - 5000000.0 * sc[4] * x41) *
-             (-x214 + x52 + (-x68) * (-x161 + x195));
-  J[159] = 6000000.0 * sc[1] * x248 + 12000000.0 * sc[3] * x202 +
-           sc[4] * x2030 + 5000000.0 * sc[4] * x248 +
-           50000000.0 * sc[4] * x359 - 5000000.0 * sc[5] * x228 - x143 * x359 -
-           x175 * x202 + x1962 * x197 - x1962 * x205 - x20 * x202 + x2159 +
-           (-12000000.0 * sc[3] * x68 - 50000000.0 * sc[4] * x124 +
-            x124 * x143 + x175 * x68 + x20 * x68) *
-             (-x197 + x205) +
-           (-6000000.0 * sc[1] * x41 - 5000000.0 * sc[4] * x41) *
-             (x202 - x25 + (-x68) * (-x197 + x205));
-  J[173] = 6000000.0 * sc[1] * x33 - 12000000.0 * sc[3] * x282 +
-           12000000.0 * sc[3] * x57 + 50000000.0 * sc[4] * x119 +
-           5000000.0 * sc[4] * x33 - x119 * x143 + x169 * x1962 + x175 * x282 -
-           x175 * x57 - x191 * x1962 + x20 * x282 - x20 * x57 + x2153 +
-           (-12000000.0 * sc[3] * x68 - 50000000.0 * sc[4] * x124 +
-            x124 * x143 + x175 * x68 + x20 * x68) *
-             (-x169 + x191) +
-           (-6000000.0 * sc[1] * x41 - 5000000.0 * sc[4] * x41) *
-             (-x282 + x57 + (-x68) * (-x169 + x191));
-  J[6] = sc[3] * x200 + 20000000.0 * sc[6] * x346 - 20000000.0 * sc[6] * x383 -
-         x155 * x186 + x174 * x321 + x186 * x497 + x2164 +
-         (x124 * x155 - x124 * x497) * (-x346 + x383) +
-         (-x174 * x41) * (x222 - x327 + (-x68) * (-x346 + x383));
-  J[20] = 375000000.0 * sc[12] * sc[3] * x1285 +
-          300000000.0 * ((sc[3]) * (sc[3])) * x1285 + sc[3] * sc[5] * x1282 +
-          sc[3] * x1279 - 20000000.0 * sc[6] * x128 +
-          20000000.0 * sc[6] * x400 + x1277 + x15 * x174 - x155 * x381 + x2164 +
-          x381 * x497 + (x124 * x155 - x124 * x497) * (x128 - x400) +
-          (-x174 * x41) * (-x345 + x413 + (-x68) * (x128 - x400));
-  J[34] = sc[5] * x1354 + 20000000.0 * sc[6] * x420 -
-          20000000.0 * sc[6] * x428 - 20000000.0 * sc[6] - x155 * x72 +
-          x174 * x28 + x2164 + x497 * x72 +
-          (x124 * x155 - x124 * x497) * (-x420 + x428) +
-          (-x174 * x41) * (-x134 + x347 + (-x68) * (-x420 + x428));
-  J[48] = sc[0] * x200 + sc[11] * x1847 + 375000000.0 * sc[12] * sc[1] * x1285 +
-          600000000.0 * sc[1] * sc[3] * x1285 + sc[1] * sc[5] * x1282 +
-          sc[1] * x1279 + sc[4] * x1732 + sc[5] * x1826 +
-          20000000.0 * sc[6] * x434 - 20000000.0 * sc[6] * x439 + sc[8] * x97 -
-          300000000.0 * x1065 * x1389 +
-          18000000.0 * x11 * exp(-452.89499922424801 * invT) - x155 * x392 +
-          x174 * x389 + 7600000.0 * x379 * exp(-201.28666632188799 * invT) +
-          x392 * x497 + (x124 * x155 - x124 * x497) * (-x434 + x439) +
-          (-x174 * x41) * (x351 - x352 + (-x68) * (-x434 + x439));
-  J[62] = sc[10] * x2017 + 20000000.0 * sc[11] * x333 + sc[3] * x1732 -
-          20000000.0 * sc[6] * x103 + 20000000.0 * sc[6] * x445 +
-          268000000.0 * x1409 - x155 * x393 + x174 * x397 - x1854 + x2164 +
-          x393 * x497 + (x124 * x155 - x124 * x497) * (x103 - x445) +
-          (-x174 * x41) * (-x356 + x84 + (-x68) * (x103 - x445));
-  J[76] = sc[1] * sc[3] * x1282 + sc[2] * x1354 + sc[3] * x1826 -
-          20000000.0 * sc[6] * x457 + 20000000.0 * sc[6] * x466 -
-          x1065 * x1463 - x155 * x399 + x174 * x78 + x399 * x497 +
-          (x124 * x155 - x124 * x497) * (x457 - x466) +
-          (-x174 * x41) * (-x167 + x361 + (-x68) * (x457 - x466));
-  J[90] =
-    -375000000.0 * refC * sc[12] * x1389 - 300000000.0 * refC * sc[3] * x1389 -
-    refC * sc[5] * x1463 - 2800000.0 * refC * x1142 * x1278 - sc[11] * x110 -
-    20000000.0 * sc[2] + 20000000.0 * sc[6] * x477 - 20000000.0 * sc[6] * x486 -
-    1000000.0 * sc[7] - sc[9] * x2059 - sc[9] * x286 + x1501 - x155 * x304 -
-    20000000.0 * x165 + x174 * x232 - x1877 + x2164 - x30 * x379 + x304 * x497 +
-    (x124 * x155 - x124 * x497) * (-x477 + x486) +
-    (-x174 * x41) * (-x25 + x483 + (-x68) * (-x477 + x486));
-  J[104] = -20000000.0 * sc[6] * x339 + 20000000.0 * sc[6] * x489 -
-           1000000.0 * sc[6] - x155 * x402 + x174 * x419 + x2164 + x402 * x497 +
-           (x124 * x155 - x124 * x497) * (x339 - x489) +
-           (-x174 * x41) * (-x25 + x494 + (-x68) * (x339 - x489));
-  J[118] = sc[3] * x97 + 20000000.0 * sc[6] * x500 - 20000000.0 * sc[6] * x506 -
-           x155 * x81 + x174 * x207 + x2164 + x497 * x81 +
-           (x124 * x155 - x124 * x497) * (-x500 + x506) +
-           (-x174 * x41) * (x371 - x373 + (-x68) * (-x500 + x506));
-  J[132] = -20000000.0 * sc[6] * x139 + 20000000.0 * sc[6] * x179 -
-           sc[6] * x2059 - sc[6] * x286 - 2100000.0 * x1065 * x1142 +
-           2100000.0 * x1147 - x155 * x417 + x174 * x209 + x417 * x497 +
-           (x124 * x155 - x124 * x497) * (x139 - x179) +
-           (-x174 * x41) * (-x210 + x378 + (-x68) * (x139 - x179));
-  J[146] = sc[4] * x2017 + 20000000.0 * sc[6] * x161 -
-           20000000.0 * sc[6] * x195 - 4200000.0 * x1065 * x1142 +
-           4200000.0 * x1147 - x155 * x185 + x174 * x207 + x185 * x497 +
-           (x124 * x155 - x124 * x497) * (-x161 + x195) +
-           (-x174 * x41) * (-x214 + x52 + (-x68) * (-x161 + x195));
-  J[160] = sc[3] * x1847 + 20000000.0 * sc[4] * x333 - sc[6] * x110 +
-           20000000.0 * sc[6] * x197 - 20000000.0 * sc[6] * x205 - x155 * x359 +
-           x174 * x248 + x2164 + x359 * x497 +
-           (x124 * x155 - x124 * x497) * (-x197 + x205) +
-           (-x174 * x41) * (x202 - x25 + (-x68) * (-x197 + x205));
-  J[174] = 375000000.0 * sc[1] * sc[3] * x1285 + 20000000.0 * sc[6] * x169 -
-           20000000.0 * sc[6] * x191 - 375000000.0 * x1065 * x1389 -
-           x119 * x155 + x119 * x497 + x174 * x33 +
-           (x124 * x155 - x124 * x497) * (-x169 + x191) +
-           (-x174 * x41) * (-x282 + x57 + (-x68) * (-x169 + x191));
-  J[7] = -26480000.0 * sc[7] * x186 - sc[7] * x188 + x1218 + x149 * x222 -
-         x149 * x327 + x156 * x186 + x1966 - x2179 * x346 + x2179 * x383 +
-         x2181 - x346 * x432 + x383 * x432 +
-         (-70000000.0 * sc[0] * x68 + 26480000.0 * sc[7] * x124 - x124 * x156 -
-          x149 * x68 - x175 * x68) *
-           (-x346 + x383) +
-         (-12000000.0 * sc[1] * x41) * (x222 - x327 + (-x68) * (-x346 + x383));
-  J[21] = sc[11] * x1311 - 26480000.0 * sc[7] * x381 + x1079 * x165 * x7 +
-          x128 * x2179 + x128 * x432 + x1300 + x1322 - x149 * x345 +
-          x149 * x413 + x156 * x381 + x1976 - x2179 * x400 + x2184 -
-          x400 * x432 + x880 +
-          (-70000000.0 * sc[0] * x68 + 26480000.0 * sc[7] * x124 - x124 * x156 -
-           x149 * x68 - x175 * x68) *
-            (x128 - x400) +
-          (-12000000.0 * sc[1] * x41) * (-x345 + x413 + (-x68) * (x128 - x400));
-  J[35] =
-    -70000000.0 * sc[0] * x134 + 70000000.0 * sc[0] * x347 -
-    26480000.0 * sc[7] * x72 - 84300000.0 * sc[7] + x1322 - x134 * x149 +
-    x149 * x347 + x156 * x72 + x1988 - x2179 * x420 + x2179 * x428 + x2184 -
-    x220 * x420 + x220 * x428 - x420 * x432 + x428 * x432 +
-    (-70000000.0 * sc[0] * x68 + 26480000.0 * sc[7] * x124 - x124 * x156 -
-     x149 * x68 - x175 * x68) *
-      (-x420 + x428) +
-    (-12000000.0 * sc[1] * x41) * (-x134 + x347 + (-x68) * (-x420 + x428));
-  J[49] = 70000000.0 * sc[0] * x351 - 70000000.0 * sc[0] * x352 -
-          sc[7] * x1834 - 26480000.0 * sc[7] * x392 + sc[8] * x97 + x1322 +
-          x149 * x351 - x149 * x352 + x156 * x392 + x1999 - x2179 * x434 +
-          x2179 * x439 + x2184 - x220 * x434 + x220 * x439 - x432 * x434 +
-          x432 * x439 +
-          (-70000000.0 * sc[0] * x68 + 26480000.0 * sc[7] * x124 - x124 * x156 -
-           x149 * x68 - x175 * x68) *
-            (-x434 + x439) +
-          (-12000000.0 * sc[1] * x41) * (x351 - x352 + (-x68) * (-x434 + x439));
-  J[63] = -70000000.0 * sc[0] * x356 + 70000000.0 * sc[0] * x84 +
-          sc[11] * x1850 - 26480000.0 * sc[7] * x393 + x103 * x2179 +
-          x103 * x220 + x103 * x432 + x1322 - x149 * x356 + x149 * x84 +
-          x156 * x393 + x2007 + x2028 - x2179 * x445 + x2184 - x220 * x445 -
-          x432 * x445 +
-          (-70000000.0 * sc[0] * x68 + 26480000.0 * sc[7] * x124 - x124 * x156 -
-           x149 * x68 - x175 * x68) *
-            (x103 - x445) +
-          (-12000000.0 * sc[1] * x41) * (-x356 + x84 + (-x68) * (x103 - x445));
-  J[77] = -26480000.0 * sc[7] * x399 - sc[7] * x43 - 2.4576e+21 * x1062 * x131 +
-          x1071 * (1.68 * x1067 + 12.0 * x1069) + 1.92e+16 * x1092 -
-          1.92e+16 * x1102 + 2.4576e+21 * x131 * x326 -
-          x1334 * (1.68 * x1067 + 12.0 * x1069) + x1480 - x149 * x167 +
-          x149 * x361 + x156 * x399 + x2050 + x2179 * x457 - x2179 * x466 +
-          x432 * x457 - x432 * x466 +
-          (-70000000.0 * sc[0] * x68 + 26480000.0 * sc[7] * x124 - x124 * x156 -
-           x149 * x68 - x175 * x68) *
-            (x457 - x466) +
-          (-12000000.0 * sc[1] * x41) * (-x167 + x361 + (-x68) * (x457 - x466));
-  J[91] = 70000000.0 * sc[0] * x483 - 26480000.0 * sc[7] * x304 -
-          1000000.0 * sc[7] + x149 * x483 + x156 * x304 + x2067 - x2179 * x477 +
-          x2179 * x486 + x2196 - x220 * x477 + x220 * x486 - x432 * x477 +
-          x432 * x486 +
-          (-70000000.0 * sc[0] * x68 + 26480000.0 * sc[7] * x124 - x124 * x156 -
-           x149 * x68 - x175 * x68) *
-            (-x477 + x486) +
-          (-12000000.0 * sc[1] * x41) * (-x25 + x483 + (-x68) * (-x477 + x486));
+    sc[1] * x1292 + 30000000.0 * sc[2] * x374 - 28000000.0 * sc[3] * x339 +
+    28000000.0 * sc[3] * x341 - sc[4] * x1738 + 30000000.0 * sc[4] * x339 -
+    30000000.0 * sc[4] * x341 - 50000000.0 * sc[4] * x374 -
+    5000000.0 * sc[4] * x388 + 20000000.0 * sc[4] * x431 -
+    20000000.0 * sc[4] * x436 + sc[5] * x1832 - x141 * x374 +
+    13200000.0 * x166 * exp(-754.82930024814868 * invT) - x1803 * x431 +
+    x1803 * x436 + x1976 + x2005 + x2009 - x374 * x478 + 28000000.0 * x51 +
+    (-30000000.0 * sc[2] * x125 - 28000000.0 * sc[3] * x67 +
+     50000000.0 * sc[4] * x125 + 30000000.0 * sc[4] * x67 + x125 * x141 -
+     x125 * x175 + x125 * x478 - x155 * x67) *
+      (-x431 + x436) +
+    (-12000000.0 * sc[1] * x42 - 10000000.0 * sc[2] * x42 +
+     5000000.0 * sc[4] * x42) *
+      (-x339 + x341 + (-x67) * (-x431 + x436));
+  J[60] = -500000.0 * refC * x1151 * x7 - sc[10] * x2023 - sc[2] * x1361 +
+          30000000.0 * sc[2] * x376 - sc[3] * x1738 +
+          30000000.0 * sc[4] * x147 - 30000000.0 * sc[4] * x344 -
+          50000000.0 * sc[4] * x376 - 5000000.0 * sc[4] * x393 +
+          20000000.0 * sc[4] * x441 - 20000000.0 * sc[4] * x79 -
+          30000000.0 * sc[9] * x308 - x141 * x376 - x1414 -
+          536000000.0 * x1416 + x1443 - 20000000.0 * x166 - 0.1428 * x1755 -
+          x1803 * x441 + x1803 * x79 - x1857 + x1976 - x2013 + x2034 + x2041 +
+          5000000.0 * x245 - 28000000.0 * x265 * x266 + 50000000.0 * x316 -
+          x376 * x478 - x392 * x451 - x392 * x467 - 30000000.0 * x51 +
+          50000000.0 * x58 + 5000000.0 * x902 - x931 +
+          (-30000000.0 * sc[2] * x125 - 28000000.0 * sc[3] * x67 +
+           50000000.0 * sc[4] * x125 + 30000000.0 * sc[4] * x67 + x125 * x141 -
+           x125 * x175 + x125 * x478 - x155 * x67) *
+            (-x441 + x79) +
+          (-12000000.0 * sc[1] * x42 - 10000000.0 * sc[2] * x42 +
+           5000000.0 * sc[4] * x42) *
+            (-x147 + x344 + (-x67) * (-x441 + x79));
+  J[74] = 5000000.0 * sc[11] * x241 + sc[1] * x861 + 0.0714 * sc[2] * x1728 +
+          30000000.0 * sc[2] * x379 + sc[3] * x1832 -
+          30000000.0 * sc[4] * x105 - 20000000.0 * sc[4] * x138 +
+          30000000.0 * sc[4] * x348 - 50000000.0 * sc[4] * x379 -
+          5000000.0 * sc[4] * x397 + 20000000.0 * sc[4] * x462 + sc[7] * x44 +
+          50000000.0 * sc[9] * x305 + 3000000.0 * x1155 - 3000000.0 * x1345 +
+          x138 * x1803 - x141 * x379 + x1491 - x1803 * x462 + x2056 + x2061 -
+          x379 * x478 +
+          (-30000000.0 * sc[2] * x125 - 28000000.0 * sc[3] * x67 +
+           50000000.0 * sc[4] * x125 + 30000000.0 * sc[4] * x67 + x125 * x141 -
+           x125 * x175 + x125 * x478 - x155 * x67) *
+            (x138 - x462) +
+          (-12000000.0 * sc[1] * x42 - 10000000.0 * sc[2] * x42 +
+           5000000.0 * sc[4] * x42) *
+            (x105 - x348 + (-x67) * (x138 - x462));
+  J[88] = 268000000.0 * sc[1] * exp(-319.5444037717163 * invT) +
+          30000000.0 * sc[2] * x286 + 20000000.0 * sc[2] +
+          28000000.0 * sc[3] * x480 - 5000000.0 * sc[4] * x228 -
+          50000000.0 * sc[4] * x286 + 30000000.0 * sc[4] * x351 +
+          20000000.0 * sc[4] * x474 - 30000000.0 * sc[4] * x480 -
+          20000000.0 * sc[4] * x483 + sc[9] * x2065 - x141 * x286 + x1517 -
+          x1803 * x474 + x1803 * x483 - x1883 + x1976 + x2073 + x2078 -
+          x286 * x478 +
+          (-30000000.0 * sc[2] * x125 - 28000000.0 * sc[3] * x67 +
+           50000000.0 * sc[4] * x125 + 30000000.0 * sc[4] * x67 + x125 * x141 -
+           x125 * x175 + x125 * x478 - x155 * x67) *
+            (-x474 + x483) +
+          (-12000000.0 * sc[1] * x42 - 10000000.0 * sc[2] * x42 +
+           5000000.0 * sc[4] * x42) *
+            (-x351 + x480 + (-x67) * (-x474 + x483));
+  J[102] = 30000000.0 * sc[2] * x384 + 28000000.0 * sc[3] * x490 -
+           20000000.0 * sc[4] * x333 + 30000000.0 * sc[4] * x351 -
+           50000000.0 * sc[4] * x384 - 5000000.0 * sc[4] * x401 +
+           20000000.0 * sc[4] * x486 - 30000000.0 * sc[4] * x490 + sc[5] * x44 -
+           x141 * x384 + x1517 - x155 * x351 + x1803 * x333 - x1803 * x486 +
+           x1976 + x2086 + x2092 - x384 * x478 +
+           (-30000000.0 * sc[2] * x125 - 28000000.0 * sc[3] * x67 +
+            50000000.0 * sc[4] * x125 + 30000000.0 * sc[4] * x67 + x125 * x141 -
+            x125 * x175 + x125 * x478 - x155 * x67) *
+             (x333 - x486) +
+           (-12000000.0 * sc[1] * x42 - 10000000.0 * sc[2] * x42 +
+            5000000.0 * sc[4] * x42) *
+             (-x351 + x490 + (-x67) * (x333 - x486));
+  J[116] = 10000000.0 * sc[2] * x203 + 30000000.0 * sc[2] * x93 +
+           28000000.0 * sc[3] * x25 - 28000000.0 * sc[3] * x360 -
+           30000000.0 * sc[4] * x25 + 30000000.0 * sc[4] * x360 +
+           20000000.0 * sc[4] * x497 - 20000000.0 * sc[4] * x503 -
+           50000000.0 * sc[4] * x93 - 20000000.0 * sc[6] * x497 +
+           20000000.0 * sc[6] * x503 - 44000000000.0 * x1164 +
+           44000000000.0 * x1167 - x141 * x93 + x175 * x93 - x1803 * x497 +
+           x1803 * x503 - x2093 + x2098 + x2107 - x478 * x93 +
+           (-30000000.0 * sc[2] * x125 - 28000000.0 * sc[3] * x67 +
+            50000000.0 * sc[4] * x125 + 30000000.0 * sc[4] * x67 + x125 * x141 -
+            x125 * x175 + x125 * x478 - x155 * x67) *
+             (-x497 + x503) +
+           (-12000000.0 * sc[1] * x42 - 10000000.0 * sc[2] * x42 +
+            5000000.0 * sc[4] * x42) *
+             (x25 - x360 + (-x67) * (-x497 + x503));
+  J[130] = 10000000.0 * sc[2] * x205 + 30000000.0 * sc[2] * x395 -
+           28000000.0 * sc[3] * x369 + 28000000.0 * sc[3] * x371 -
+           20000000.0 * sc[4] * x143 + 20000000.0 * sc[4] * x156 -
+           5000000.0 * sc[4] * x205 - 30000000.0 * sc[4] * x308 +
+           30000000.0 * sc[4] * x369 - 30000000.0 * sc[4] * x371 -
+           50000000.0 * sc[4] * x395 + 50000000.0 * sc[5] * x305 +
+           20000000.0 * sc[6] * x143 - 20000000.0 * sc[6] * x156 +
+           sc[6] * x2065 + 750000.0 * x1155 - x1255 * x264 - 750000.0 * x1345 +
+           x1352 - x141 * x395 + x143 * x1803 - x156 * x1803 - x1571 +
+           x175 * x395 + x2117 - x395 * x478 +
+           (-30000000.0 * sc[2] * x125 - 28000000.0 * sc[3] * x67 +
+            50000000.0 * sc[4] * x125 + 30000000.0 * sc[4] * x67 + x125 * x141 -
+            x125 * x175 + x125 * x478 - x155 * x67) *
+             (x143 - x156) +
+           (-12000000.0 * sc[1] * x42 - 10000000.0 * sc[2] * x42 +
+            5000000.0 * sc[4] * x42) *
+             (-x369 + x371 + (-x67) * (x143 - x156));
+  J[144] = sc[1] * x1272 + 30000000.0 * sc[2] * x185 +
+           10000000.0 * sc[2] * x203 - 28000000.0 * sc[3] * x375 +
+           28000000.0 * sc[3] * x53 + 20000000.0 * sc[4] * x157 -
+           20000000.0 * sc[4] * x162 - 50000000.0 * sc[4] * x185 -
+           sc[4] * x2023 + 30000000.0 * sc[4] * x375 -
+           30000000.0 * sc[4] * x53 - 20000000.0 * sc[6] * x157 +
+           20000000.0 * sc[6] * x162 + x1352 - x141 * x185 - x155 * x375 +
+           x155 * x53 - x157 * x1803 - x157 * x1967 + x162 * x1803 +
+           x162 * x1967 + x175 * x185 - x185 * x478 + x2098 +
+           (-30000000.0 * sc[2] * x125 - 28000000.0 * sc[3] * x67 +
+            50000000.0 * sc[4] * x125 + 30000000.0 * sc[4] * x67 + x125 * x141 -
+            x125 * x175 + x125 * x478 - x155 * x67) *
+             (-x157 + x162) +
+           (-12000000.0 * sc[1] * x42 - 10000000.0 * sc[2] * x42 +
+            5000000.0 * sc[4] * x42) *
+             (-x375 + x53 + (-x67) * (-x157 + x162));
+  J[158] = 12000000.0 * sc[1] * x244 + 30000000.0 * sc[1] * x260 +
+           20000000.0 * sc[1] * x317 + sc[2] * x1732 +
+           30000000.0 * sc[2] * x355 + 28000000.0 * sc[3] * x20 +
+           20000000.0 * sc[4] * x181 - 20000000.0 * sc[4] * x197 -
+           30000000.0 * sc[4] * x20 - 5000000.0 * sc[4] * x244 +
+           30000000.0 * sc[4] * x351 - 50000000.0 * sc[4] * x355 +
+           5000000.0 * sc[5] * x241 - x141 * x355 + x1517 + x155 * x20 -
+           x155 * x351 - x1803 * x181 + x1803 * x197 - x181 * x1967 +
+           x1967 * x197 + x1976 + x2147 - x355 * x478 +
+           (-30000000.0 * sc[2] * x125 - 28000000.0 * sc[3] * x67 +
+            50000000.0 * sc[4] * x125 + 30000000.0 * sc[4] * x67 + x125 * x141 -
+            x125 * x175 + x125 * x478 - x155 * x67) *
+             (-x181 + x197) +
+           (-12000000.0 * sc[1] * x42 - 10000000.0 * sc[2] * x42 +
+            5000000.0 * sc[4] * x42) *
+             (x20 - x351 + (-x67) * (-x181 + x197));
+  J[172] = 30000000.0 * sc[2] * x120 + 10000000.0 * sc[2] * x33 -
+           28000000.0 * sc[3] * x206 + 28000000.0 * sc[3] * x54 -
+           50000000.0 * sc[4] * x120 + 20000000.0 * sc[4] * x170 -
+           20000000.0 * sc[4] * x191 + 30000000.0 * sc[4] * x206 -
+           5000000.0 * sc[4] * x33 - 30000000.0 * sc[4] * x54 -
+           20000000.0 * sc[6] * x170 + 20000000.0 * sc[6] * x191 - x120 * x141 +
+           x120 * x175 - x120 * x478 - x170 * x1803 + x1803 * x191 + x1976 +
+           x2158 +
+           (-30000000.0 * sc[2] * x125 - 28000000.0 * sc[3] * x67 +
+            50000000.0 * sc[4] * x125 + 30000000.0 * sc[4] * x67 + x125 * x141 -
+            x125 * x175 + x125 * x478 - x155 * x67) *
+             (-x170 + x191) +
+           (-12000000.0 * sc[1] * x42 - 10000000.0 * sc[2] * x42 +
+            5000000.0 * sc[4] * x42) *
+             (-x206 + x54 + (-x67) * (-x170 + x191));
+  J[5] = 6000000.0 * sc[1] * x315 - 12000000.0 * sc[3] * x213 +
+         12000000.0 * sc[3] * x219 + 50000000.0 * sc[4] * x186 +
+         5000000.0 * sc[4] * x315 + 16060000000.0 * x1164 -
+         16060000000.0 * x1167 + x155 * x213 - x155 * x219 - x175 * x186 +
+         x1967 * x340 - x1967 * x381 + x198 + x213 * x405 - x219 * x405 +
+         (-12000000.0 * sc[3] * x67 - 50000000.0 * sc[4] * x125 + x125 * x175 +
+          x155 * x67 + x405 * x67) *
+           (-x340 + x381) +
+         (-6000000.0 * sc[1] * x42 - 5000000.0 * sc[4] * x42) *
+           (-x213 + x219 + (-x67) * (-x340 + x381));
+  J[19] = 6000000.0 * sc[1] * x15 - 12000000.0 * sc[3] * x221 +
+          12000000.0 * sc[3] * x408 + sc[4] * x1305 * x863 +
+          5000000.0 * sc[4] * x15 + 50000000.0 * sc[4] * x210 - sc[5] * x861 +
+          sc[6] * x1280 - x132 * x1967 + x155 * x221 - x155 * x408 -
+          x175 * x210 + x1967 * x396 + x2159 + x221 * x405 - 6000000.0 * x245 -
+          x405 * x408 - 6000000.0 * x902 +
+          (-12000000.0 * sc[3] * x67 - 50000000.0 * sc[4] * x125 + x125 * x175 +
+           x155 * x67 + x405 * x67) *
+            (x132 - x396) +
+          (-6000000.0 * sc[1] * x42 - 5000000.0 * sc[4] * x42) *
+            (-x221 + x408 + (-x67) * (x132 - x396));
+  J[33] = 6000000.0 * sc[1] * x28 - 12000000.0 * sc[3] * x283 +
+          12000000.0 * sc[3] * x322 + 50000000.0 * sc[4] * x277 +
+          5000000.0 * sc[4] * x28 - sc[5] * x1359 - 0.0357 * sc[5] * x1728 +
+          x155 * x283 - x155 * x322 - x168 * x1967 - x175 * x277 +
+          x1967 * x417 + x2159 + x283 * x405 - x322 * x405 +
+          (-12000000.0 * sc[3] * x67 - 50000000.0 * sc[4] * x125 + x125 * x175 +
+           x155 * x67 + x405 * x67) *
+            (x168 - x417) +
+          (-6000000.0 * sc[1] * x42 - 5000000.0 * sc[4] * x42) *
+            (-x283 + x322 + (-x67) * (x168 - x417));
+  J[47] = 6000000.0 * sc[1] * x388 - 12000000.0 * sc[3] * x339 +
+          12000000.0 * sc[3] * x341 + 50000000.0 * sc[4] * x374 +
+          5000000.0 * sc[4] * x388 - sc[5] * x1832 + x155 * x339 - x155 * x341 -
+          x175 * x374 + x1967 * x431 - x1967 * x436 + x2159 + x339 * x405 -
+          x341 * x405 + 12000000.0 * x51 +
+          (-12000000.0 * sc[3] * x67 - 50000000.0 * sc[4] * x125 + x125 * x175 +
+           x155 * x67 + x405 * x67) *
+            (-x431 + x436) +
+          (-6000000.0 * sc[1] * x42 - 5000000.0 * sc[4] * x42) *
+            (-x339 + x341 + (-x67) * (-x431 + x436));
+  J[61] = sc[11] * x2036 + sc[1] * x1305 * x863 + 6000000.0 * sc[1] * x393 -
+          12000000.0 * sc[3] * x147 + 12000000.0 * sc[3] * x344 +
+          50000000.0 * sc[4] * x376 + 5000000.0 * sc[4] * x393 + sc[7] * x2030 +
+          25010000.0 * sc[7] + x147 * x155 + x147 * x405 - x155 * x344 -
+          x175 * x376 + 0.0714 * x1755 + x1857 + x1967 * x441 - x1967 * x79 +
+          x2013 + x2159 - 5000000.0 * x245 - 50000000.0 * x316 - x344 * x405 -
+          50000000.0 * x58 - 5000000.0 * x902 + x931 +
+          (-12000000.0 * sc[3] * x67 - 50000000.0 * sc[4] * x125 + x125 * x175 +
+           x155 * x67 + x405 * x67) *
+            (-x441 + x79) +
+          (-6000000.0 * sc[1] * x42 - 5000000.0 * sc[4] * x42) *
+            (-x147 + x344 + (-x67) * (-x441 + x79));
+  J[75] = -refC * x1166 * x1305 - 5000000.0 * sc[11] * x241 +
+          6000000.0 * sc[1] * x397 - sc[1] * x861 - sc[2] * x1359 -
+          0.0357 * sc[2] * x1728 + 12000000.0 * sc[3] * x105 - sc[3] * x1832 -
+          12000000.0 * sc[3] * x348 + 50000000.0 * sc[4] * x379 +
+          5000000.0 * sc[4] * x397 - sc[7] * x44 - 12000000.0 * sc[9] * x248 -
+          50000000.0 * sc[9] * x305 - x105 * x155 - x105 * x405 +
+          80300000000.0 * x1164 - 80300000000.0 * x1167 - x138 * x1967 +
+          x155 * x348 - x161 * x392 - x166 * x1966 - x175 * x379 +
+          x1967 * x462 + x348 * x405 - 6000000.0 * x38 * x51 -
+          25010000.0 * x46 * x51 +
+          (-12000000.0 * sc[3] * x67 - 50000000.0 * sc[4] * x125 + x125 * x175 +
+           x155 * x67 + x405 * x67) *
+            (x138 - x462) +
+          (-6000000.0 * sc[1] * x42 - 5000000.0 * sc[4] * x42) *
+            (x105 - x348 + (-x67) * (x138 - x462));
+  J[89] = sc[1] * x1280 + 6000000.0 * sc[1] * x228 + 12000000.0 * sc[3] * x480 +
+          5000000.0 * sc[4] * x228 + 50000000.0 * sc[4] * x286 - x155 * x480 -
+          x175 * x286 + x1883 + x1967 * x474 - x1967 * x483 + x2165 -
+          x405 * x480 +
+          (-12000000.0 * sc[3] * x67 - 50000000.0 * sc[4] * x125 + x125 * x175 +
+           x155 * x67 + x405 * x67) *
+            (-x474 + x483) +
+          (-6000000.0 * sc[1] * x42 - 5000000.0 * sc[4] * x42) *
+            (-x351 + x480 + (-x67) * (-x474 + x483));
+  J[103] = 6000000.0 * sc[1] * x401 + 12000000.0 * sc[3] * x490 +
+           sc[4] * x2030 + 50000000.0 * sc[4] * x384 +
+           5000000.0 * sc[4] * x401 + 25010000.0 * sc[4] - sc[5] * x44 -
+           x155 * x490 - x175 * x384 - x1967 * x333 + x1967 * x486 + x2165 -
+           x405 * x490 +
+           (-12000000.0 * sc[3] * x67 - 50000000.0 * sc[4] * x125 +
+            x125 * x175 + x155 * x67 + x405 * x67) *
+             (x333 - x486) +
+           (-6000000.0 * sc[1] * x42 - 5000000.0 * sc[4] * x42) *
+             (-x351 + x490 + (-x67) * (x333 - x486));
+  J[117] = 6000000.0 * sc[1] * x203 + 12000000.0 * sc[3] * x25 -
+           12000000.0 * sc[3] * x360 + 5000000.0 * sc[4] * x203 +
+           50000000.0 * sc[4] * x93 + 44000000000.0 * x1164 -
+           44000000000.0 * x1167 - x155 * x25 + x155 * x360 - x175 * x93 +
+           x1967 * x497 - x1967 * x503 + x2093 - x25 * x405 + x360 * x405 +
+           (-12000000.0 * sc[3] * x67 - 50000000.0 * sc[4] * x125 +
+            x125 * x175 + x155 * x67 + x405 * x67) *
+             (-x497 + x503) +
+           (-6000000.0 * sc[1] * x42 - 5000000.0 * sc[4] * x42) *
+             (x25 - x360 + (-x67) * (-x497 + x503));
+  J[131] = 6000000.0 * sc[1] * x205 - 12000000.0 * sc[3] * x369 +
+           12000000.0 * sc[3] * x371 + 5000000.0 * sc[4] * x205 +
+           50000000.0 * sc[4] * x395 - 12000000.0 * sc[5] * x248 -
+           50000000.0 * sc[5] * x305 - x143 * x1967 + x155 * x369 -
+           x155 * x371 + x156 * x1967 - x175 * x395 + x2159 + x369 * x405 -
+           x371 * x405 +
+           (-12000000.0 * sc[3] * x67 - 50000000.0 * sc[4] * x125 +
+            x125 * x175 + x155 * x67 + x405 * x67) *
+             (x143 - x156) +
+           (-6000000.0 * sc[1] * x42 - 5000000.0 * sc[4] * x42) *
+             (-x369 + x371 + (-x67) * (x143 - x156));
+  J[145] = 6000000.0 * sc[1] * x203 - 12000000.0 * sc[3] * x375 +
+           12000000.0 * sc[3] * x53 + 50000000.0 * sc[4] * x185 +
+           5000000.0 * sc[4] * x203 + x155 * x375 - x155 * x53 + x157 * x1967 -
+           x162 * x1967 - x175 * x185 + x2159 + x375 * x405 - x405 * x53 +
+           (-12000000.0 * sc[3] * x67 - 50000000.0 * sc[4] * x125 +
+            x125 * x175 + x155 * x67 + x405 * x67) *
+             (-x157 + x162) +
+           (-6000000.0 * sc[1] * x42 - 5000000.0 * sc[4] * x42) *
+             (-x375 + x53 + (-x67) * (-x157 + x162));
+  J[159] = 6000000.0 * sc[1] * x244 + 12000000.0 * sc[3] * x20 + sc[4] * x2036 +
+           5000000.0 * sc[4] * x244 + 50000000.0 * sc[4] * x355 -
+           5000000.0 * sc[5] * x241 - x155 * x20 - x175 * x355 + x181 * x1967 -
+           x1967 * x197 - x20 * x405 + x2165 +
+           (-12000000.0 * sc[3] * x67 - 50000000.0 * sc[4] * x125 +
+            x125 * x175 + x155 * x67 + x405 * x67) *
+             (-x181 + x197) +
+           (-6000000.0 * sc[1] * x42 - 5000000.0 * sc[4] * x42) *
+             (x20 - x351 + (-x67) * (-x181 + x197));
+  J[173] = 6000000.0 * sc[1] * x33 - 12000000.0 * sc[3] * x206 +
+           12000000.0 * sc[3] * x54 + 50000000.0 * sc[4] * x120 +
+           5000000.0 * sc[4] * x33 - x120 * x175 + x155 * x206 - x155 * x54 +
+           x170 * x1967 - x191 * x1967 + x206 * x405 + x2159 - x405 * x54 +
+           (-12000000.0 * sc[3] * x67 - 50000000.0 * sc[4] * x125 +
+            x125 * x175 + x155 * x67 + x405 * x67) *
+             (-x170 + x191) +
+           (-6000000.0 * sc[1] * x42 - 5000000.0 * sc[4] * x42) *
+             (-x206 + x54 + (-x67) * (-x170 + x191));
+  J[6] = sc[3] * x109 + 20000000.0 * sc[6] * x340 - 20000000.0 * sc[6] * x381 -
+         x179 * x186 + x186 * x495 + x2170 + x30 * x315 +
+         (x125 * x179 - x125 * x495) * (-x340 + x381) +
+         (-x30 * x42) * (-x213 + x219 + (-x67) * (-x340 + x381));
+  J[20] = 300000000.0 * ((sc[3]) * (sc[3])) * exp(-1.72 * logT) +
+          sc[3] * sc[5] * x1286 + sc[3] * x1283 * exp(-0.86 * logT) +
+          sc[3] * x1295 - 20000000.0 * sc[6] * x132 +
+          20000000.0 * sc[6] * x396 + x1282 + x15 * x30 - x179 * x210 +
+          x210 * x495 + x2170 + (x125 * x179 - x125 * x495) * (x132 - x396) +
+          (-x30 * x42) * (-x221 + x408 + (-x67) * (x132 - x396));
+  J[34] = sc[5] * x1359 - 20000000.0 * sc[6] * x168 +
+          20000000.0 * sc[6] * x417 - 20000000.0 * sc[6] - x179 * x277 + x2170 +
+          x277 * x495 + x28 * x30 +
+          (x125 * x179 - x125 * x495) * (x168 - x417) +
+          (-x30 * x42) * (-x283 + x322 + (-x67) * (x168 - x417));
+  J[48] = -300000000.0 * refC * sc[6] * x1401 + sc[0] * x109 + sc[11] * x1853 +
+          sc[1] * sc[5] * x1286 + sc[1] * x1283 * exp(-0.86 * logT) +
+          sc[1] * x1295 + sc[4] * x1738 + sc[5] * x1832 +
+          20000000.0 * sc[6] * x431 - 20000000.0 * sc[6] * x436 +
+          sc[8] * x1828 + 18000000.0 * x1225 * exp(-452.89758014888923 * invT) +
+          600000000.0 * x1395 - x179 * x374 + x30 * x388 + x374 * x495 +
+          7600000.0 * x392 * exp(-201.28781339950632 * invT) +
+          (x125 * x179 - x125 * x495) * (-x431 + x436) +
+          (-x30 * x42) * (-x339 + x341 + (-x67) * (-x431 + x436));
+  J[62] = sc[10] * x2023 + 20000000.0 * sc[11] * x327 + sc[3] * x1738 +
+          20000000.0 * sc[6] * x441 - 20000000.0 * sc[6] * x79 +
+          268000000.0 * x1416 - x179 * x376 - x1857 + x2170 + x30 * x393 +
+          x376 * x495 + (x125 * x179 - x125 * x495) * (-x441 + x79) +
+          (-x30 * x42) * (-x147 + x344 + (-x67) * (-x441 + x79));
+  J[76] = -refC * sc[6] * x1470 + sc[1] * sc[3] * x1286 + sc[2] * x1359 +
+          sc[3] * x1832 - 20000000.0 * sc[6] * x138 +
+          20000000.0 * sc[6] * x462 - x179 * x379 + x30 * x397 + x379 * x495 +
+          (x125 * x179 - x125 * x495) * (x138 - x462) +
+          (-x30 * x42) * (x105 - x348 + (-x67) * (x138 - x462));
+  J[90] = -375000000.0 * refC * sc[12] * x1401 -
+          300000000.0 * refC * sc[3] * x1401 - refC * sc[5] * x1470 -
+          sc[11] * x88 - 20000000.0 * sc[2] + 20000000.0 * sc[6] * x474 -
+          20000000.0 * sc[6] * x483 - 1000000.0 * sc[7] - sc[9] * x2065 -
+          sc[9] * x281 - x1143 * x1283 + x1507 - 20000000.0 * x166 -
+          x179 * x286 - x1883 + x2170 + x228 * x30 + x286 * x495 - x392 * x501 +
+          (x125 * x179 - x125 * x495) * (-x474 + x483) +
+          (-x30 * x42) * (-x351 + x480 + (-x67) * (-x474 + x483));
+  J[104] = -20000000.0 * sc[6] * x333 + 20000000.0 * sc[6] * x486 -
+           1000000.0 * sc[6] - x179 * x384 + x2170 + x30 * x401 + x384 * x495 +
+           (x125 * x179 - x125 * x495) * (x333 - x486) +
+           (-x30 * x42) * (-x351 + x490 + (-x67) * (x333 - x486));
+  J[118] = sc[3] * x1828 + 20000000.0 * sc[6] * x497 -
+           20000000.0 * sc[6] * x503 - x179 * x93 + x203 * x30 + x2170 +
+           x495 * x93 + (x125 * x179 - x125 * x495) * (-x497 + x503) +
+           (-x30 * x42) * (x25 - x360 + (-x67) * (-x497 + x503));
+  J[132] = -2100000.0 * sc[6] * x1143 - 20000000.0 * sc[6] * x143 +
+           20000000.0 * sc[6] * x156 - sc[6] * x2065 - sc[6] * x281 +
+           2100000.0 * x1148 - x179 * x395 + x205 * x30 + x395 * x495 +
+           (x125 * x179 - x125 * x495) * (x143 - x156) +
+           (-x30 * x42) * (-x369 + x371 + (-x67) * (x143 - x156));
+  J[146] = sc[4] * x2023 - 4200000.0 * sc[6] * x1143 +
+           20000000.0 * sc[6] * x157 - 20000000.0 * sc[6] * x162 +
+           4200000.0 * x1148 - x179 * x185 + x185 * x495 + x203 * x30 +
+           (x125 * x179 - x125 * x495) * (-x157 + x162) +
+           (-x30 * x42) * (-x375 + x53 + (-x67) * (-x157 + x162));
+  J[160] = sc[3] * x1853 + 20000000.0 * sc[4] * x327 +
+           20000000.0 * sc[6] * x181 - 20000000.0 * sc[6] * x197 - sc[6] * x88 -
+           x179 * x355 + x2170 + x244 * x30 + x355 * x495 +
+           (x125 * x179 - x125 * x495) * (-x181 + x197) +
+           (-x30 * x42) * (x20 - x351 + (-x67) * (-x181 + x197));
+  J[174] = -375000000.0 * refC * sc[6] * x1401 + 20000000.0 * sc[6] * x170 -
+           20000000.0 * sc[6] * x191 - x120 * x179 + x120 * x495 +
+           375000000.0 * x1395 + x30 * x33 +
+           (x125 * x179 - x125 * x495) * (-x170 + x191) +
+           (-x30 * x42) * (-x206 + x54 + (-x67) * (-x170 + x191));
+  J[7] = -26480000.0 * sc[7] * x186 - sc[7] * x336 - x1136 * x340 +
+         x1136 * x381 + x1218 + x145 * x186 - x176 * x213 + x176 * x219 +
+         x1972 - x2185 * x340 + x2185 * x381 + x2187 +
+         (-70000000.0 * sc[0] * x67 + 26480000.0 * sc[7] * x125 - x125 * x145 -
+          x155 * x67 - x176 * x67) *
+           (-x340 + x381) +
+         (-12000000.0 * sc[1] * x42) * (-x213 + x219 + (-x67) * (-x340 + x381));
+  J[21] = sc[11] * x1309 - 26480000.0 * sc[7] * x210 + x1101 * x7 +
+          x1136 * x132 - x1136 * x396 + x1304 + x132 * x2185 + x1324 + x1342 +
+          x145 * x210 - x176 * x221 + x176 * x408 + x1982 - x2185 * x396 +
+          x874 +
+          (-70000000.0 * sc[0] * x67 + 26480000.0 * sc[7] * x125 - x125 * x145 -
+           x155 * x67 - x176 * x67) *
+            (x132 - x396) +
+          (-12000000.0 * sc[1] * x42) * (-x221 + x408 + (-x67) * (x132 - x396));
+  J[35] = -70000000.0 * sc[0] * x283 + 70000000.0 * sc[0] * x322 -
+          26480000.0 * sc[7] * x277 - 84300000.0 * sc[7] + x1136 * x168 -
+          x1136 * x417 + x1324 + x1342 + x145 * x277 + x168 * x216 +
+          x168 * x2185 - x176 * x283 + x176 * x322 + x1994 - x216 * x417 -
+          x2185 * x417 +
+          (-70000000.0 * sc[0] * x67 + 26480000.0 * sc[7] * x125 - x125 * x145 -
+           x155 * x67 - x176 * x67) *
+            (x168 - x417) +
+          (-12000000.0 * sc[1] * x42) * (-x283 + x322 + (-x67) * (x168 - x417));
+  J[49] =
+    -70000000.0 * sc[0] * x339 + 70000000.0 * sc[0] * x341 - sc[7] * x1842 -
+    26480000.0 * sc[7] * x374 + sc[8] * x1828 - x1136 * x431 + x1136 * x436 +
+    x1324 + x1342 + x145 * x374 - x176 * x339 + x176 * x341 + x2005 -
+    x216 * x431 + x216 * x436 - x2185 * x431 + x2185 * x436 +
+    (-70000000.0 * sc[0] * x67 + 26480000.0 * sc[7] * x125 - x125 * x145 -
+     x155 * x67 - x176 * x67) *
+      (-x431 + x436) +
+    (-12000000.0 * sc[1] * x42) * (-x339 + x341 + (-x67) * (-x431 + x436));
+  J[63] = -70000000.0 * sc[0] * x147 + 70000000.0 * sc[0] * x344 +
+          sc[11] * x1867 - 26480000.0 * sc[7] * x376 - x1136 * x441 +
+          x1136 * x79 + x1324 + x1342 + x145 * x376 - x147 * x176 +
+          x176 * x344 + x2013 + x2034 - x216 * x441 + x216 * x79 -
+          x2185 * x441 + x2185 * x79 +
+          (-70000000.0 * sc[0] * x67 + 26480000.0 * sc[7] * x125 - x125 * x145 -
+           x155 * x67 - x176 * x67) *
+            (-x441 + x79) +
+          (-12000000.0 * sc[1] * x42) * (-x147 + x344 + (-x67) * (-x441 + x79));
+  J[77] = 1.9199999999999996e+16 * sc[1] * x1087 * x1100 -
+          sc[1] * x1097 * x1101 * x7 - 26480000.0 * sc[7] * x379 - sc[7] * x44 +
+          x105 * x176 + 3199999999999999.5 * x1091 * x1097 * x7 -
+          1.9199999999999996e+16 * x1091 - 2.4576e+21 * x1122 * x135 +
+          x1136 * x138 - x1136 * x462 + x1176 + 2.4576e+21 * x135 * x321 +
+          x138 * x2185 + x145 * x379 - x176 * x348 + x2056 - x2185 * x462 +
+          (-70000000.0 * sc[0] * x67 + 26480000.0 * sc[7] * x125 - x125 * x145 -
+           x155 * x67 - x176 * x67) *
+            (x138 - x462) +
+          (-12000000.0 * sc[1] * x42) * (x105 - x348 + (-x67) * (x138 - x462));
+  J[91] =
+    70000000.0 * sc[0] * x480 - 26480000.0 * sc[7] * x286 - 1000000.0 * sc[7] -
+    x1136 * x474 + x1136 * x483 + x145 * x286 + x176 * x480 + x2073 -
+    x216 * x474 + x216 * x483 - x2185 * x474 + x2185 * x483 + x2202 +
+    (-70000000.0 * sc[0] * x67 + 26480000.0 * sc[7] * x125 - x125 * x145 -
+     x155 * x67 - x176 * x67) *
+      (-x474 + x483) +
+    (-12000000.0 * sc[1] * x42) * (-x351 + x480 + (-x67) * (-x474 + x483));
   J[105] =
-    -sc[0] * x188 - sc[11] * x2204 - 84300000.0 * sc[2] - sc[3] * x1834 -
-    sc[5] * x43 - 1000000.0 * sc[6] - 26480000.0 * sc[7] * x402 -
-    9.84 * sc[7] * exp(-g_RT_qss[0] + x2176 - x260) -
-    64000000.0 * sc[7] * exp(-g_RT_qss[1] + 286.83349950869001 * invT - x260) -
-    x1078 + x149 * x494 + x1541 + x156 * x402 - x175 * x25 + x2086 +
-    x2179 * x339 - x2179 * x489 + x2196 + 26480000.0 * x299 +
-    26480000.0 * x322 + x339 * x432 - x432 * x489 +
-    (-70000000.0 * sc[0] * x68 + 26480000.0 * sc[7] * x124 - x124 * x156 -
-     x149 * x68 - x175 * x68) *
-      (x339 - x489) +
-    (-12000000.0 * sc[1] * x41) * (-x25 + x494 + (-x68) * (x339 - x489));
-  J[119] =
-    12000000.0 * sc[1] * x207 + sc[3] * x97 - 26480000.0 * sc[7] * x81 +
-    26480000.0 * sc[9] * x311 + x149 * x371 - x149 * x373 + x156 * x81 + x1563 +
-    4.92 * x165 * exp(x2176) + x2087 + x2101 - x2179 * x500 + x2179 * x506 +
-    x2181 + x379 * x94 - x432 * x500 + x432 * x506 +
-    32000000.0 * x50 * exp(286.83349950869001 * invT) + x994 +
-    (-70000000.0 * sc[0] * x68 + 26480000.0 * sc[7] * x124 - x124 * x156 -
-     x149 * x68 - x175 * x68) *
-      (-x500 + x506) +
-    (-12000000.0 * sc[1] * x41) * (x371 - x373 + (-x68) * (-x500 + x506));
+    -3199999999999999.5 * refC * x1087 * x1089 * x7 - sc[0] * x336 -
+    sc[11] * x2209 - 84300000.0 * sc[2] - sc[3] * x1842 - sc[5] * x44 -
+    1000000.0 * sc[6] - 26480000.0 * sc[7] * x384 -
+    9.84 * sc[7] * exp(-g_RT_qss[0] + x2182 - x255) -
+    64000000.0 * sc[7] * exp(-g_RT_qss[1] + 286.83513409429651 * invT - x255) +
+    x1136 * x333 - x1136 * x486 + x145 * x384 + x1547 - x155 * x351 +
+    x176 * x490 + x2092 + x2185 * x333 - x2185 * x486 + x2202 +
+    26480000.0 * x316 + 26480000.0 * x58 +
+    (-70000000.0 * sc[0] * x67 + 26480000.0 * sc[7] * x125 - x125 * x145 -
+     x155 * x67 - x176 * x67) *
+      (x333 - x486) +
+    (-12000000.0 * sc[1] * x42) * (-x351 + x490 + (-x67) * (x333 - x486));
+  J[119] = 12000000.0 * sc[1] * x203 + sc[3] * x1828 -
+           26480000.0 * sc[7] * x93 + 26480000.0 * sc[9] * x302 - x1136 * x497 +
+           x1136 * x503 + x145 * x93 + x1569 + 4.92 * x166 * exp(x2182) +
+           x176 * x25 - x176 * x360 + x2093 + x2107 - x2185 * x497 +
+           x2185 * x503 + x2187 + x392 * x70 +
+           32000000.0 * x51 * exp(286.83513409429651 * invT) + x995 +
+           (-70000000.0 * sc[0] * x67 + 26480000.0 * sc[7] * x125 -
+            x125 * x145 - x155 * x67 - x176 * x67) *
+             (-x497 + x503) +
+           (-12000000.0 * sc[1] * x42) * (x25 - x360 + (-x67) * (-x497 + x503));
   J[133] =
-    -26480000.0 * sc[7] * x417 + 26480000.0 * sc[8] * x311 -
-    6.144e+20 * x1062 * x131 + x1071 * (0.42 * x1067 + 3.0 * x1069) +
-    4800000000000000.0 * x1092 - 4800000000000000.0 * x1102 + x1175 +
-    6.144e+20 * x131 * x326 - x1334 * (0.42 * x1067 + 3.0 * x1069) +
-    x139 * x2179 + x139 * x432 - x149 * x210 + x149 * x378 + x156 * x417 -
-    x179 * x2179 - x179 * x432 + x2111 +
-    (-70000000.0 * sc[0] * x68 + 26480000.0 * sc[7] * x124 - x124 * x156 -
-     x149 * x68 - x175 * x68) *
-      (x139 - x179) +
-    (-12000000.0 * sc[1] * x41) * (-x210 + x378 + (-x68) * (x139 - x179));
+    -4799999999999999.0 * refC * sc[7] * x1087 * x1089 +
+    4799999999999999.0 * sc[1] * x1087 * x1100 - 26480000.0 * sc[7] * x395 +
+    26480000.0 * sc[8] * x302 + x1094 - x1103 * x412 -
+    6.144e+20 * x1122 * x135 + x1136 * x143 - x1136 * x156 +
+    6.144e+20 * x135 * x321 + x143 * x2185 + x145 * x395 - x156 * x2185 -
+    x176 * x369 + x176 * x371 + x2117 + x412 * x91 +
+    (-70000000.0 * sc[0] * x67 + 26480000.0 * sc[7] * x125 - x125 * x145 -
+     x155 * x67 - x176 * x67) *
+      (x143 - x156) +
+    (-12000000.0 * sc[1] * x42) * (-x369 + x371 + (-x67) * (x143 - x156));
   J[147] =
-    12000000.0 * sc[1] * x207 - 26480000.0 * sc[7] * x185 + x1176 -
-    x149 * x214 + x149 * x52 + x156 * x185 - x161 * x1962 - x161 * x2179 -
-    x161 * x432 - x175 * x214 + x175 * x52 + x195 * x1962 + x195 * x2179 +
-    x195 * x432 + x2181 +
-    (-70000000.0 * sc[0] * x68 + 26480000.0 * sc[7] * x124 - x124 * x156 -
-     x149 * x68 - x175 * x68) *
-      (-x161 + x195) +
-    (-12000000.0 * sc[1] * x41) * (-x214 + x52 + (-x68) * (-x161 + x195));
-  J[161] = 70000000.0 * sc[0] * x202 + sc[1] * x1311 +
-           12000000.0 * sc[1] * x248 + sc[4] * x1850 - sc[7] * x2204 -
-           26480000.0 * sc[7] * x359 + x149 * x202 + x156 * x359 + x175 * x202 -
-           x175 * x25 - x1962 * x197 + x1962 * x205 - x197 * x2179 -
-           x197 * x220 - x197 * x432 + x205 * x2179 + x205 * x220 +
-           x205 * x432 + x2196 +
-           (-70000000.0 * sc[0] * x68 + 26480000.0 * sc[7] * x124 -
-            x124 * x156 - x149 * x68 - x175 * x68) *
-             (-x197 + x205) +
-           (-12000000.0 * sc[1] * x41) * (x202 - x25 + (-x68) * (-x197 + x205));
+    12000000.0 * sc[1] * x203 - 26480000.0 * sc[7] * x185 - x1136 * x157 +
+    x1136 * x162 + x145 * x185 - x155 * x375 + x155 * x53 - x157 * x1967 -
+    x157 * x2185 + x162 * x1967 + x162 * x2185 - x176 * x375 + x176 * x53 +
+    x2187 + x437 +
+    (-70000000.0 * sc[0] * x67 + 26480000.0 * sc[7] * x125 - x125 * x145 -
+     x155 * x67 - x176 * x67) *
+      (-x157 + x162) +
+    (-12000000.0 * sc[1] * x42) * (-x375 + x53 + (-x67) * (-x157 + x162));
+  J[161] = 70000000.0 * sc[0] * x20 + sc[1] * x1309 +
+           12000000.0 * sc[1] * x244 + sc[4] * x1867 - sc[7] * x2209 -
+           26480000.0 * sc[7] * x355 - x1136 * x181 + x1136 * x197 +
+           x145 * x355 + x155 * x20 - x155 * x351 + x176 * x20 - x181 * x1967 -
+           x181 * x216 - x181 * x2185 + x1967 * x197 + x197 * x216 +
+           x197 * x2185 + x2202 +
+           (-70000000.0 * sc[0] * x67 + 26480000.0 * sc[7] * x125 -
+            x125 * x145 - x155 * x67 - x176 * x67) *
+             (-x181 + x197) +
+           (-12000000.0 * sc[1] * x42) * (x20 - x351 + (-x67) * (-x181 + x197));
   J[175] =
-    -26480000.0 * sc[7] * x119 + x119 * x156 - x149 * x282 + x149 * x57 -
-    x169 * x2179 - x169 * x432 + x191 * x2179 + x191 * x432 + x2152 + x2184 +
-    x471 +
-    (-70000000.0 * sc[0] * x68 + 26480000.0 * sc[7] * x124 - x124 * x156 -
-     x149 * x68 - x175 * x68) *
-      (-x169 + x191) +
-    (-12000000.0 * sc[1] * x41) * (-x282 + x57 + (-x68) * (-x169 + x191));
+    -26480000.0 * sc[7] * x120 - x1136 * x170 + x1136 * x191 + x120 * x145 +
+    x1342 - x170 * x2185 - x176 * x206 + x176 * x54 + x191 * x2185 + x2158 +
+    x99 +
+    (-70000000.0 * sc[0] * x67 + 26480000.0 * sc[7] * x125 - x125 * x145 -
+     x155 * x67 - x176 * x67) *
+      (-x170 + x191) +
+    (-12000000.0 * sc[1] * x42) * (-x206 + x54 + (-x67) * (-x170 + x191));
   J[8] =
-    26480000.0 * sc[7] * x186 + sc[7] * x188 + x1200 - x156 * x186 -
-    x222 * x87 + x2227 * x346 - x2227 * x383 + x327 * x87 +
-    (-26480000.0 * sc[7] * x124 + x124 * x156 + x68 * x87) * (-x346 + x383);
+    26480000.0 * sc[7] * x186 + sc[7] * x336 - x145 * x186 + x150 * x213 -
+    x150 * x219 + x2233 * x340 - x2233 * x381 + x2234 +
+    (-26480000.0 * sc[7] * x125 + x125 * x145 + x150 * x67) * (-x340 + x381);
   J[22] =
-    2.477e+21 * sc[7] * x1182 * x7 * exp(x1185) + 26480000.0 * sc[7] * x381 -
-    x128 * x2227 + x1316 - x156 * x381 + x2227 * x400 + x345 * x87 -
-    x413 * x87 - x880 +
-    (-26480000.0 * sc[7] * x124 + x124 * x156 + x68 * x87) * (x128 - x400);
+    2.477e+21 * sc[7] * x1188 * x7 * exp(x1191) + 26480000.0 * sc[7] * x210 -
+    x132 * x2233 - x145 * x210 + x150 * x221 - x150 * x408 + x2233 * x396 +
+    x2235 - x874 +
+    (-26480000.0 * sc[7] * x125 + x125 * x145 + x150 * x67) * (x132 - x396);
   J[36] =
-    26480000.0 * sc[7] * x72 - sc[8] * x1709 + x1316 + x134 * x87 - x156 * x72 +
-    x2227 * x420 - x2227 * x428 - x347 * x87 +
-    (-26480000.0 * sc[7] * x124 + x124 * x156 + x68 * x87) * (-x420 + x428);
+    26480000.0 * sc[7] * x277 - sc[8] * x1247 - x145 * x277 + x150 * x283 -
+    x150 * x322 - x168 * x2233 + x2233 * x417 + x2235 +
+    (-26480000.0 * sc[7] * x125 + x125 * x145 + x150 * x67) * (x168 - x417);
   J[50] =
-    26480000.0 * sc[7] * x392 - sc[8] * x97 + x1316 - x156 * x392 +
-    x2227 * x434 - x2227 * x439 - x351 * x87 + x352 * x87 +
-    (-26480000.0 * sc[7] * x124 + x124 * x156 + x68 * x87) * (-x434 + x439);
+    26480000.0 * sc[7] * x374 - sc[8] * x1828 - x145 * x374 + x150 * x339 -
+    x150 * x341 + x2233 * x431 - x2233 * x436 + x2235 +
+    (-26480000.0 * sc[7] * x125 + x125 * x145 + x150 * x67) * (-x431 + x436);
   J[64] =
-    26480000.0 * sc[7] * x393 + sc[7] * x92 - x103 * x2227 + x1316 -
-    x156 * x393 - x2007 + x2227 * x445 + x356 * x87 - x84 * x87 +
-    (-26480000.0 * sc[7] * x124 + x124 * x156 + x68 * x87) * (x103 - x445);
+    sc[7] * x114 + 26480000.0 * sc[7] * x376 - x145 * x376 + x147 * x150 -
+    x150 * x344 - x2013 + x2233 * x441 - x2233 * x79 + x2235 +
+    (-26480000.0 * sc[7] * x125 + x125 * x145 + x150 * x67) * (-x441 + x79);
   J[78] =
-    26480000.0 * sc[7] * x399 + sc[7] * x43 +
-    2.8986751181102398e+33 * x1172 * x1179 -
-    2.8986751181102398e+33 * x1172 * x1192 - x1173 * x1473 -
-    1.4862e+22 * x1201 + x1204 * x1473 + 1.4862e+22 * x1210 - x156 * x399 +
-    x167 * x87 - x2227 * x457 + x2227 * x466 - x361 * x87 +
-    (-26480000.0 * sc[7] * x124 + x124 * x156 + x68 * x87) * (x457 - x466);
+    1.4862e+22 * sc[1] * sc[7] * x1188 * exp(x1191) +
+    26480000.0 * sc[7] * x379 + sc[7] * x44 - x105 * x150 -
+    2.8986751181102357e+33 * x1173 * x1185 +
+    2.8986751181102357e+33 * x1173 * x1203 - x1174 * x1175 + x1175 * x1197 -
+    1.4862e+22 * x1188 * x1194 - x138 * x2233 - x145 * x379 + x150 * x348 +
+    x2233 * x462 +
+    (-26480000.0 * sc[7] * x125 + x125 * x145 + x150 * x67) * (x138 - x462);
   J[92] =
-    26480000.0 * sc[7] * x304 + 1000000.0 * sc[7] + x1316 - x156 * x304 +
-    x2227 * x477 - x2227 * x486 + x25 * x87 - x483 * x87 +
-    (-26480000.0 * sc[7] * x124 + x124 * x156 + x68 * x87) * (-x477 + x486);
+    26480000.0 * sc[7] * x286 + 1000000.0 * sc[7] - x145 * x286 + x150 * x351 -
+    x150 * x480 + x2233 * x474 - x2233 * x483 + x2235 +
+    (-26480000.0 * sc[7] * x125 + x125 * x145 + x150 * x67) * (-x474 + x483);
   J[106] =
-    sc[0] * x188 + sc[11] * x2204 +
-    2.477e+21 * sc[1] * x1182 * x7 * exp(x1185) + sc[4] * x92 + sc[5] * x43 +
-    1000000.0 * sc[6] + 26480000.0 * sc[7] * x402 +
-    4.92 * sc[7] * exp(-g_RT_qss[0] + x2176 - x260) +
-    32000000.0 * sc[7] * exp(-g_RT_qss[1] + 286.83349950869001 * invT - x260) +
-    x1316 - x156 * x402 - x2227 * x339 + x2227 * x489 + x25 * x87 -
-    26480000.0 * x299 - 26480000.0 * x322 - x494 * x87 +
-    (-26480000.0 * sc[7] * x124 + x124 * x156 + x68 * x87) * (x339 - x489);
+    sc[0] * x336 + sc[11] * x2209 +
+    2.477e+21 * sc[1] * x1188 * x7 * exp(x1191) + sc[4] * x114 + sc[5] * x44 +
+    1000000.0 * sc[6] + 26480000.0 * sc[7] * x384 +
+    4.92 * sc[7] * exp(-g_RT_qss[0] + x2182 - x255) +
+    32000000.0 * sc[7] * exp(-g_RT_qss[1] + 286.83513409429651 * invT - x255) -
+    x145 * x384 + x150 * x351 - x150 * x490 - x2233 * x333 + x2233 * x486 +
+    x2235 - 26480000.0 * x316 - 26480000.0 * x58 +
+    (-26480000.0 * sc[7] * x125 + x125 * x145 + x150 * x67) * (x333 - x486);
   J[120] =
-    -sc[2] * x1709 - sc[3] * x97 + 26480000.0 * sc[7] * x81 -
-    26480000.0 * sc[9] * x311 - 2.477e+21 * x1182 * x1186 * x204 + x1200 -
-    x156 * x81 - 2.46 * x165 * exp(x2176) - x2087 + x2227 * x500 -
-    x2227 * x506 - x371 * x87 + x373 * x87 - x379 * x94 -
-    16000000.0 * x50 * exp(286.83349950869001 * invT) - x994 +
-    (-26480000.0 * sc[7] * x124 + x124 * x156 + x68 * x87) * (-x500 + x506);
+    -2.477e+21 * refC * x1188 * x7 * exp(-g_RT[1] + x1191 - x68) -
+    sc[2] * x1247 - sc[3] * x1828 + 26480000.0 * sc[7] * x93 -
+    26480000.0 * sc[9] * x302 - x145 * x93 - x150 * x25 + x150 * x360 -
+    2.46 * x166 * exp(x2182) - x2093 + x2233 * x497 - x2233 * x503 + x2234 -
+    x392 * x70 - 16000000.0 * x51 * exp(286.83513409429651 * invT) - x995 +
+    (-26480000.0 * sc[7] * x125 + x125 * x145 + x150 * x67) * (-x497 + x503);
   J[134] =
-    26480000.0 * sc[7] * x417 - 26480000.0 * sc[8] * x311 +
-    7.2466877952755894e+32 * x1172 * x1179 -
-    7.2466877952755894e+32 * x1172 * x1192 - x1173 * x429 - 3.7155e+21 * x1201 +
-    x1204 * x429 + 3.7155e+21 * x1210 - x139 * x2227 - x156 * x417 +
-    x179 * x2227 + x210 * x87 - x378 * x87 +
-    (-26480000.0 * sc[7] * x124 + x124 * x156 + x68 * x87) * (x139 - x179);
+    26480000.0 * sc[7] * x395 - 26480000.0 * sc[8] * x302 -
+    7.2466877952755894e+32 * x1173 * x1185 +
+    7.2466877952755894e+32 * x1173 * x1203 -
+    x1174 * (3.0 * x1180 + 0.42 * x1183) - 3.7155e+21 * x1188 * x1194 +
+    x1197 * (3.0 * x1180 + 0.42 * x1183) + 3.7155e+21 * x1209 - x143 * x2233 -
+    x145 * x395 + x150 * x369 - x150 * x371 + x156 * x2233 +
+    (-26480000.0 * sc[7] * x125 + x125 * x145 + x150 * x67) * (x143 - x156);
   J[148] =
-    26480000.0 * sc[7] * x185 + x1200 - x156 * x185 + x161 * x2227 -
-    x195 * x2227 + x214 * x87 - x52 * x87 +
-    (-26480000.0 * sc[7] * x124 + x124 * x156 + x68 * x87) * (-x161 + x195);
+    26480000.0 * sc[7] * x185 - x145 * x185 + x150 * x375 - x150 * x53 +
+    x157 * x2233 - x162 * x2233 + x2234 +
+    (-26480000.0 * sc[7] * x125 + x125 * x145 + x150 * x67) * (-x157 + x162);
   J[162] =
-    sc[7] * x2204 + 26480000.0 * sc[7] * x359 + x1316 - x156 * x359 +
-    x197 * x2227 - x202 * x87 - x205 * x2227 + x25 * x87 +
-    (-26480000.0 * sc[7] * x124 + x124 * x156 + x68 * x87) * (-x197 + x205);
+    sc[7] * x2209 + 26480000.0 * sc[7] * x355 - x145 * x355 - x150 * x20 +
+    x150 * x351 + x181 * x2233 - x197 * x2233 + x2235 +
+    (-26480000.0 * sc[7] * x125 + x125 * x145 + x150 * x67) * (-x181 + x197);
   J[176] =
-    26480000.0 * sc[7] * x119 - x119 * x156 + x1316 + x169 * x2227 -
-    x191 * x2227 + x282 * x87 - x57 * x87 +
-    (-26480000.0 * sc[7] * x124 + x124 * x156 + x68 * x87) * (-x169 + x191);
-  J[9] = 14000000.0 * sc[10] * x222 - 14000000.0 * sc[10] * x327 +
-         30000000.0 * sc[2] * x186 + 40000000.0 * sc[3] * x222 -
-         40000000.0 * sc[3] * x327 + 50000000.0 * sc[4] * x186 +
-         26480000.0 * sc[7] * x186 + x1160 - 1204.0 * x1238 + 1204.0 * x17 +
-         x183 * x186 + x186 * x460 + x186 * x497 + x845 + x853 +
-         (-14000000.0 * sc[10] * x68 - 73400000.0 * sc[1] * x124 -
-          30000000.0 * sc[2] * x124 - 15000000.0 * sc[2] * x68 -
-          40000000.0 * sc[3] * x68 - 50000000.0 * sc[4] * x124 -
-          26480000.0 * sc[7] * x124 - x124 * x183 - x124 * x460 - x124 * x497) *
-           (-x346 + x383);
+    26480000.0 * sc[7] * x120 - x120 * x145 + x150 * x206 - x150 * x54 +
+    x170 * x2233 - x191 * x2233 + x2235 +
+    (-26480000.0 * sc[7] * x125 + x125 * x145 + x150 * x67) * (-x170 + x191);
+  J[9] = -14000000.0 * sc[10] * x213 + 14000000.0 * sc[10] * x219 +
+         30000000.0 * sc[2] * x186 - 40000000.0 * sc[3] * x213 +
+         40000000.0 * sc[3] * x219 + 50000000.0 * sc[4] * x186 +
+         26480000.0 * sc[7] * x186 + x1161 + 1204.0 * x184 + x186 * x440 +
+         x186 * x446 + x186 * x495 - 1204.0 * x456 + x841 + x850 +
+         (-14000000.0 * sc[10] * x67 - 73400000.0 * sc[1] * x125 -
+          30000000.0 * sc[2] * x125 - 15000000.0 * sc[2] * x67 -
+          40000000.0 * sc[3] * x67 - 50000000.0 * sc[4] * x125 -
+          26480000.0 * sc[7] * x125 - x125 * x440 - x125 * x446 - x125 * x495) *
+           (-x340 + x381);
   J[23] =
-    -refCinv * sc[9] * x1250 + sc[10] * x1267 - 14000000.0 * sc[10] * x345 +
-    14000000.0 * sc[10] * x413 + 30000000.0 * sc[2] * x381 -
-    40000000.0 * sc[3] * x345 + 40000000.0 * sc[3] * x413 +
-    50000000.0 * sc[4] * x381 + 26480000.0 * sc[7] * x381 + x1296 + x2240 +
-    x381 * x497 + x901 +
-    (-14000000.0 * sc[10] * x68 - 73400000.0 * sc[1] * x124 -
-     30000000.0 * sc[2] * x124 - 15000000.0 * sc[2] * x68 -
-     40000000.0 * sc[3] * x68 - 50000000.0 * sc[4] * x124 -
-     26480000.0 * sc[7] * x124 - x124 * x183 - x124 * x460 - x124 * x497) *
-      (x128 - x400);
+    -refCinv * sc[9] * x1255 + sc[10] * x1272 - 14000000.0 * sc[10] * x221 +
+    14000000.0 * sc[10] * x408 + 30000000.0 * sc[2] * x210 -
+    40000000.0 * sc[3] * x221 + 40000000.0 * sc[3] * x408 +
+    50000000.0 * sc[4] * x210 + 26480000.0 * sc[7] * x210 + x1301 +
+    x210 * x495 + x2246 + x901 +
+    (-14000000.0 * sc[10] * x67 - 73400000.0 * sc[1] * x125 -
+     30000000.0 * sc[2] * x125 - 15000000.0 * sc[2] * x67 -
+     40000000.0 * sc[3] * x67 - 50000000.0 * sc[4] * x125 -
+     26480000.0 * sc[7] * x125 - x125 * x440 - x125 * x446 - x125 * x495) *
+      (x132 - x396);
   J[37] =
-    sc[10] * x10 - 14000000.0 * sc[10] * x134 + 14000000.0 * sc[10] * x347 +
-    73400000.0 * sc[1] * x72 - 15000000.0 * sc[2] * x134 +
-    15000000.0 * sc[2] * x347 - 40000000.0 * sc[3] * x134 +
-    40000000.0 * sc[3] * x347 + 50000000.0 * sc[4] * x72 +
-    26480000.0 * sc[7] * x72 - sc[9] * x1712 * x468 + x1369 + x183 * x72 +
-    x2240 + x460 * x72 + x497 * x72 + 15000000.0 * x50 +
-    (-14000000.0 * sc[10] * x68 - 73400000.0 * sc[1] * x124 -
-     30000000.0 * sc[2] * x124 - 15000000.0 * sc[2] * x68 -
-     40000000.0 * sc[3] * x68 - 50000000.0 * sc[4] * x124 -
-     26480000.0 * sc[7] * x124 - x124 * x183 - x124 * x460 - x124 * x497) *
-      (-x420 + x428);
+    sc[10] * x1244 - 14000000.0 * sc[10] * x283 + 14000000.0 * sc[10] * x322 +
+    73400000.0 * sc[1] * x277 - 15000000.0 * sc[2] * x283 +
+    15000000.0 * sc[2] * x322 - 40000000.0 * sc[3] * x283 +
+    40000000.0 * sc[3] * x322 + 50000000.0 * sc[4] * x277 +
+    26480000.0 * sc[7] * x277 - sc[9] * x17 * x1716 + x1374 + x2246 +
+    x277 * x440 + x277 * x446 + x277 * x495 + 15000000.0 * x51 +
+    (-14000000.0 * sc[10] * x67 - 73400000.0 * sc[1] * x125 -
+     30000000.0 * sc[2] * x125 - 15000000.0 * sc[2] * x67 -
+     40000000.0 * sc[3] * x67 - 50000000.0 * sc[4] * x125 -
+     26480000.0 * sc[7] * x125 - x125 * x440 - x125 * x446 - x125 * x495) *
+      (x168 - x417);
   J[51] =
-    14000000.0 * sc[10] * x351 - 14000000.0 * sc[10] * x352 +
-    73400000.0 * sc[1] * x392 + 15000000.0 * sc[2] * x351 -
-    15000000.0 * sc[2] * x352 + 30000000.0 * sc[2] * x392 +
-    40000000.0 * sc[3] * x351 - 40000000.0 * sc[3] * x352 +
-    50000000.0 * sc[4] * x392 + 26480000.0 * sc[7] * x392 - 3612.0 * x1238 +
-    x1344 + 3612.0 * x17 - x1730 + x183 * x392 +
-    7600000.0 * x379 * exp(-201.28666632188799 * invT) + x392 * x460 +
-    x392 * x497 + 40000000.0 * x50 + x894 +
-    (-14000000.0 * sc[10] * x68 - 73400000.0 * sc[1] * x124 -
-     30000000.0 * sc[2] * x124 - 15000000.0 * sc[2] * x68 -
-     40000000.0 * sc[3] * x68 - 50000000.0 * sc[4] * x124 -
-     26480000.0 * sc[7] * x124 - x124 * x183 - x124 * x460 - x124 * x497) *
-      (-x434 + x439);
+    -14000000.0 * sc[10] * x339 + 14000000.0 * sc[10] * x341 +
+    73400000.0 * sc[1] * x374 - 15000000.0 * sc[2] * x339 +
+    15000000.0 * sc[2] * x341 + 30000000.0 * sc[2] * x374 -
+    40000000.0 * sc[3] * x339 + 40000000.0 * sc[3] * x341 +
+    50000000.0 * sc[4] * x374 + 26480000.0 * sc[7] * x374 + x1349 - x1736 +
+    3612.0 * x184 + x374 * x440 + x374 * x446 + x374 * x495 +
+    7600000.0 * x392 * exp(-201.28781339950632 * invT) - 3612.0 * x456 +
+    40000000.0 * x51 + x894 +
+    (-14000000.0 * sc[10] * x67 - 73400000.0 * sc[1] * x125 -
+     30000000.0 * sc[2] * x125 - 15000000.0 * sc[2] * x67 -
+     40000000.0 * sc[3] * x67 - 50000000.0 * sc[4] * x125 -
+     26480000.0 * sc[7] * x125 - x125 * x440 - x125 * x446 - x125 * x495) *
+      (-x431 + x436);
   J[65] =
-    sc[10] * x2017 - 14000000.0 * sc[10] * x356 + 14000000.0 * sc[10] * x84 +
-    73400000.0 * sc[1] * x393 - 15000000.0 * sc[2] * x356 +
-    30000000.0 * sc[2] * x393 + 15000000.0 * sc[2] * x84 -
-    40000000.0 * sc[3] * x356 + 40000000.0 * sc[3] * x84 +
-    50000000.0 * sc[4] * x393 + 26480000.0 * sc[7] * x393 -
-    30000000.0 * sc[9] * x295 - x1407 + x183 * x393 + x2240 -
-    28000000.0 * x270 * x271 - 50000000.0 * x299 - 50000000.0 * x322 +
-    x393 * x460 + x393 * x497 +
-    (-14000000.0 * sc[10] * x68 - 73400000.0 * sc[1] * x124 -
-     30000000.0 * sc[2] * x124 - 15000000.0 * sc[2] * x68 -
-     40000000.0 * sc[3] * x68 - 50000000.0 * sc[4] * x124 -
-     26480000.0 * sc[7] * x124 - x124 * x183 - x124 * x460 - x124 * x497) *
-      (x103 - x445);
+    -14000000.0 * sc[10] * x147 + sc[10] * x2023 + 14000000.0 * sc[10] * x344 +
+    73400000.0 * sc[1] * x376 - 15000000.0 * sc[2] * x147 +
+    15000000.0 * sc[2] * x344 + 30000000.0 * sc[2] * x376 -
+    40000000.0 * sc[3] * x147 + 40000000.0 * sc[3] * x344 +
+    50000000.0 * sc[4] * x376 + 26480000.0 * sc[7] * x376 -
+    30000000.0 * sc[9] * x308 - x1414 + x2246 - 28000000.0 * x265 * x266 -
+    50000000.0 * x316 + x376 * x440 + x376 * x446 + x376 * x495 -
+    50000000.0 * x58 +
+    (-14000000.0 * sc[10] * x67 - 73400000.0 * sc[1] * x125 -
+     30000000.0 * sc[2] * x125 - 15000000.0 * sc[2] * x67 -
+     40000000.0 * sc[3] * x67 - 50000000.0 * sc[4] * x125 -
+     26480000.0 * sc[7] * x125 - x125 * x440 - x125 * x446 - x125 * x495) *
+      (-x441 + x79);
   J[79] =
-    -14000000.0 * sc[10] * x167 + 14000000.0 * sc[10] * x361 -
-    40000000.0 * sc[3] * x167 + 40000000.0 * sc[3] * x361 +
-    50000000.0 * sc[4] * x399 + 26480000.0 * sc[7] * x399 -
-    12000000.0 * sc[9] * x253 - 50000000.0 * sc[9] * x287 - 3612.0 * x1238 +
-    x1472 + 3612.0 * x17 + x399 * x497 + x963 +
-    (-14000000.0 * sc[10] * x68 - 73400000.0 * sc[1] * x124 -
-     30000000.0 * sc[2] * x124 - 15000000.0 * sc[2] * x68 -
-     40000000.0 * sc[3] * x68 - 50000000.0 * sc[4] * x124 -
-     26480000.0 * sc[7] * x124 - x124 * x183 - x124 * x460 - x124 * x497) *
-      (x457 - x466);
+    14000000.0 * sc[10] * x105 - 14000000.0 * sc[10] * x348 +
+    40000000.0 * sc[3] * x105 - 40000000.0 * sc[3] * x348 +
+    50000000.0 * sc[4] * x379 + 26480000.0 * sc[7] * x379 -
+    12000000.0 * sc[9] * x248 - 50000000.0 * sc[9] * x305 + x1478 +
+    3612.0 * x184 + x379 * x495 - 3612.0 * x456 + x963 +
+    (-14000000.0 * sc[10] * x67 - 73400000.0 * sc[1] * x125 -
+     30000000.0 * sc[2] * x125 - 15000000.0 * sc[2] * x67 -
+     40000000.0 * sc[3] * x67 - 50000000.0 * sc[4] * x125 -
+     26480000.0 * sc[7] * x125 - x125 * x440 - x125 * x446 - x125 * x495) *
+      (x138 - x462);
   J[93] =
-    14000000.0 * sc[10] * x483 + 73400000.0 * sc[1] * x304 +
-    30000000.0 * sc[2] * x304 + 15000000.0 * sc[2] * x483 +
-    40000000.0 * sc[3] * x483 + 50000000.0 * sc[4] * x304 +
-    26480000.0 * sc[7] * x304 - sc[9] * x2059 - sc[9] * x286 + x183 * x304 +
-    x2258 + x2260 + x304 * x460 + x304 * x497 +
-    (-14000000.0 * sc[10] * x68 - 73400000.0 * sc[1] * x124 -
-     30000000.0 * sc[2] * x124 - 15000000.0 * sc[2] * x68 -
-     40000000.0 * sc[3] * x68 - 50000000.0 * sc[4] * x124 -
-     26480000.0 * sc[7] * x124 - x124 * x183 - x124 * x460 - x124 * x497) *
-      (-x477 + x486);
+    14000000.0 * sc[10] * x480 + 73400000.0 * sc[1] * x286 +
+    30000000.0 * sc[2] * x286 + 15000000.0 * sc[2] * x480 +
+    40000000.0 * sc[3] * x480 + 50000000.0 * sc[4] * x286 +
+    26480000.0 * sc[7] * x286 - sc[9] * x2065 - sc[9] * x281 + x2264 + x2265 +
+    x286 * x440 + x286 * x446 + x286 * x495 +
+    (-14000000.0 * sc[10] * x67 - 73400000.0 * sc[1] * x125 -
+     30000000.0 * sc[2] * x125 - 15000000.0 * sc[2] * x67 -
+     40000000.0 * sc[3] * x67 - 50000000.0 * sc[4] * x125 -
+     26480000.0 * sc[7] * x125 - x125 * x440 - x125 * x446 - x125 * x495) *
+      (-x474 + x483);
   J[107] =
-    14000000.0 * sc[10] * x494 + 73400000.0 * sc[1] * x402 +
-    30000000.0 * sc[2] * x402 + 15000000.0 * sc[2] * x494 +
-    40000000.0 * sc[3] * x494 + 50000000.0 * sc[4] * x402 +
-    2244000000000.0 * sc[5] * x402 * x450 + 26480000.0 * sc[7] * x402 + x2258 +
-    x2260 - 26480000.0 * x299 - 26480000.0 * x322 +
-    187000000000.0 * x402 * x450 * x6 + x402 * x497 +
-    (-14000000.0 * sc[10] * x68 - 73400000.0 * sc[1] * x124 -
-     30000000.0 * sc[2] * x124 - 15000000.0 * sc[2] * x68 -
-     40000000.0 * sc[3] * x68 - 50000000.0 * sc[4] * x124 -
-     26480000.0 * sc[7] * x124 - x124 * x183 - x124 * x460 - x124 * x497) *
-      (x339 - x489);
+    14000000.0 * sc[10] * x490 + 73400000.0 * sc[1] * x384 +
+    30000000.0 * sc[2] * x384 + 15000000.0 * sc[2] * x490 +
+    40000000.0 * sc[3] * x490 + 50000000.0 * sc[4] * x384 +
+    26480000.0 * sc[7] * x384 + x2264 + x2265 - 26480000.0 * x316 +
+    x384 * x440 + x384 * x446 + x384 * x495 - 26480000.0 * x58 +
+    (-14000000.0 * sc[10] * x67 - 73400000.0 * sc[1] * x125 -
+     30000000.0 * sc[2] * x125 - 15000000.0 * sc[2] * x67 -
+     40000000.0 * sc[3] * x67 - 50000000.0 * sc[4] * x125 -
+     26480000.0 * sc[7] * x125 - x125 * x440 - x125 * x446 - x125 * x495) *
+      (x333 - x486);
   J[121] =
-    14000000.0 * sc[10] * x371 - 14000000.0 * sc[10] * x373 +
-    73400000.0 * sc[1] * x81 + 15000000.0 * sc[2] * x371 -
-    15000000.0 * sc[2] * x373 + 30000000.0 * sc[2] * x81 +
-    40000000.0 * sc[3] * x371 - 40000000.0 * sc[3] * x373 +
-    50000000.0 * sc[4] * x81 + 26480000.0 * sc[7] * x81 -
-    26480000.0 * sc[9] * x311 + x1160 - 1204.0 * x1238 + 1204.0 * x17 +
-    x183 * x81 + x460 * x81 + x497 * x81 + x845 +
-    (-14000000.0 * sc[10] * x68 - 73400000.0 * sc[1] * x124 -
-     30000000.0 * sc[2] * x124 - 15000000.0 * sc[2] * x68 -
-     40000000.0 * sc[3] * x68 - 50000000.0 * sc[4] * x124 -
-     26480000.0 * sc[7] * x124 - x124 * x183 - x124 * x460 - x124 * x497) *
-      (-x500 + x506);
+    14000000.0 * sc[10] * x25 - 14000000.0 * sc[10] * x360 +
+    73400000.0 * sc[1] * x93 + 15000000.0 * sc[2] * x25 -
+    15000000.0 * sc[2] * x360 + 30000000.0 * sc[2] * x93 +
+    40000000.0 * sc[3] * x25 - 40000000.0 * sc[3] * x360 +
+    50000000.0 * sc[4] * x93 + 26480000.0 * sc[7] * x93 -
+    26480000.0 * sc[9] * x302 + x1161 + 1204.0 * x184 + x440 * x93 +
+    x446 * x93 - 1204.0 * x456 + x495 * x93 + x841 +
+    (-14000000.0 * sc[10] * x67 - 73400000.0 * sc[1] * x125 -
+     30000000.0 * sc[2] * x125 - 15000000.0 * sc[2] * x67 -
+     40000000.0 * sc[3] * x67 - 50000000.0 * sc[4] * x125 -
+     26480000.0 * sc[7] * x125 - x125 * x440 - x125 * x446 - x125 * x495) *
+      (-x497 + x503);
   J[135] =
-    -14000000.0 * sc[10] * x210 + 14000000.0 * sc[10] * x378 -
-    14000000.0 * sc[11] * x274 - sc[2] * x1712 * x468 -
-    40000000.0 * sc[3] * x210 + 40000000.0 * sc[3] * x378 -
-    30000000.0 * sc[4] * x295 + 50000000.0 * sc[4] * x417 -
-    12000000.0 * sc[5] * x253 - 50000000.0 * sc[5] * x287 - sc[6] * x2059 -
-    sc[6] * x286 + 26480000.0 * sc[7] * x417 - 26480000.0 * sc[8] * x311 +
-    x1158 - 903.0 * x1238 - x1250 * x269 - x1565 + 903.0 * x17 - x1772 + x283 +
-    x417 * x497 +
-    (-14000000.0 * sc[10] * x68 - 73400000.0 * sc[1] * x124 -
-     30000000.0 * sc[2] * x124 - 15000000.0 * sc[2] * x68 -
-     40000000.0 * sc[3] * x68 - 50000000.0 * sc[4] * x124 -
-     26480000.0 * sc[7] * x124 - x124 * x183 - x124 * x460 - x124 * x497) *
-      (x139 - x179);
+    -14000000.0 * sc[10] * x369 + 14000000.0 * sc[10] * x371 -
+    14000000.0 * sc[11] * x269 - sc[2] * x17 * x1716 -
+    40000000.0 * sc[3] * x369 + 40000000.0 * sc[3] * x371 -
+    30000000.0 * sc[4] * x308 + 50000000.0 * sc[4] * x395 -
+    12000000.0 * sc[5] * x248 - 50000000.0 * sc[5] * x305 - sc[6] * x2065 -
+    sc[6] * x281 + 26480000.0 * sc[7] * x395 - 26480000.0 * sc[8] * x302 -
+    x1255 * x264 - x1571 - x1778 + 903.0 * x184 + x395 * x495 - 903.0 * x456 +
+    x6 + x805 +
+    (-14000000.0 * sc[10] * x67 - 73400000.0 * sc[1] * x125 -
+     30000000.0 * sc[2] * x125 - 15000000.0 * sc[2] * x67 -
+     40000000.0 * sc[3] * x67 - 50000000.0 * sc[4] * x125 -
+     26480000.0 * sc[7] * x125 - x125 * x440 - x125 * x446 - x125 * x495) *
+      (x143 - x156);
   J[149] =
-    refC * x1230 * x1712 - 14000000.0 * sc[10] * x214 +
-    14000000.0 * sc[10] * x52 + sc[1] * x1267 + 73400000.0 * sc[1] * x185 +
-    sc[2] * x10 + 30000000.0 * sc[2] * x185 - 15000000.0 * sc[2] * x214 +
-    15000000.0 * sc[2] * x52 - 40000000.0 * sc[3] * x214 +
-    40000000.0 * sc[3] * x52 + 50000000.0 * sc[4] * x185 + sc[4] * x2017 +
-    26480000.0 * sc[7] * x185 + x1160 - 2107.0 * x1238 + 2107.0 * x17 +
-    x183 * x185 + x185 * x460 + x185 * x497 + 14000000.0 * x50 + x845 +
-    (-14000000.0 * sc[10] * x68 - 73400000.0 * sc[1] * x124 -
-     30000000.0 * sc[2] * x124 - 15000000.0 * sc[2] * x68 -
-     40000000.0 * sc[3] * x68 - 50000000.0 * sc[4] * x124 -
-     26480000.0 * sc[7] * x124 - x124 * x183 - x124 * x460 - x124 * x497) *
-      (-x161 + x195);
+    refC * x1230 * x1716 - 14000000.0 * sc[10] * x375 +
+    14000000.0 * sc[10] * x53 + sc[1] * x1272 + 73400000.0 * sc[1] * x185 +
+    sc[2] * x1244 + 30000000.0 * sc[2] * x185 - 15000000.0 * sc[2] * x375 +
+    15000000.0 * sc[2] * x53 - 40000000.0 * sc[3] * x375 +
+    40000000.0 * sc[3] * x53 + 50000000.0 * sc[4] * x185 + sc[4] * x2023 +
+    26480000.0 * sc[7] * x185 + x1161 + 2107.0 * x184 + x185 * x440 +
+    x185 * x446 + x185 * x495 - 2107.0 * x456 + 14000000.0 * x51 + x841 +
+    (-14000000.0 * sc[10] * x67 - 73400000.0 * sc[1] * x125 -
+     30000000.0 * sc[2] * x125 - 15000000.0 * sc[2] * x67 -
+     40000000.0 * sc[3] * x67 - 50000000.0 * sc[4] * x125 -
+     26480000.0 * sc[7] * x125 - x125 * x440 - x125 * x446 - x125 * x495) *
+      (-x157 + x162);
   J[163] =
-    14000000.0 * sc[10] * x202 + 73400000.0 * sc[1] * x359 +
-    15000000.0 * sc[2] * x202 + 30000000.0 * sc[2] * x359 +
-    40000000.0 * sc[3] * x202 + 50000000.0 * sc[4] * x359 +
-    2244000000000.0 * sc[5] * x359 * x450 + 26480000.0 * sc[7] * x359 -
-    14000000.0 * sc[9] * x274 + 5070000000000000.0 * x204 * x342 * x815 +
-    x2258 + x2260 + 187000000000.0 * x359 * x450 * x6 + x359 * x497 +
-    (-14000000.0 * sc[10] * x68 - 73400000.0 * sc[1] * x124 -
-     30000000.0 * sc[2] * x124 - 15000000.0 * sc[2] * x68 -
-     40000000.0 * sc[3] * x68 - 50000000.0 * sc[4] * x124 -
-     26480000.0 * sc[7] * x124 - x124 * x183 - x124 * x460 - x124 * x497) *
-      (-x197 + x205);
+    14000000.0 * sc[10] * x20 + 30000000.0 * sc[2] * x355 +
+    40000000.0 * sc[3] * x20 + 50000000.0 * sc[4] * x355 +
+    26480000.0 * sc[7] * x355 - 14000000.0 * sc[9] * x269 + x2264 + x2265 +
+    x355 * x440 + x355 * x446 + x355 * x495 + x810 +
+    (-14000000.0 * sc[10] * x67 - 73400000.0 * sc[1] * x125 -
+     30000000.0 * sc[2] * x125 - 15000000.0 * sc[2] * x67 -
+     40000000.0 * sc[3] * x67 - 50000000.0 * sc[4] * x125 -
+     26480000.0 * sc[7] * x125 - x125 * x440 - x125 * x446 - x125 * x495) *
+      (-x181 + x197);
   J[177] =
-    -14000000.0 * sc[10] * x282 + 14000000.0 * sc[10] * x57 +
-    73400000.0 * sc[1] * x119 + 30000000.0 * sc[2] * x119 -
-    15000000.0 * sc[2] * x282 + 15000000.0 * sc[2] * x57 -
-    40000000.0 * sc[3] * x282 + 40000000.0 * sc[3] * x57 +
-    50000000.0 * sc[4] * x119 + 26480000.0 * sc[7] * x119 + x119 * x183 +
-    x119 * x460 + x119 * x497 + x2240 +
-    (-14000000.0 * sc[10] * x68 - 73400000.0 * sc[1] * x124 -
-     30000000.0 * sc[2] * x124 - 15000000.0 * sc[2] * x68 -
-     40000000.0 * sc[3] * x68 - 50000000.0 * sc[4] * x124 -
-     26480000.0 * sc[7] * x124 - x124 * x183 - x124 * x460 - x124 * x497) *
-      (-x169 + x191);
+    -14000000.0 * sc[10] * x206 + 14000000.0 * sc[10] * x54 +
+    73400000.0 * sc[1] * x120 + 30000000.0 * sc[2] * x120 -
+    15000000.0 * sc[2] * x206 + 15000000.0 * sc[2] * x54 -
+    40000000.0 * sc[3] * x206 + 40000000.0 * sc[3] * x54 +
+    50000000.0 * sc[4] * x120 + 26480000.0 * sc[7] * x120 + x120 * x440 +
+    x120 * x446 + x120 * x495 + x2246 +
+    (-14000000.0 * sc[10] * x67 - 73400000.0 * sc[1] * x125 -
+     30000000.0 * sc[2] * x125 - 15000000.0 * sc[2] * x67 -
+     40000000.0 * sc[3] * x67 - 50000000.0 * sc[4] * x125 -
+     26480000.0 * sc[7] * x125 - x125 * x440 - x125 * x446 - x125 * x495) *
+      (-x170 + x191);
   J[10] =
-    -14000000.0 * sc[10] * x222 + 14000000.0 * sc[10] * x327 +
-    30000000.0 * sc[2] * x186 + 1204.0 * x1238 - 1204.0 * x17 +
-    (14000000.0 * sc[10] * x68 - 30000000.0 * sc[2] * x124) * (-x346 + x383);
+    14000000.0 * sc[10] * x213 - 14000000.0 * sc[10] * x219 +
+    30000000.0 * sc[2] * x186 - 1204.0 * x184 + 1204.0 * x456 +
+    (14000000.0 * sc[10] * x67 - 30000000.0 * sc[2] * x125) * (-x340 + x381);
   J[24] =
-    -sc[10] * x1267 - 30000000.0 * sc[10] * x308 + 14000000.0 * sc[10] * x345 -
-    14000000.0 * sc[10] * x413 + 30000000.0 * sc[2] * x381 + x2281 +
-    (14000000.0 * sc[10] * x68 - 30000000.0 * sc[2] * x124) * (x128 - x400);
+    -sc[10] * x1272 + 14000000.0 * sc[10] * x221 - 30000000.0 * sc[10] * x299 -
+    14000000.0 * sc[10] * x408 + 30000000.0 * sc[2] * x210 + x2286 +
+    (14000000.0 * sc[10] * x67 - 30000000.0 * sc[2] * x125) * (x132 - x396);
   J[38] =
-    -sc[10] * x10 + 14000000.0 * sc[10] * x134 - 14000000.0 * sc[10] * x347 +
-    sc[9] * x1712 * x468 + x1369 + x2281 +
-    (14000000.0 * sc[10] * x68 - 30000000.0 * sc[2] * x124) * (-x420 + x428);
+    -sc[10] * x1244 + 14000000.0 * sc[10] * x283 - 14000000.0 * sc[10] * x322 +
+    sc[9] * x17 * x1716 + x1374 + x2286 +
+    (14000000.0 * sc[10] * x67 - 30000000.0 * sc[2] * x125) * (x168 - x417);
   J[52] =
-    -14000000.0 * sc[10] * x351 + 14000000.0 * sc[10] * x352 +
-    30000000.0 * sc[2] * x392 + 3612.0 * x1238 - 3612.0 * x17 + x1730 +
-    (14000000.0 * sc[10] * x68 - 30000000.0 * sc[2] * x124) * (-x434 + x439);
+    14000000.0 * sc[10] * x339 - 14000000.0 * sc[10] * x341 +
+    30000000.0 * sc[2] * x374 + x1736 - 3612.0 * x184 + 3612.0 * x456 +
+    (14000000.0 * sc[10] * x67 - 30000000.0 * sc[2] * x125) * (-x431 + x436);
   J[66] =
-    -sc[10] * x2017 + 14000000.0 * sc[10] * x356 - 14000000.0 * sc[10] * x84 +
-    30000000.0 * sc[2] * x393 + x1407 + x2281 +
-    (14000000.0 * sc[10] * x68 - 30000000.0 * sc[2] * x124) * (x103 - x445);
+    14000000.0 * sc[10] * x147 - sc[10] * x2023 - 14000000.0 * sc[10] * x344 +
+    30000000.0 * sc[2] * x376 + x1414 + x2286 +
+    (14000000.0 * sc[10] * x67 - 30000000.0 * sc[2] * x125) * (-x441 + x79);
   J[80] =
-    14000000.0 * sc[10] * x167 - 14000000.0 * sc[10] * x361 +
-    30000000.0 * sc[2] * x399 + 3612.0 * x1238 - 3612.0 * x17 +
-    (14000000.0 * sc[10] * x68 - 30000000.0 * sc[2] * x124) * (x457 - x466);
+    -14000000.0 * sc[10] * x105 + 14000000.0 * sc[10] * x348 +
+    30000000.0 * sc[2] * x379 - 3612.0 * x184 + 3612.0 * x456 +
+    (14000000.0 * sc[10] * x67 - 30000000.0 * sc[2] * x125) * (x138 - x462);
   J[94] =
-    14000000.0 * sc[10] * x25 - 14000000.0 * sc[10] * x483 +
-    30000000.0 * sc[2] * x304 + sc[9] * x2059 + x2281 +
-    (14000000.0 * sc[10] * x68 - 30000000.0 * sc[2] * x124) * (-x477 + x486);
+    14000000.0 * sc[10] * x351 - 14000000.0 * sc[10] * x480 +
+    30000000.0 * sc[2] * x286 + sc[9] * x2065 + x2286 +
+    (14000000.0 * sc[10] * x67 - 30000000.0 * sc[2] * x125) * (-x474 + x483);
   J[108] =
-    14000000.0 * sc[10] * x25 - 14000000.0 * sc[10] * x494 +
-    30000000.0 * sc[2] * x402 + x2281 +
-    (14000000.0 * sc[10] * x68 - 30000000.0 * sc[2] * x124) * (x339 - x489);
+    14000000.0 * sc[10] * x351 - 14000000.0 * sc[10] * x490 +
+    30000000.0 * sc[2] * x384 + x2286 +
+    (14000000.0 * sc[10] * x67 - 30000000.0 * sc[2] * x125) * (x333 - x486);
   J[122] =
-    -14000000.0 * sc[10] * x371 + 14000000.0 * sc[10] * x373 +
-    30000000.0 * sc[2] * x81 + 1204.0 * x1238 - 1204.0 * x17 +
-    (14000000.0 * sc[10] * x68 - 30000000.0 * sc[2] * x124) * (-x500 + x506);
+    -14000000.0 * sc[10] * x25 + 14000000.0 * sc[10] * x360 +
+    30000000.0 * sc[2] * x93 - 1204.0 * x184 + 1204.0 * x456 +
+    (14000000.0 * sc[10] * x67 - 30000000.0 * sc[2] * x125) * (-x497 + x503);
   J[136] =
-    14000000.0 * sc[10] * x210 - 14000000.0 * sc[10] * x378 +
-    14000000.0 * sc[11] * x274 + sc[2] * x1712 * x468 +
-    30000000.0 * sc[2] * x417 + sc[6] * x2059 + 903.0 * x1238 + x1565 -
-    903.0 * x17 + x1772 +
-    (14000000.0 * sc[10] * x68 - 30000000.0 * sc[2] * x124) * (x139 - x179);
+    14000000.0 * sc[10] * x369 - 14000000.0 * sc[10] * x371 +
+    14000000.0 * sc[11] * x269 + sc[2] * x17 * x1716 +
+    30000000.0 * sc[2] * x395 + sc[6] * x2065 + x1571 + x1778 - 903.0 * x184 +
+    903.0 * x456 +
+    (14000000.0 * sc[10] * x67 - 30000000.0 * sc[2] * x125) * (x143 - x156);
   J[150] =
-    -refC * x1230 * x1712 + 14000000.0 * sc[10] * x214 -
-    14000000.0 * sc[10] * x52 - sc[1] * x1267 - 30000000.0 * sc[1] * x308 -
-    sc[2] * x10 + 30000000.0 * sc[2] * x185 - sc[4] * x2017 + 2107.0 * x1238 -
-    2107.0 * x17 - 14000000.0 * x50 +
-    (14000000.0 * sc[10] * x68 - 30000000.0 * sc[2] * x124) * (-x161 + x195);
+    -refC * x1230 * x1716 + 14000000.0 * sc[10] * x375 -
+    14000000.0 * sc[10] * x53 - sc[1] * x1272 - 30000000.0 * sc[1] * x299 -
+    sc[2] * x1244 + 30000000.0 * sc[2] * x185 - sc[4] * x2023 - 2107.0 * x184 +
+    2107.0 * x456 - 14000000.0 * x51 +
+    (14000000.0 * sc[10] * x67 - 30000000.0 * sc[2] * x125) * (-x157 + x162);
   J[164] =
-    -14000000.0 * sc[10] * x202 + 14000000.0 * sc[10] * x25 +
-    30000000.0 * sc[2] * x359 + 14000000.0 * sc[9] * x274 + x2281 +
-    (14000000.0 * sc[10] * x68 - 30000000.0 * sc[2] * x124) * (-x197 + x205);
+    -14000000.0 * sc[10] * x20 + 14000000.0 * sc[10] * x351 +
+    30000000.0 * sc[2] * x355 + 14000000.0 * sc[9] * x269 + x2286 +
+    (14000000.0 * sc[10] * x67 - 30000000.0 * sc[2] * x125) * (-x181 + x197);
   J[178] =
-    14000000.0 * sc[10] * x282 - 14000000.0 * sc[10] * x57 +
-    30000000.0 * sc[2] * x119 + x2281 +
-    (14000000.0 * sc[10] * x68 - 30000000.0 * sc[2] * x124) * (-x169 + x191);
+    14000000.0 * sc[10] * x206 - 14000000.0 * sc[10] * x54 +
+    30000000.0 * sc[2] * x120 + x2286 +
+    (14000000.0 * sc[10] * x67 - 30000000.0 * sc[2] * x125) * (-x170 + x191);
   J[11] =
-    14000000.0 * sc[10] * x222 - 14000000.0 * sc[10] * x327 -
-    20000000.0 * sc[11] * x234 + 20000000.0 * sc[1] * x321 +
-    10000000.0 * sc[2] * x321 + 5000000.0 * sc[4] * x321 -
-    20000000.0 * sc[6] * x346 + 20000000.0 * sc[6] * x383 +
-    sc[9] * x839 * exp(x382) + x1243 + x143 * x186 + x155 * x186 + x156 * x186 +
-    x174 * x321 + x186 * x443 + x186 * x476 + x827 +
-    (-14000000.0 * sc[10] * x68 - 30000000.0 * sc[4] * x68 - x124 * x143 -
-     x124 * x155 - x124 * x156 - x124 * x375 - x124 * x443 - x124 * x476) *
-      (-x346 + x383) +
-    (-20000000.0 * sc[1] * x41 - 10000000.0 * sc[2] * x41 -
-     5000000.0 * sc[4] * x41 - x174 * x41 - x41 * x472) *
-      (x222 - x327 + (-x68) * (-x346 + x383));
+    -14000000.0 * sc[10] * x213 + 14000000.0 * sc[10] * x219 -
+    20000000.0 * sc[11] * x230 + 20000000.0 * sc[1] * x315 +
+    10000000.0 * sc[2] * x315 + 5000000.0 * sc[4] * x315 -
+    20000000.0 * sc[6] * x340 + 20000000.0 * sc[6] * x381 +
+    5070000000000001.0 * sc[9] * x7 * x816 * exp(x819) + x1248 + x141 * x186 +
+    x145 * x186 + x175 * x186 + x179 * x186 + x186 * x435 + x30 * x315 + x813 +
+    (-14000000.0 * sc[10] * x67 - 30000000.0 * sc[4] * x67 - x125 * x141 -
+     x125 * x145 - x125 * x175 - x125 * x179 - x125 * x372 - x125 * x435) *
+      (-x340 + x381) +
+    (-20000000.0 * sc[1] * x42 - 10000000.0 * sc[2] * x42 -
+     5000000.0 * sc[4] * x42 - x102 * x42 - x30 * x42) *
+      (-x213 + x219 + (-x67) * (-x340 + x381));
   J[25] =
-    -14000000.0 * sc[10] * x345 + 14000000.0 * sc[10] * x413 +
+    -14000000.0 * sc[10] * x221 + 14000000.0 * sc[10] * x408 +
     20000000.0 * sc[1] * x15 + 10000000.0 * sc[2] * x15 +
-    5000000.0 * sc[4] * x15 + 20000000.0 * sc[6] * x128 -
-    20000000.0 * sc[6] * x400 + x1315 + x1325 + x143 * x381 + x15 * x174 +
-    x155 * x381 + x156 * x381 - 20000000.0 * x249 +
-    1350000000000.0 * x379 * x438 * x7 * exp(x427) + x381 * x443 + x381 * x476 +
-    x890 - 20000000.0 * x902 +
-    (-14000000.0 * sc[10] * x68 - 30000000.0 * sc[4] * x68 - x124 * x143 -
-     x124 * x155 - x124 * x156 - x124 * x375 - x124 * x443 - x124 * x476) *
-      (x128 - x400) +
-    (-20000000.0 * sc[1] * x41 - 10000000.0 * sc[2] * x41 -
-     5000000.0 * sc[4] * x41 - x174 * x41 - x41 * x472) *
-      (-x345 + x413 + (-x68) * (x128 - x400));
+    5000000.0 * sc[4] * x15 + 20000000.0 * sc[6] * x132 -
+    20000000.0 * sc[6] * x396 + x10 + x1317 + x141 * x210 + x145 * x210 +
+    x15 * x30 + x175 * x210 + x179 * x210 + x210 * x435 - 20000000.0 * x245 +
+    x392 * x430 + x888 - 20000000.0 * x902 +
+    (-14000000.0 * sc[10] * x67 - 30000000.0 * sc[4] * x67 - x125 * x141 -
+     x125 * x145 - x125 * x175 - x125 * x179 - x125 * x372 - x125 * x435) *
+      (x132 - x396) +
+    (-20000000.0 * sc[1] * x42 - 10000000.0 * sc[2] * x42 -
+     5000000.0 * sc[4] * x42 - x102 * x42 - x30 * x42) *
+      (-x221 + x408 + (-x67) * (x132 - x396));
   J[39] =
-    -14000000.0 * sc[10] * x134 + 14000000.0 * sc[10] * x347 - sc[11] * x1725 +
-    20000000.0 * sc[1] * x28 + 5000000.0 * sc[4] * x28 + x1325 + x1378 +
-    x155 * x72 + x156 * x72 + x174 * x28 + x1992 + x443 * x72 + x476 * x72 +
-    x890 +
-    (-14000000.0 * sc[10] * x68 - 30000000.0 * sc[4] * x68 - x124 * x143 -
-     x124 * x155 - x124 * x156 - x124 * x375 - x124 * x443 - x124 * x476) *
-      (-x420 + x428) +
-    (-20000000.0 * sc[1] * x41 - 10000000.0 * sc[2] * x41 -
-     5000000.0 * sc[4] * x41 - x174 * x41 - x41 * x472) *
-      (-x134 + x347 + (-x68) * (-x420 + x428));
+    -14000000.0 * sc[10] * x283 + 14000000.0 * sc[10] * x322 - sc[11] * x1732 +
+    20000000.0 * sc[1] * x28 + 5000000.0 * sc[4] * x28 + x10 + x1383 +
+    x141 * x277 + x145 * x277 + x179 * x277 + x1998 + x277 * x435 + x28 * x30 +
+    x888 +
+    (-14000000.0 * sc[10] * x67 - 30000000.0 * sc[4] * x67 - x125 * x141 -
+     x125 * x145 - x125 * x175 - x125 * x179 - x125 * x372 - x125 * x435) *
+      (x168 - x417) +
+    (-20000000.0 * sc[1] * x42 - 10000000.0 * sc[2] * x42 -
+     5000000.0 * sc[4] * x42 - x102 * x42 - x30 * x42) *
+      (-x283 + x322 + (-x67) * (x168 - x417));
   J[53] =
-    14000000.0 * sc[10] * x351 - 14000000.0 * sc[10] * x352 - sc[11] * x1847 +
-    20000000.0 * sc[1] * x389 + 5000000.0 * sc[4] * x389 +
-    18000000.0 * x11 * exp(-452.89499922424801 * invT) + x1325 + x1405 +
-    x155 * x392 + x156 * x392 + x174 * x389 + x2003 + x392 * x443 +
-    x392 * x476 + x890 +
-    (-14000000.0 * sc[10] * x68 - 30000000.0 * sc[4] * x68 - x124 * x143 -
-     x124 * x155 - x124 * x156 - x124 * x375 - x124 * x443 - x124 * x476) *
-      (-x434 + x439) +
-    (-20000000.0 * sc[1] * x41 - 10000000.0 * sc[2] * x41 -
-     5000000.0 * sc[4] * x41 - x174 * x41 - x41 * x472) *
-      (x351 - x352 + (-x68) * (-x434 + x439));
+    -14000000.0 * sc[10] * x339 + 14000000.0 * sc[10] * x341 - sc[11] * x1853 +
+    20000000.0 * sc[1] * x388 + 5000000.0 * sc[4] * x388 + x10 +
+    18000000.0 * x1225 * exp(-452.89758014888923 * invT) + x141 * x374 + x1412 +
+    x145 * x374 + x179 * x374 + x2009 + x30 * x388 + x374 * x435 + x888 +
+    (-14000000.0 * sc[10] * x67 - 30000000.0 * sc[4] * x67 - x125 * x141 -
+     x125 * x145 - x125 * x175 - x125 * x179 - x125 * x372 - x125 * x435) *
+      (-x431 + x436) +
+    (-20000000.0 * sc[1] * x42 - 10000000.0 * sc[2] * x42 -
+     5000000.0 * sc[4] * x42 - x102 * x42 - x30 * x42) *
+      (-x339 + x341 + (-x67) * (-x431 + x436));
   J[67] =
-    -14000000.0 * sc[10] * x356 + 14000000.0 * sc[10] * x84 +
-    20000000.0 * sc[1] * x397 + 5000000.0 * sc[4] * x397 + x1325 + x1434 +
-    x155 * x393 + x156 * x393 + x174 * x397 + x2035 - 5000000.0 * x249 +
-    x379 * x475 + x393 * x443 + x393 * x476 + x890 - 5000000.0 * x902 +
-    (-14000000.0 * sc[10] * x68 - 30000000.0 * sc[4] * x68 - x124 * x143 -
-     x124 * x155 - x124 * x156 - x124 * x375 - x124 * x443 - x124 * x476) *
-      (x103 - x445) +
-    (-20000000.0 * sc[1] * x41 - 10000000.0 * sc[2] * x41 -
-     5000000.0 * sc[4] * x41 - x174 * x41 - x41 * x472) *
-      (-x356 + x84 + (-x68) * (x103 - x445));
+    -14000000.0 * sc[10] * x147 + 14000000.0 * sc[10] * x344 +
+    20000000.0 * sc[1] * x393 + 5000000.0 * sc[4] * x393 + x10 + x141 * x376 +
+    x1441 + x145 * x376 + x179 * x376 + x2041 - 5000000.0 * x245 + x30 * x393 +
+    x376 * x435 + x392 * x467 + x888 - 5000000.0 * x902 +
+    (-14000000.0 * sc[10] * x67 - 30000000.0 * sc[4] * x67 - x125 * x141 -
+     x125 * x145 - x125 * x175 - x125 * x179 - x125 * x372 - x125 * x435) *
+      (-x441 + x79) +
+    (-20000000.0 * sc[1] * x42 - 10000000.0 * sc[2] * x42 -
+     5000000.0 * sc[4] * x42 - x102 * x42 - x30 * x42) *
+      (-x147 + x344 + (-x67) * (-x441 + x79));
   J[81] =
-    -14000000.0 * sc[10] * x167 + 14000000.0 * sc[10] * x361 -
-    5000000.0 * sc[11] * x228 + 20000000.0 * sc[1] * x78 +
-    5000000.0 * sc[4] * x78 + 8100000000000.0 * x1063 + x1089 * x1442 -
-    1.0032110091743101e+19 * x1105 * x70 - x1442 * x75 + x1492 + x155 * x399 +
-    x156 * x399 + x174 * x78 + x2055 - 3.042e+16 * x314 * x342 * x815 -
-    8100000000000.0 * x314 * x826 + 1.0032110091743101e+19 * x316 * x70 +
-    3.042e+16 * x342 * x837 + x399 * x443 + x399 * x476 +
-    3.5867302325581401e+30 * x54 * x822 - 3.5867302325581401e+30 * x54 * x843 +
-    x66 * x7 * x831 - x66 * x837 * x839 +
-    (-14000000.0 * sc[10] * x68 - 30000000.0 * sc[4] * x68 - x124 * x143 -
-     x124 * x155 - x124 * x156 - x124 * x375 - x124 * x443 - x124 * x476) *
-      (x457 - x466) +
-    (-20000000.0 * sc[1] * x41 - 10000000.0 * sc[2] * x41 -
-     5000000.0 * sc[4] * x41 - x174 * x41 - x41 * x472) *
-      (-x167 + x361 + (-x68) * (x457 - x466));
+    14000000.0 * sc[10] * x105 - 14000000.0 * sc[10] * x348 -
+    5000000.0 * sc[11] * x241 + 20000000.0 * sc[1] * x397 +
+    5000000.0 * sc[4] * x397 + 8100000000000.0 * x1057 +
+    1.0032110091743119e+19 * x1061 * x1062 -
+    1.0032110091743119e+19 * x1062 * x413 + x1107 * x1454 + x141 * x379 +
+    x145 * x379 - x1454 * x416 + x1498 + x179 * x379 + x2061 -
+    8100000000000.0 * x292 * x350 + x30 * x397 + x379 * x435 -
+    3.5867302325581406e+30 * x55 * x829 + 3.5867302325581406e+30 * x55 * x838 +
+    3.042000000000001e+16 * x65 * x816 + x812 * x959 -
+    3.042000000000001e+16 * x816 * x821 - x889 * x959 +
+    (-14000000.0 * sc[10] * x67 - 30000000.0 * sc[4] * x67 - x125 * x141 -
+     x125 * x145 - x125 * x175 - x125 * x179 - x125 * x372 - x125 * x435) *
+      (x138 - x462) +
+    (-20000000.0 * sc[1] * x42 - 10000000.0 * sc[2] * x42 -
+     5000000.0 * sc[4] * x42 - x102 * x42 - x30 * x42) *
+      (x105 - x348 + (-x67) * (x138 - x462));
   J[95] =
-    14000000.0 * sc[10] * x483 - sc[11] * x110 + 20000000.0 * sc[1] * x232 +
-    5000000.0 * sc[4] * x232 - 30000000.0 * sc[4] * x25 + x1325 + x1516 +
-    x155 * x304 + x156 * x304 + x174 * x232 + x2072 + x2258 + x30 * x379 +
-    x304 * x443 + x304 * x476 + x890 +
-    (-14000000.0 * sc[10] * x68 - 30000000.0 * sc[4] * x68 - x124 * x143 -
-     x124 * x155 - x124 * x156 - x124 * x375 - x124 * x443 - x124 * x476) *
-      (-x477 + x486) +
-    (-20000000.0 * sc[1] * x41 - 10000000.0 * sc[2] * x41 -
-     5000000.0 * sc[4] * x41 - x174 * x41 - x41 * x472) *
-      (-x25 + x483 + (-x68) * (-x477 + x486));
+    14000000.0 * sc[10] * x480 - sc[11] * x88 + 20000000.0 * sc[1] * x228 +
+    5000000.0 * sc[4] * x228 - 30000000.0 * sc[4] * x351 + x10 + x141 * x286 +
+    x145 * x286 + x1522 + x179 * x286 + x2078 + x2264 + x228 * x30 +
+    x286 * x435 + x392 * x501 + x888 +
+    (-14000000.0 * sc[10] * x67 - 30000000.0 * sc[4] * x67 - x125 * x141 -
+     x125 * x145 - x125 * x175 - x125 * x179 - x125 * x372 - x125 * x435) *
+      (-x474 + x483) +
+    (-20000000.0 * sc[1] * x42 - 10000000.0 * sc[2] * x42 -
+     5000000.0 * sc[4] * x42 - x102 * x42 - x30 * x42) *
+      (-x351 + x480 + (-x67) * (-x474 + x483));
   J[109] =
-    14000000.0 * sc[10] * x494 - sc[11] * x2204 + 20000000.0 * sc[1] * x419 -
-    30000000.0 * sc[4] * x25 + 5000000.0 * sc[4] * x419 + x1325 + x1539 +
-    x155 * x402 + x156 * x402 + x174 * x419 + x2080 + x2258 + x402 * x443 +
-    x402 * x476 + x890 +
-    (-14000000.0 * sc[10] * x68 - 30000000.0 * sc[4] * x68 - x124 * x143 -
-     x124 * x155 - x124 * x156 - x124 * x375 - x124 * x443 - x124 * x476) *
-      (x339 - x489) +
-    (-20000000.0 * sc[1] * x41 - 10000000.0 * sc[2] * x41 -
-     5000000.0 * sc[4] * x41 - x174 * x41 - x41 * x472) *
-      (-x25 + x494 + (-x68) * (x339 - x489));
+    14000000.0 * sc[10] * x490 - sc[11] * x2209 + 20000000.0 * sc[1] * x401 -
+    30000000.0 * sc[4] * x351 + 5000000.0 * sc[4] * x401 + x10 + x141 * x384 +
+    x145 * x384 + x1545 + x179 * x384 + x2086 + x2264 + x30 * x401 +
+    x384 * x435 + x888 +
+    (-14000000.0 * sc[10] * x67 - 30000000.0 * sc[4] * x67 - x125 * x141 -
+     x125 * x145 - x125 * x175 - x125 * x179 - x125 * x372 - x125 * x435) *
+      (x333 - x486) +
+    (-20000000.0 * sc[1] * x42 - 10000000.0 * sc[2] * x42 -
+     5000000.0 * sc[4] * x42 - x102 * x42 - x30 * x42) *
+      (-x351 + x490 + (-x67) * (x333 - x486));
   J[123] =
-    14000000.0 * sc[10] * x371 - 14000000.0 * sc[10] * x373 +
-    20000000.0 * sc[1] * x207 + 10000000.0 * sc[2] * x207 +
-    5000000.0 * sc[4] * x207 - 20000000.0 * sc[6] * x500 +
-    20000000.0 * sc[6] * x506 + x143 * x81 + x155 * x81 + x156 * x81 + x1561 +
-    x174 * x207 + x379 * x94 + x443 * x81 + x476 * x81 + x827 +
-    (-14000000.0 * sc[10] * x68 - 30000000.0 * sc[4] * x68 - x124 * x143 -
-     x124 * x155 - x124 * x156 - x124 * x375 - x124 * x443 - x124 * x476) *
-      (-x500 + x506) +
-    (-20000000.0 * sc[1] * x41 - 10000000.0 * sc[2] * x41 -
-     5000000.0 * sc[4] * x41 - x174 * x41 - x41 * x472) *
-      (x371 - x373 + (-x68) * (-x500 + x506));
+    14000000.0 * sc[10] * x25 - 14000000.0 * sc[10] * x360 +
+    20000000.0 * sc[1] * x203 + 10000000.0 * sc[2] * x203 +
+    5000000.0 * sc[4] * x203 - 20000000.0 * sc[6] * x497 +
+    20000000.0 * sc[6] * x503 + x141 * x93 + x145 * x93 + x1567 + x175 * x93 +
+    x179 * x93 + x203 * x30 + x392 * x70 + x435 * x93 + x813 +
+    (-14000000.0 * sc[10] * x67 - 30000000.0 * sc[4] * x67 - x125 * x141 -
+     x125 * x145 - x125 * x175 - x125 * x179 - x125 * x372 - x125 * x435) *
+      (-x497 + x503) +
+    (-20000000.0 * sc[1] * x42 - 10000000.0 * sc[2] * x42 -
+     5000000.0 * sc[4] * x42 - x102 * x42 - x30 * x42) *
+      (x25 - x360 + (-x67) * (-x497 + x503));
   J[137] =
-    sc[0] * x839 * exp(x382) - 14000000.0 * sc[10] * x210 +
-    14000000.0 * sc[10] * x378 - 14000000.0 * sc[11] * x274 +
-    20000000.0 * sc[1] * x209 + 10000000.0 * sc[2] * x209 +
-    5000000.0 * sc[4] * x209 + 20000000.0 * sc[6] * x139 -
-    20000000.0 * sc[6] * x179 + 2025000000000.0 * x1063 + x1084 * x1089 -
-    x1084 * x75 - 2.5080275229357798e+18 * x1105 * x70 + x140 + x143 * x417 +
-    x155 * x417 + x156 * x417 + x174 * x209 + x223 * x833 - x223 * x841 -
-    7605000000000000.0 * x314 * x342 * x815 - 2025000000000.0 * x314 * x826 +
-    2.5080275229357798e+18 * x316 * x70 + 7605000000000000.0 * x342 * x837 +
-    x417 * x443 + x417 * x476 + 8.9668255813953501e+29 * x54 * x822 -
-    8.9668255813953501e+29 * x54 * x843 +
-    (-14000000.0 * sc[10] * x68 - 30000000.0 * sc[4] * x68 - x124 * x143 -
-     x124 * x155 - x124 * x156 - x124 * x375 - x124 * x443 - x124 * x476) *
-      (x139 - x179) +
-    (-20000000.0 * sc[1] * x41 - 10000000.0 * sc[2] * x41 -
-     5000000.0 * sc[4] * x41 - x174 * x41 - x41 * x472) *
-      (-x210 + x378 + (-x68) * (x139 - x179));
+    5070000000000001.0 * sc[0] * x7 * x816 * exp(x819) -
+    14000000.0 * sc[10] * x369 + 14000000.0 * sc[10] * x371 -
+    14000000.0 * sc[11] * x269 + 20000000.0 * sc[1] * x205 +
+    10000000.0 * sc[2] * x205 + 5000000.0 * sc[4] * x205 +
+    20000000.0 * sc[6] * x143 - 20000000.0 * sc[6] * x156 +
+    2025000000000.0 * x1057 + 2.5080275229357798e+18 * x1061 * x1062 -
+    2.5080275229357798e+18 * x1062 * x413 + x1081 * x1107 - x1081 * x416 +
+    x129 + x141 * x395 + x145 * x395 + x175 * x395 + x179 * x395 + x205 * x30 +
+    x278 * x812 - x278 * x889 - 2025000000000.0 * x292 * x350 + x395 * x435 -
+    8.9668255813953516e+29 * x55 * x829 + 8.9668255813953516e+29 * x55 * x838 +
+    7605000000000002.0 * x65 * x816 - 7605000000000002.0 * x816 * x821 +
+    (-14000000.0 * sc[10] * x67 - 30000000.0 * sc[4] * x67 - x125 * x141 -
+     x125 * x145 - x125 * x175 - x125 * x179 - x125 * x372 - x125 * x435) *
+      (x143 - x156) +
+    (-20000000.0 * sc[1] * x42 - 10000000.0 * sc[2] * x42 -
+     5000000.0 * sc[4] * x42 - x102 * x42 - x30 * x42) *
+      (-x369 + x371 + (-x67) * (x143 - x156));
   J[151] =
-    -14000000.0 * sc[10] * x214 + 14000000.0 * sc[10] * x52 +
-    20000000.0 * sc[1] * x207 + 10000000.0 * sc[2] * x207 +
-    5000000.0 * sc[4] * x207 - 20000000.0 * sc[6] * x161 +
-    20000000.0 * sc[6] * x195 + x1197 + x143 * x185 + x155 * x185 +
-    x156 * x185 + x174 * x207 + x185 * x443 + x185 * x476 + 14000000.0 * x50 +
-    x827 +
-    (-14000000.0 * sc[10] * x68 - 30000000.0 * sc[4] * x68 - x124 * x143 -
-     x124 * x155 - x124 * x156 - x124 * x375 - x124 * x443 - x124 * x476) *
-      (-x161 + x195) +
-    (-20000000.0 * sc[1] * x41 - 10000000.0 * sc[2] * x41 -
-     5000000.0 * sc[4] * x41 - x174 * x41 - x41 * x472) *
-      (-x214 + x52 + (-x68) * (-x161 + x195));
+    -14000000.0 * sc[10] * x375 + 14000000.0 * sc[10] * x53 +
+    20000000.0 * sc[1] * x203 + 10000000.0 * sc[2] * x203 +
+    5000000.0 * sc[4] * x203 - 20000000.0 * sc[6] * x157 +
+    20000000.0 * sc[6] * x162 + x141 * x185 + x145 * x185 + x175 * x185 +
+    x179 * x185 + x185 * x435 + x203 * x30 + x458 + 14000000.0 * x51 + x813 +
+    (-14000000.0 * sc[10] * x67 - 30000000.0 * sc[4] * x67 - x125 * x141 -
+     x125 * x145 - x125 * x175 - x125 * x179 - x125 * x372 - x125 * x435) *
+      (-x157 + x162) +
+    (-20000000.0 * sc[1] * x42 - 10000000.0 * sc[2] * x42 -
+     5000000.0 * sc[4] * x42 - x102 * x42 - x30 * x42) *
+      (-x375 + x53 + (-x67) * (-x157 + x162));
   J[165] =
-    -20000000.0 * sc[0] * x234 + 14000000.0 * sc[10] * x202 +
-    20000000.0 * sc[1] * x248 - sc[2] * x1725 - sc[3] * x1847 +
-    5000000.0 * sc[4] * x248 - 30000000.0 * sc[4] * x25 -
-    5000000.0 * sc[5] * x228 - sc[6] * x110 - sc[7] * x2204 -
-    14000000.0 * sc[9] * x274 + x1325 + x155 * x359 + x156 * x359 +
-    x174 * x248 - 5070000000000000.0 * x204 * x342 * x815 -
-    1350000000000.0 * x204 * x826 + x2141 + x2258 + x359 * x443 + x359 * x476 +
-    x462 + x890 +
-    (-14000000.0 * sc[10] * x68 - 30000000.0 * sc[4] * x68 - x124 * x143 -
-     x124 * x155 - x124 * x156 - x124 * x375 - x124 * x443 - x124 * x476) *
-      (-x197 + x205) +
-    (-20000000.0 * sc[1] * x41 - 10000000.0 * sc[2] * x41 -
-     5000000.0 * sc[4] * x41 - x174 * x41 - x41 * x472) *
-      (x202 - x25 + (-x68) * (-x197 + x205));
+    -1350000000000.0 * refC * x292 * x7 -
+    5070000000000001.0 * refC * x7 * x816 *
+      exp(-g_RT[0] + g_RT[11] - g_RT[9] + x819) -
+    20000000.0 * sc[0] * x230 + 14000000.0 * sc[10] * x20 +
+    20000000.0 * sc[1] * x244 - sc[2] * x1732 - sc[3] * x1853 +
+    5000000.0 * sc[4] * x244 - 30000000.0 * sc[4] * x351 -
+    5000000.0 * sc[5] * x241 - sc[6] * x88 - sc[7] * x2209 -
+    14000000.0 * sc[9] * x269 + x10 + x141 * x355 + x145 * x355 + x179 * x355 +
+    x2147 + x2264 + x244 * x30 + x355 * x435 + x459 + x888 +
+    (-14000000.0 * sc[10] * x67 - 30000000.0 * sc[4] * x67 - x125 * x141 -
+     x125 * x145 - x125 * x175 - x125 * x179 - x125 * x372 - x125 * x435) *
+      (-x181 + x197) +
+    (-20000000.0 * sc[1] * x42 - 10000000.0 * sc[2] * x42 -
+     5000000.0 * sc[4] * x42 - x102 * x42 - x30 * x42) *
+      (x20 - x351 + (-x67) * (-x181 + x197));
   J[179] =
-    -14000000.0 * sc[10] * x282 + 14000000.0 * sc[10] * x57 +
+    -14000000.0 * sc[10] * x206 + 14000000.0 * sc[10] * x54 +
     20000000.0 * sc[1] * x33 + 10000000.0 * sc[2] * x33 +
-    5000000.0 * sc[4] * x33 - 20000000.0 * sc[6] * x169 +
-    20000000.0 * sc[6] * x191 + x119 * x143 + x119 * x155 + x119 * x156 +
-    x119 * x443 + x119 * x476 + x1217 + x174 * x33 + x890 +
-    (-14000000.0 * sc[10] * x68 - 30000000.0 * sc[4] * x68 - x124 * x143 -
-     x124 * x155 - x124 * x156 - x124 * x375 - x124 * x443 - x124 * x476) *
-      (-x169 + x191) +
-    (-20000000.0 * sc[1] * x41 - 10000000.0 * sc[2] * x41 -
-     5000000.0 * sc[4] * x41 - x174 * x41 - x41 * x472) *
-      (-x282 + x57 + (-x68) * (-x169 + x191));
+    5000000.0 * sc[4] * x33 - 20000000.0 * sc[6] * x170 +
+    20000000.0 * sc[6] * x191 + x1159 + x120 * x141 + x120 * x145 +
+    x120 * x175 + x120 * x179 + x120 * x435 + x30 * x33 + x888 +
+    (-14000000.0 * sc[10] * x67 - 30000000.0 * sc[4] * x67 - x125 * x141 -
+     x125 * x145 - x125 * x175 - x125 * x179 - x125 * x372 - x125 * x435) *
+      (-x170 + x191) +
+    (-20000000.0 * sc[1] * x42 - 10000000.0 * sc[2] * x42 -
+     5000000.0 * sc[4] * x42 - x102 * x42 - x30 * x42) *
+      (-x206 + x54 + (-x67) * (-x170 + x191));
   J[12] = 0;
   J[26] = 0;
   J[40] = 0;

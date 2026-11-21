@@ -217,7 +217,7 @@ AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE void
 CKRP(amrex::Real& ru, amrex::Real& ruc, amrex::Real& pa)
 {
   ru = 8.31446261815324e+07;
-  ruc = 1.98721558317399615845;
+  ruc = 1.98720425864083161116;
   pa = 1.01325e+06;
 }
 
@@ -1872,14 +1872,14 @@ comp_qfqr(
   }
 
   // reference concentration: P_atm / (RT) in inverse mol/m^3
-  amrex::Real refC = 101325 / 8.31446 * invT;
+  amrex::Real refC = 101325 / 8.31446261815324 * invT;
   amrex::Real refCinv = 1 / refC;
 
   // Evaluate the kfs
   amrex::Real k_f, Corr;
 
   // reaction 0:  2 CH4 + 3 O2 => 2 CO + 4 H2O
-  k_f = 154500000 * exp((0.5) * logT - (20075.8288822793) * invT);
+  k_f = 154500000 * exp((0.5) * logT - (20075.9432889333) * invT);
   qf[0] *= k_f;
   qr[0] *= k_f *
            exp(
@@ -1887,7 +1887,7 @@ comp_qfqr(
                2.000000 * g_RT[3])) *
            (refCinv);
   // reaction 1:  2 CO + O2 => 2 CO2
-  k_f = 6296094821.39524 * exp(-(20128.6666321888) * invT);
+  k_f = 6296094821.39524 * exp(-(20128.7813399506) * invT);
   qf[1] *= k_f;
   qr[1] *=
     k_f *
@@ -1895,7 +1895,7 @@ comp_qfqr(
              : exp(-(g_RT[0] + 2.000000 * g_RT[3] - 2.000000 * g_RT[4]))) *
     (refC);
   // reaction 2:  2 CO2 => 2 CO + O2
-  k_f = 250000000 * exp(-(20128.6666321888) * invT);
+  k_f = 250000000 * exp(-(20128.7813399506) * invT);
   qf[2] *= k_f;
   qr[2] *=
     k_f *
@@ -1911,7 +1911,7 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
   const amrex::Real logT = log(T);
 
   // reference concentration: P_atm / (RT) in inverse mol/m^3
-  const amrex::Real refC = 101325 / 8.31446 * invT;
+  const amrex::Real refC = 101325 / 8.31446261815324 * invT;
   const amrex::Real refCinv = 1 / refC;
 
   for (int i = 0; i < 6; ++i) {
@@ -1943,7 +1943,7 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
   {
     // reaction 0:  2 CH4 + 3 O2 => 2 CO + 4 H2O
     const amrex::Real k_f =
-      154500000 * exp((0.5) * logT - (20075.8288822793) * invT);
+      154500000 * exp((0.5) * logT - (20075.9432889333) * invT);
     const amrex::Real qf = k_f * (sc[0] * sc[2]);
     const amrex::Real qr = 0.0;
     const amrex::Real qdot = qf - qr;
@@ -1955,7 +1955,7 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
 
   {
     // reaction 1:  2 CO + O2 => 2 CO2
-    const amrex::Real k_f = 6296094821.39524 * exp(-(20128.6666321888) * invT);
+    const amrex::Real k_f = 6296094821.39524 * exp(-(20128.7813399506) * invT);
     const amrex::Real qf = k_f * (pow(std::max(sc[0], 0.0), 0.250000) *
                                   std::sqrt(std::max(sc[1], 0.0)) * sc[3]);
     const amrex::Real qr = 0.0;
@@ -1967,7 +1967,7 @@ productionRate(amrex::Real* wdot, const amrex::Real* sc, const amrex::Real T)
 
   {
     // reaction 2:  2 CO2 => 2 CO + O2
-    const amrex::Real k_f = 250000000 * exp(-(20128.6666321888) * invT);
+    const amrex::Real k_f = 250000000 * exp(-(20128.7813399506) * invT);
     const amrex::Real qf = k_f * (sc[4]);
     const amrex::Real qr = 0.0;
     const amrex::Real qdot = qf - qr;
@@ -2166,7 +2166,7 @@ aJacobian_precond(
   const amrex::Real logT = log(T);
 
   // reference concentration: P_atm / (RT) in inverse mol/m^3
-  amrex::Real refC = 101325 / 8.31446 / T;
+  amrex::Real refC = 101325 / 8.31446261815324 / T;
   amrex::Real refCinv = 1.0 / refC;
 
   // compute the mixture concentration
@@ -2209,8 +2209,8 @@ aJacobian_precond(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[0] * sc[2];
-  k_f = 154500000 * exp(0.5 * logT - (20075.8288822793) * invT);
-  dlnkfdT = 0.5 * invT + (20075.8288822793) * invT2;
+  k_f = 154500000 * exp(0.5 * logT - (20075.9432889333) * invT);
+  dlnkfdT = 0.5 * invT + (20075.9432889333) * invT2;
   // rate of progress
   q = k_f * phi_f;
   dqdT = dlnkfdT * k_f * phi_f;
@@ -2242,8 +2242,8 @@ aJacobian_precond(
   // forward
   phi_f = pow(std::max(sc[0], 0.0), 0.250000) *
           std::sqrt(std::max(sc[1], 0.0)) * sc[3];
-  k_f = 6296094821.39524 * exp(-(20128.6666321888) * invT);
-  dlnkfdT = (20128.6666321888) * invT2;
+  k_f = 6296094821.39524 * exp(-(20128.7813399506) * invT);
+  dlnkfdT = (20128.7813399506) * invT2;
   // rate of progress
   q = k_f * phi_f;
   dqdT = dlnkfdT * k_f * phi_f;
@@ -2278,8 +2278,8 @@ aJacobian_precond(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[4];
-  k_f = 250000000 * exp(-(20128.6666321888) * invT);
-  dlnkfdT = (20128.6666321888) * invT2;
+  k_f = 250000000 * exp(-(20128.7813399506) * invT);
+  dlnkfdT = (20128.7813399506) * invT2;
   // rate of progress
   q = k_f * phi_f;
   dqdT = dlnkfdT * k_f * phi_f;
@@ -2380,7 +2380,7 @@ aJacobian(
   const amrex::Real logT = log(T);
 
   // reference concentration: P_atm / (RT) in inverse mol/m^3
-  amrex::Real refC = 101325 / 8.31446 / T;
+  amrex::Real refC = 101325 / 8.31446261815324 / T;
   amrex::Real refCinv = 1.0 / refC;
 
   // compute the mixture concentration
@@ -2423,8 +2423,8 @@ aJacobian(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[0] * sc[2];
-  k_f = 154500000 * exp(0.5 * logT - (20075.8288822793) * invT);
-  dlnkfdT = 0.5 * invT + (20075.8288822793) * invT2;
+  k_f = 154500000 * exp(0.5 * logT - (20075.9432889333) * invT);
+  dlnkfdT = 0.5 * invT + (20075.9432889333) * invT2;
   // rate of progress
   q = k_f * phi_f;
   dqdT = dlnkfdT * k_f * phi_f;
@@ -2456,8 +2456,8 @@ aJacobian(
   // forward
   phi_f = pow(std::max(sc[0], 0.0), 0.250000) *
           std::sqrt(std::max(sc[1], 0.0)) * sc[3];
-  k_f = 6296094821.39524 * exp(-(20128.6666321888) * invT);
-  dlnkfdT = (20128.6666321888) * invT2;
+  k_f = 6296094821.39524 * exp(-(20128.7813399506) * invT);
+  dlnkfdT = (20128.7813399506) * invT2;
   // rate of progress
   q = k_f * phi_f;
   dqdT = dlnkfdT * k_f * phi_f;
@@ -2492,8 +2492,8 @@ aJacobian(
   // a non-third-body and non-pressure-fall-off reaction
   // forward
   phi_f = sc[4];
-  k_f = 250000000 * exp(-(20128.6666321888) * invT);
-  dlnkfdT = (20128.6666321888) * invT2;
+  k_f = 250000000 * exp(-(20128.7813399506) * invT);
+  dlnkfdT = (20128.7813399506) * invT2;
   // rate of progress
   q = k_f * phi_f;
   dqdT = dlnkfdT * k_f * phi_f;
