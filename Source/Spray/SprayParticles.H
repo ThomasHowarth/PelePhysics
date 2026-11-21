@@ -227,9 +227,12 @@ public:
     pele::physics::transport::TransParm<
       pele::physics::EosType,
       pele::physics::TransportType> const* ltransparm,
-    const amrex::Real spray_cfl_lev = -1.);
+    const amrex::Real spray_cfl_lev = -1.,
+    const amrex::MultiFab* state_end = nullptr);
 
   /// \brief Update particle data and solve gas-phase source terms
+  /// @param state_end If set, the gas state at the end of the step: the
+  /// particles see the gas varying linearly in time from state to state_end
   void updateParticles(
     const int& level,
     amrex::MultiFab& state,
@@ -244,7 +247,8 @@ public:
     pele::physics::transport::TransParm<
       pele::physics::EosType,
       pele::physics::TransportType> const* ltransparm,
-    const amrex::Real spray_cfl_lev);
+    const amrex::Real spray_cfl_lev,
+    const amrex::MultiFab* state_end = nullptr);
 
   /// \brief Sum boundary and copy temporary source term
   /// @param source_ghosts Number of ghost cells needed for source terms

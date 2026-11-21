@@ -303,7 +303,11 @@ struct calcVaporState<pele::physics::eos::Manifold>
   }
 };
 
-// Compute source terms and update particles
+// Compute source terms and update particles.
+// gpv_end: if set, the gas state varies linearly in time over the call, from
+// gpv at theta0 to gpv_end at theta1 of the flow step (theta is the fraction
+// of the step), and each particle substep sees the gas at its midpoint.
+// Otherwise the gas is held at gpv.
 AMREX_GPU_DEVICE
 AMREX_FORCE_INLINE
 amrex::Real
@@ -315,7 +319,10 @@ calculateSpraySource(
   amrex::Real* cBoilT,
   pele::physics::transport::TransParm<
     pele::physics::EosType,
-    pele::physics::TransportType> const* trans_parm)
+    pele::physics::TransportType> const* trans_parm,
+  const GasPhaseVals* gpv_end = nullptr,
+  const amrex::Real theta0 = 0.,
+  const amrex::Real theta1 = 1.)
 {
   auto eos = pele::physics::PhysicsType::eos(fdat.eosparm);
   const amrex::Real rule = 1. / 3.;
@@ -371,7 +378,50 @@ calculateSpraySource(
   amrex::Real startmass = pmass;
   amrex::Real Reyn;
   amrex::RealVect part_vel_src;
+  // With a time-varying gas, a first pass only sets nsub, so that each
+  // substep then sees the gas at its own midpoint
+  GasPhaseVals gpv_start;
+  bool nsub_trial = false;
+  bool nsub_fixed = false;
+  const amrex::RealVect mom_src0 = gpv.fluid_mom_src;
+  const amrex::Real eng_src0 = gpv.fluid_eng_src;
+  if (gpv_end != nullptr) {
+    gpv_start = gpv;
+    nsub_trial = true;
+  }
+  // Heun: each substep evaluates the rates at its start (stage 0, followed by
+  // an Euler predictor) and at its end (stage 1), and the update from the
+  // start of the substep uses their average
+  const bool rk2 = (fdat.time_order == 2);
+  int stage = 0;
+  amrex::RealVect vel_part0 = vel_part;
+  amrex::Real T_part0 = T_part;
+  amrex::Real pmass0 = pmass;
+  amrex::Real dia_part0 = dia_part;
+  amrex::Real rho_part0 = rho_part;
+  amrex::GpuArray<amrex::Real, SPRAY_FUEL_NUM> Y_part0 = Y_part;
+  amrex::RealVect part_vel_src0;
+  amrex::Real part_temp_src0 = 0.;
+  amrex::Real m_dot0 = 0.;
+  amrex::GpuArray<amrex::Real, SPRAY_FUEL_NUM> mn_dot0{};
   while (isub <= nsub) {
+    if (gpv_end != nullptr) {
+      // Euler: gas at the middle of the substep; Heun: at its start or end
+      const amrex::Real frac =
+        rk2 ? static_cast<amrex::Real>(isub - 1 + stage)
+            : (static_cast<amrex::Real>(isub) - 0.5);
+      const amrex::Real theta =
+        theta0 + (theta1 - theta0) * frac / static_cast<amrex::Real>(nsub);
+      gpv.setFluidState(gpv_start, *gpv_end, theta);
+    }
+    if (stage == 0) {
+      vel_part0 = vel_part;
+      T_part0 = T_part;
+      pmass0 = pmass;
+      dia_part0 = dia_part;
+      rho_part0 = rho_part;
+      Y_part0 = Y_part;
+    }
     const amrex::Real cp_part = fdat.liqprops.cp_mix(Y_part, T_part, cBoilT);
     // Average molar mass of liquid droplet
     const amrex::Real mw_part = fdat.liqprops.mw_mix(Y_part);
@@ -470,7 +520,7 @@ calculateSpraySource(
       amrex::Real S_dmu_dot_u = diff_vel.dotProduct(vel_part);
       gpv.fluid_eng_src += num_ppp * drag_force * S_dmu_dot_u;
 #endif
-      if (isub == 1) {
+      if (isub == 1 && stage == 0 && !nsub_fixed) {
         amrex::Real inv_tau_var = drag_force_p;
         nsub = amrex::min<int>(
           amrex::max<int>(nsub, static_cast<int>(flow_dt * inv_tau_var) + 1),
@@ -563,7 +613,7 @@ calculateSpraySource(
       amrex::Real conv_src = M_PI * lambda_skin * dia_part * delT * Nu_num;
       gpv.fluid_eng_src += num_ppp * conv_src;
       part_temp_src = (sumL + conv_src) * inv_pmass / cp_part;
-      if (isub == 1 && delT > C_eps) {
+      if (isub == 1 && stage == 0 && !nsub_fixed && delT > C_eps) {
         // Limit dt so change in mass does not exceed 10%
         amrex::Real inv_tau_d = -m_dot / (0.2 * pmass);
         amrex::Real inv_tau_T = conv_src * inv_pmass / (cp_part * delT);
@@ -579,6 +629,37 @@ calculateSpraySource(
 
     if (isub == 1) {
       dt = flow_dt / static_cast<amrex::Real>(nsub);
+    }
+    if (nsub_trial) {
+      // Discard the sources of the trial pass and redo substep 1
+      nsub_trial = false;
+      nsub_fixed = true;
+      gpv.fluid_mom_src = mom_src0;
+      gpv.fluid_eng_src = eng_src0;
+      continue;
+    }
+    if (rk2) {
+      if (stage == 0) {
+        // Keep the start rates; the update below is the Euler predictor
+        part_vel_src0 = part_vel_src;
+        part_temp_src0 = part_temp_src;
+        m_dot0 = m_dot;
+        mn_dot0 = mn_dot;
+      } else {
+        // Corrector: from the start of the substep with the average rates
+        vel_part = vel_part0;
+        T_part = T_part0;
+        pmass = pmass0;
+        dia_part = dia_part0;
+        rho_part = rho_part0;
+        Y_part = Y_part0;
+        part_vel_src = 0.5 * (part_vel_src0 + part_vel_src);
+        part_temp_src = 0.5 * (part_temp_src0 + part_temp_src);
+        m_dot = 0.5 * (m_dot0 + m_dot);
+        for (int spf = 0; spf < SPRAY_FUEL_NUM; ++spf) {
+          mn_dot[spf] = 0.5 * (mn_dot0[spf] + mn_dot[spf]);
+        }
+      }
     }
     const amrex::Real part_dt = fdat.dtmod * dt;
     if (!fdat.fixed_parts) {
@@ -628,11 +709,19 @@ calculateSpraySource(
         isub = nsub + 1;
       }
     }
+    if (rk2 && stage == 0 && isub <= nsub) {
+      // Evaluate the end rates of this substep from the predictor
+      stage = 1;
+      continue;
+    }
+    stage = 0;
     ++isub;
   }
-  if (nsub > 1) {
-    gpv.fluid_eng_src /= static_cast<amrex::Real>(nsub);
-    gpv.fluid_mom_src /= static_cast<amrex::Real>(nsub);
+  // Average the drag and heat exchange over the rate evaluations
+  const int neval = rk2 ? 2 * nsub : nsub;
+  if (neval > 1) {
+    gpv.fluid_eng_src /= static_cast<amrex::Real>(neval);
+    gpv.fluid_mom_src /= static_cast<amrex::Real>(neval);
   }
   // Must add any mass related sources at the end in case
   // some species disappear completely

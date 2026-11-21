@@ -73,7 +73,8 @@ SprayParticleContainer::moveKickDrift(
   pele::physics::transport::TransParm<
     pele::physics::EosType,
     pele::physics::TransportType> const* ltransparm,
-  const Real spray_cfl_lev)
+  const Real spray_cfl_lev,
+  const MultiFab* state_end)
 {
   BL_PROFILE("ParticleContainer::moveKickDrift()");
   AMREX_ASSERT(level >= 0);
@@ -85,7 +86,7 @@ SprayParticleContainer::moveKickDrift(
 
   updateParticles(
     level, state, source, dt, time, state_ghosts, source_ghosts, isVirtualPart,
-    isGhostPart, do_move, ltransparm, spray_cfl_lev);
+    isGhostPart, do_move, ltransparm, spray_cfl_lev, state_end);
 }
 
 Real
@@ -156,10 +157,12 @@ SprayParticleContainer::updateParticles(
   pele::physics::transport::TransParm<
     pele::physics::EosType,
     pele::physics::TransportType> const* ltransparm,
-  const Real spray_cfl_lev)
+  const Real spray_cfl_lev,
+  const MultiFab* state_end)
 {
   BL_PROFILE("SprayParticleContainer::updateParticles()");
   AMREX_ASSERT(OnSameGrids(level, state));
+  const bool has_end = (state_end != nullptr);
   AMREX_ASSERT(OnSameGrids(level, source));
   bool isActive = !(isVirt || isGhost);
   bool do_splash = (m_sprayData->do_splash && isActive && do_move);
@@ -266,6 +269,15 @@ SprayParticleContainer::updateParticles(
       Array4<const Real> const& rhoarr = state.array(pti, SPI.rhoIndx);
       Array4<const Real> const& momarr = state.array(pti, SPI.momIndx);
       Array4<const Real> const& engarr = state.array(pti, SPI.engIndx);
+      // Gas state at the end of the step (only with state_end)
+      Array4<const Real> Tarr_e, rhoYarr_e, rhoarr_e, momarr_e, engarr_e;
+      if (has_end) {
+        Tarr_e = state_end->const_array(pti, SPI.utempIndx);
+        rhoYarr_e = state_end->const_array(pti, SPI.specIndx);
+        rhoarr_e = state_end->const_array(pti, SPI.rhoIndx);
+        momarr_e = state_end->const_array(pti, SPI.momIndx);
+        engarr_e = state_end->const_array(pti, SPI.engIndx);
+      }
       Array4<Real> const& rhoYSrcarr = source.array(pti, SPI.specSrcIndx);
       Array4<Real> const& rhoSrcarr = source.array(pti, SPI.rhoSrcIndx);
       Array4<Real> const& momSrcarr = source.array(pti, SPI.momSrcIndx);
@@ -383,11 +395,43 @@ SprayParticleContainer::updateParticles(
             InterpolateGasPhase(
               gpv, state_box, rhoarr, rhoYarr, Tarr, momarr, engarr,
               indx_array.data(), weights.data(), fdat->eosparm, fdat);
+            // Gas state at the end of the step, and the fraction of the step
+            // this subcycle covers
+            GasPhaseVals gpv_e;
+            const Real theta0 =
+              static_cast<Real>(cur_iter) / static_cast<Real>(num_iter);
+            const Real theta1 =
+              static_cast<Real>(cur_iter + 1) / static_cast<Real>(num_iter);
+            if (has_end) {
+              gpv_e.reset();
+              eos.molecular_weight(gpv_e.mw.data());
+              for (int n = 0; n < NUM_CHEM_SPECIES; ++n) {
+                gpv_e.mw[n] *= SprayUnits::mass_conv;
+              }
+              InterpolateGasPhase(
+                gpv_e, state_box, rhoarr_e, rhoYarr_e, Tarr_e, momarr_e,
+                engarr_e, indx_array.data(), weights.data(), fdat->eosparm,
+                fdat);
+            }
             // Solve for avg mw and pressure at droplet location
             fdat->calcBoilT(gpv, cBoilT.data());
             if (is_film) {
+              if (has_end) {
+                // Wall film: gas held at the middle of the subcycle
+                const GasPhaseVals gpv_s = gpv;
+                gpv.setFluidState(gpv_s, gpv_e, 0.5 * (theta0 + theta1));
+              }
               calculateFilmSource(
                 sub_dt, gpv, *fdat, p, cBoilT.data(), ltransparm);
+            } else if (has_end) {
+              // The gas varies from theta = 0 (gpv) to 1 (gpv_e) over the step
+              const GasPhaseVals gpv_s = gpv;
+              gpv.setFluidState(gpv_s, gpv_e, theta0);
+              GasPhaseVals gpv_1;
+              gpv_1.setFluidState(gpv_s, gpv_e, theta1);
+              Reyn_d = calculateSpraySource(
+                sub_dt, gpv, *fdat, p, cBoilT.data(), ltransparm, &gpv_1, theta0,
+                theta1);
             } else {
               Reyn_d = calculateSpraySource(
                 sub_dt, gpv, *fdat, p, cBoilT.data(), ltransparm);

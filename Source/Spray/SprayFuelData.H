@@ -78,6 +78,24 @@ struct GasPhaseVals
   amrex::GpuArray<amrex::Real, NUM_SPECIES> fluid_Y_dot{0.0};
   amrex::Real fluid_eng_src;
 
+  // Set the fluid state (not the sources) to (1 - theta) a + theta b
+  AMREX_GPU_DEVICE AMREX_FORCE_INLINE void setFluidState(
+    const GasPhaseVals& a, const GasPhaseVals& b, const amrex::Real theta)
+  {
+    const amrex::Real wa = 1. - theta;
+    vel_fluid = wa * a.vel_fluid + theta * b.vel_fluid;
+    T_fluid = wa * a.T_fluid + theta * b.T_fluid;
+    rho_fluid = wa * a.rho_fluid + theta * b.rho_fluid;
+    p_fluid = wa * a.p_fluid + theta * b.p_fluid;
+    mw_mix = wa * a.mw_mix + theta * b.mw_mix;
+    for (int n = 0; n < NUM_SPECIES; ++n) {
+      Y_fluid[n] = wa * a.Y_fluid[n] + theta * b.Y_fluid[n];
+    }
+    for (int n = 0; n < NUM_CHEM_SPECIES_MANI_ONLY; ++n) {
+      Yspec_fluid[n] = wa * a.Yspec_fluid[n] + theta * b.Yspec_fluid[n];
+    }
+  }
+
   AMREX_GPU_DEVICE AMREX_FORCE_INLINE void reset()
   {
     fluid_mom_src = amrex::RealVect::TheZeroVector();
@@ -102,6 +120,8 @@ struct SprayData
   bool mass_trans = true;   // If evaporation is on
   bool mom_trans = true;    // If momentum transfer is on
   bool fixed_parts = false; // If particles are fixed in place
+  // Particle ODE substeps: 1 - forward Euler, 2 - Heun (explicit RK2)
+  int time_order = 1;
   bool do_splash = false;
   int do_breakup = 0; // 0 - no breakup modeling, 1 - TAB model, 2 - KHRT model
   // Min cell volume fraction to add sources to

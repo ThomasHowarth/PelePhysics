@@ -44,6 +44,10 @@ SprayParticleContainer::readSprayParams(int& particle_verbose)
   pp.query("mass_transfer", m_sprayData->mass_trans);
   pp.query("mom_transfer", m_sprayData->mom_trans);
   pp.query("fixed_parts", m_sprayData->fixed_parts);
+  pp.query("time_order", m_sprayData->time_order);
+  if (m_sprayData->time_order != 1 && m_sprayData->time_order != 2) {
+    amrex::Abort("particles.time_order must be 1 (Euler) or 2 (Heun)");
+  }
 #ifdef PELELM_USE_SPRAY
   Real max_cfl = 2.;
 #else
