@@ -1,7 +1,7 @@
 """Symbolic math for symbolic differentiation."""
 
 import re
-from collections import OrderedDict
+from collections import Counter, OrderedDict, defaultdict
 
 import symengine as sme
 import sympy as smp
@@ -515,8 +515,12 @@ class SymbolicMath:
         a number of operation < count_lim including operations of variables that use it
         """
         replacements = []
-        common_expr_symbols = [rhs.free_symbols for rhs in common_expr_rhs]
-        final_expr_symbols = [expr.free_symbols for expr in final_expr]
+        # How often each symbol appears in each expression, and the expressions
+        # each symbol appears in (possibly more: substitutions can remove it)
+        common_counts = [symbol_counts(rhs) for rhs in common_expr_rhs]
+        final_counts = [symbol_counts(expr) for expr in final_expr]
+        common_users = symbol_users(common_counts)
+        final_users = symbol_users(final_counts)
 
         # Replacement loop
         for i, (lhs, rhs) in enumerate(
@@ -524,14 +528,11 @@ class SymbolicMath:
         ):
             op_count = sme.count_ops(rhs)
             # count how many times the expression is used later
-            ind_rhs = [j + i for j, s in enumerate(common_expr_symbols[i:]) if lhs in s]
-            ind_final_expr = [j for j, s in enumerate(final_expr_symbols) if lhs in s]
-            rec_count = 0
-            for ind in ind_rhs:
-                rec_count += smp.sympify(common_expr_rhs[ind]).count(lhs)
-            # rec_count_cse = rec_count
-            for ind in ind_final_expr:
-                rec_count += smp.sympify(final_expr[ind]).count(lhs)
+            ind_rhs = sorted(j for j in common_users[lhs] if j >= i)
+            ind_final_expr = sorted(final_users[lhs])
+            rec_count = sum(common_counts[j][lhs] for j in ind_rhs) + sum(
+                final_counts[j][lhs] for j in ind_final_expr
+            )
 
             total_op = (rec_count - 1) * op_count
             is_float = True
@@ -542,14 +543,14 @@ class SymbolicMath:
                 is_float = False
             if total_op < count_lim or is_float:
                 replacements.append(i)
-                ind = [j + i for j, s in enumerate(common_expr_symbols[i:]) if lhs in s]
-                for j in ind:
+                for j in ind_rhs:
                     common_expr_rhs[j] = common_expr_rhs[j].subs(lhs, rhs)
-                    common_expr_symbols[j].remove(lhs)
-                ind = [j for j, s in enumerate(final_expr_symbols) if lhs in s]
-                for j in ind:
+                    update_symbol_counts(
+                        common_counts, common_users, j, common_expr_rhs[j]
+                    )
+                for j in ind_final_expr:
                     final_expr[j] = final_expr[j].subs(lhs, rhs)
-                    final_expr_symbols[j].remove(lhs)
+                    update_symbol_counts(final_counts, final_users, j, final_expr[j])
 
         replacements.reverse()
         for rep in replacements:
@@ -1284,3 +1285,38 @@ class SymbolicMath:
 
                 # add in the non-chain derivative term
                 self.jacobian[(wdot_idx, sc_idx)] += self.dwdotdsc[(wdot_idx, sc_idx)]
+
+
+def symbol_counts(expr):
+    """Count the occurrences of each symbol in a symengine expression.
+
+    Each symbol counts once per leaf of the expression tree, as sympy's
+    Basic.count does, without converting the expression to sympy.
+    """
+    counts = Counter()
+    if not isinstance(expr, sme.Basic):
+        return counts
+    stack = [expr]
+    while stack:
+        node = stack.pop()
+        if isinstance(node, sme.Symbol):
+            counts[node] += 1
+        else:
+            stack.extend(node.args)
+    return counts
+
+
+def symbol_users(counts):
+    """Map each symbol to the indices of the expressions it appears in."""
+    users = defaultdict(set)
+    for j, expr_counts in enumerate(counts):
+        for symbol in expr_counts:
+            users[symbol].add(j)
+    return users
+
+
+def update_symbol_counts(counts, users, j, expr):
+    """Recount the symbols of expression j after a substitution."""
+    counts[j] = symbol_counts(expr)
+    for symbol in counts[j]:
+        users[symbol].add(j)

@@ -8,12 +8,13 @@ import types
 import cantera as ct
 import pytest
 import symengine
+import sympy
 
 import ceptr.converter as converter
 import ceptr.utilities as cu
 from ceptr import __version__
 from ceptr.ceptr import parse_lst_file, parse_qss_lst_file
-from ceptr.symbolic_math import SymbolicMath
+from ceptr.symbolic_math import SymbolicMath, symbol_counts
 
 
 def mechanism_path(mname):
@@ -181,6 +182,24 @@ def test_parse_lst_file(tmp_path):
         lst.write_text("# comment\n" + text)
         with pytest.raises(ValueError, match=f"{lst}:2: "):
             parse(lst)
+
+
+def test_symbol_counts():
+    """symbol_counts agrees with sympy's count on CSE-like expressions."""
+    x0, x1, x2, sc = symengine.symbols("x0 x1 x2 sc")
+    exprs = [
+        x0,
+        2.5 * x0 * x1 + x0,
+        x0**2 / x1 + symengine.exp(-x0 * x2),
+        (x0 + x1) ** 3 * symengine.log(x1) - 1.0 / (x0 * x1 * sc),
+        x0 * x0 * x1 - x1 / x0 + x2**-1.5,
+        symengine.Integer(3),
+        symengine.RealDouble(1.5),
+    ]
+    for expr in exprs:
+        counts = symbol_counts(expr)
+        for sym in (x0, x1, x2, sc):
+            assert counts[sym] == sympy.sympify(expr).count(sym), (expr, sym)
 
 
 def test_qssa_visualize(tmp_path):
