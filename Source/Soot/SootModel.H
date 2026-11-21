@@ -72,6 +72,59 @@ public:
     const bool pres_term = true) const;
 
   //
+  // Optional inputs to computeSootSourceTerm, for codes that couple the soot
+  // source to the rest of the step (e.g. inside SDC iterations)
+  //
+  struct SootForcing
+  {
+    // Constant forcing of the gas (density, species) and of the moments
+    // during the integration, in the components and units of soot_state.
+    // It is subtracted from the result, so only the soot source is added.
+    amrex::Array4<const amrex::Real> forcing;
+    // State at the end of the step: the temperature is held at the midpoint
+    // of Qstate and Qstate_end instead of at Qstate
+    amrex::Array4<const amrex::Real> Qstate_end;
+    // Viscosity at the end of the step, averaged likewise
+    amrex::Array4<const amrex::Real> coeff_mu_end;
+  };
+
+  //
+  // Compute HMOM source term, integrating the soot ODEs with a forcing
+  //
+  void computeSootSourceTerm(
+    const amrex::Box& vbox,
+    amrex::Array4<const amrex::Real> const& Qstate,
+    amrex::Array4<const amrex::Real> const& coeff_mu,
+    amrex::Array4<amrex::Real> const& soot_state,
+    const amrex::Real time,
+    const amrex::Real dt,
+    const bool pres_term,
+    SootForcing const& forcing) const;
+
+  //
+  // Add the instantaneous HMOM source rate at Qstate (no integration), in the
+  // same components and units as computeSootSourceTerm
+  //
+  void computeSootSourceRate(
+    const amrex::Box& vbox,
+    amrex::Array4<const amrex::Real> const& Qstate,
+    amrex::Array4<const amrex::Real> const& coeff_mu,
+    amrex::Array4<amrex::Real> const& soot_state,
+    const bool pres_term = true) const;
+
+  // Shared kernel of computeSootSourceTerm and computeSootSourceRate (public
+  // because it holds a device lambda)
+  void computeSootSourceImpl(
+    const amrex::Box& vbox,
+    amrex::Array4<const amrex::Real> const& Qstate,
+    amrex::Array4<const amrex::Real> const& coeff_mu,
+    amrex::Array4<amrex::Real> const& soot_state,
+    const amrex::Real dt,
+    const bool pres_term,
+    SootForcing const& forcing,
+    const bool instantaneous) const;
+
+  //
   // Estimate the soot time step
   //
   amrex::Real estSootDt(
