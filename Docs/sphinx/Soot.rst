@@ -44,6 +44,11 @@ Soot Flags and Inputs
 
   * If the inception species is named something other than ``A#`` in the chemistry model, a different name can be specified using ``soot.pah_name =``. However, ``soot.incept_pah`` must be set to ``A2``, ``A3``, or ``A4``.
 
+* The soot moment and gas species equations are integrated over each time step with the gas temperature held fixed. ``soot.integrator`` selects how:
+
+  * ``subcycle`` (default): explicit forward-Euler subcycles, starting from ``soot.num_subcycles`` and shrunk adaptively up to ``soot.max_subcycles``. This is first order in the time step.
+  * ``cvode``: all cells of a box are integrated together with CVODE (requires SUNDIALS), with error control, so the integration error is set by the tolerances rather than the time step. ``soot.cvode_rtol`` (default 1e-6) is the relative tolerance; ``soot.cvode_atol`` (default 1e-10) is the absolute tolerance relative to the largest magnitude of each unknown over the box. ``soot.cvode_solver`` is ``bdf`` (default, BDF with matrix-free GMRES) or ``adams`` (Adams with fixed-point iterations), and ``soot.cvode_max_steps`` (default 100000) limits the number of internal steps. Set ``soot.v = 2`` to print the number of steps per box.
+
 .. [#mueller] "Hybrid Method of Moments for modeling soot formation and growth", M. E. Mueller and G. Blanquart and H. Pitsch, Comb. Flame, Vol. 156, No. 6, pp. 1143-1155 (2009)
 
 .. [#bisetti] "On the formation and early evolution of soot in turbulent nonpremixed flames", F. Bisetti and G. Blanquart and M. E. Mueller and H. Pitsch, Comb. Flame, Vol. 159, No. 1, pp. 317-335 (2012)

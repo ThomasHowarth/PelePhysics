@@ -112,8 +112,22 @@ public:
     amrex::Array4<amrex::Real> const& soot_state,
     const bool pres_term = true) const;
 
+  // What computeSootSourceImpl does in each cell
+  enum class SrcMode {
+    Subcycle,      // integrate with the explicit subcycles, add the source
+    Instantaneous, // add the instantaneous source rate
+    CvodeSetup,    // fill the CVODE initial state and cell constants only
+    CvodeFinalize  // add the source from the CVODE end state
+  };
+
+  // Number of CVODE unknowns per cell: moments (and weight), gas species,
+  // density; and of the constants held per cell during the integration
+  static constexpr int cvNeq = NUM_SOOT_MOMENTS + 1 + NUM_SOOT_GS + 1;
+  static constexpr int cvNconst = 7 + NUM_SOOT_MOMENTS + 1 + NUM_SOOT_GS + 1;
+
   // Shared kernel of computeSootSourceTerm and computeSootSourceRate (public
-  // because it holds a device lambda)
+  // because it holds a device lambda). cv_y / cv_c are the CVODE state and
+  // the cell constants, cell-major over vbox, for the Cvode modes.
   void computeSootSourceImpl(
     const amrex::Box& vbox,
     amrex::Array4<const amrex::Real> const& Qstate,
@@ -122,7 +136,20 @@ public:
     const amrex::Real dt,
     const bool pres_term,
     SootForcing const& forcing,
-    const bool instantaneous) const;
+    const SrcMode mode,
+    amrex::Real* cv_y = nullptr,
+    amrex::Real* cv_c = nullptr) const;
+
+  // soot.integrator = cvode: integrate the soot ODEs of all cells of vbox
+  // with CVODE (error controlled) instead of the explicit subcycles
+  void computeSootSourceCvode(
+    const amrex::Box& vbox,
+    amrex::Array4<const amrex::Real> const& Qstate,
+    amrex::Array4<const amrex::Real> const& coeff_mu,
+    amrex::Array4<amrex::Real> const& soot_state,
+    const amrex::Real dt,
+    const bool pres_term,
+    SootForcing const& forcing) const;
 
   //
   // Estimate the soot time step
@@ -217,6 +244,16 @@ public:
   int m_maxSubcycles = 20;
   // Number of subcycles to use during source calculations
   int m_numSubcycles = 1;
+  // Soot ODE integrator: false = explicit subcycles, true = CVODE
+  bool m_useCvode = false;
+  // CVODE relative tolerance, and absolute tolerance relative to the
+  // largest magnitude of each unknown over the box
+  amrex::Real m_cvodeRtol = 1.0e-6;
+  amrex::Real m_cvodeAtol = 1.0e-10;
+  // CVODE solver: true = BDF with matrix-free GMRES, false = Adams with
+  // fixed-point iterations
+  bool m_cvodeBDF = true;
+  int m_cvodeMaxSteps = 100000;
 
   /***********************************************************************
     Reaction member data

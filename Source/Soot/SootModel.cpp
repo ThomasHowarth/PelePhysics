@@ -1,6 +1,20 @@
 
 // AMReX include statements
 #include <AMReX_Reduce.H>
+#ifdef AMREX_USE_SUNDIALS
+#include <AMReX_Sundials.H>
+#include <cvode/cvode.h>
+#include <nvector/nvector_serial.h>
+#include <sunlinsol/sunlinsol_spgmr.h>
+#include <sunnonlinsol/sunnonlinsol_fixedpoint.h>
+#if defined(AMREX_USE_CUDA)
+#include <nvector/nvector_cuda.h>
+#elif defined(AMREX_USE_HIP)
+#include <nvector/nvector_hip.h>
+#elif defined(AMREX_USE_SYCL)
+#include <nvector/nvector_sycl.h>
+#endif
+#endif
 
 // PelePhysics include statements
 #include "PelePhysics.H"
@@ -139,6 +153,27 @@ SootModel::readSootParams()
   m_numSubcycles = 5;
 #endif
   pp.query("num_subcycles", m_numSubcycles);
+  std::string integrator = "subcycle";
+  pp.query("integrator", integrator);
+  if (integrator == "cvode") {
+#ifdef AMREX_USE_SUNDIALS
+    m_useCvode = true;
+#else
+    Abort("soot.integrator = cvode requires SUNDIALS");
+#endif
+  } else if (integrator != "subcycle") {
+    Abort("soot.integrator must be subcycle or cvode");
+  }
+  pp.query("cvode_rtol", m_cvodeRtol);
+  pp.query("cvode_atol", m_cvodeAtol);
+  std::string cvsolver = "bdf";
+  pp.query("cvode_solver", cvsolver);
+  if (cvsolver == "adams") {
+    m_cvodeBDF = false;
+  } else if (cvsolver != "bdf") {
+    Abort("soot.cvode_solver must be bdf or adams");
+  }
+  pp.query("cvode_max_steps", m_cvodeMaxSteps);
   // Determines if mass is conserved by adding lost mass to H2
   pp.query("conserve_mass", m_conserveMass);
   m_readSootParams = true;
@@ -234,8 +269,14 @@ SootModel::computeSootSourceTerm(
   const bool pres_term) const
 {
   BL_PROFILE("SootModel::computeSootSourceTerm");
-  computeSootSourceImpl(
-    vbox, Qstate, coeff_mu, soot_state, dt, pres_term, SootForcing{}, false);
+  if (m_useCvode) {
+    computeSootSourceCvode(
+      vbox, Qstate, coeff_mu, soot_state, dt, pres_term, SootForcing{});
+  } else {
+    computeSootSourceImpl(
+      vbox, Qstate, coeff_mu, soot_state, dt, pres_term, SootForcing{},
+      SrcMode::Subcycle);
+  }
 }
 
 // Add soot source term, integrating the soot ODEs with a constant forcing
@@ -251,8 +292,14 @@ SootModel::computeSootSourceTerm(
   SootForcing const& forcing) const
 {
   BL_PROFILE("SootModel::computeSootSourceTerm");
-  computeSootSourceImpl(
-    vbox, Qstate, coeff_mu, soot_state, dt, pres_term, forcing, false);
+  if (m_useCvode) {
+    computeSootSourceCvode(
+      vbox, Qstate, coeff_mu, soot_state, dt, pres_term, forcing);
+  } else {
+    computeSootSourceImpl(
+      vbox, Qstate, coeff_mu, soot_state, dt, pres_term, forcing,
+      SrcMode::Subcycle);
+  }
 }
 
 // Add the instantaneous soot source rate at the given state
@@ -266,7 +313,8 @@ SootModel::computeSootSourceRate(
 {
   BL_PROFILE("SootModel::computeSootSourceRate");
   computeSootSourceImpl(
-    vbox, Qstate, coeff_mu, soot_state, 1.0, pres_term, SootForcing{}, true);
+    vbox, Qstate, coeff_mu, soot_state, 1.0, pres_term, SootForcing{},
+    SrcMode::Instantaneous);
 }
 
 // Shared kernel. Without forcing, integrates the soot ODEs over dt from
@@ -286,7 +334,9 @@ SootModel::computeSootSourceImpl(
   const Real dt,
   const bool pres_term,
   SootForcing const& forcing,
-  const bool instantaneous) const
+  const SrcMode mode,
+  Real* cv_y,
+  Real* cv_c) const
 {
   AMREX_ASSERT(m_memberDataDefined);
   AMREX_ASSERT(m_setIndx);
@@ -322,10 +372,31 @@ SootModel::computeSootSourceImpl(
   const auto Qend = forcing.Qstate_end;
   const auto mu_end = forcing.coeff_mu_end;
 
+  const bool instantaneous = (mode == SrcMode::Instantaneous);
+  const bool cv_setup = (mode == SrcMode::CvodeSetup);
+  const bool cv_final = (mode == SrcMode::CvodeFinalize);
+  AMREX_ASSERT(!(cv_setup || cv_final) || (cv_y != nullptr && cv_c != nullptr));
+  const auto blo = amrex::lbound(vbox);
+  const auto blen = amrex::length(vbox);
+  constexpr int nmom = NUM_SOOT_MOMENTS + 1;
+
   const SootData* sd = d_sootData;
   const SootReaction* sr = d_sootReact;
   SootConst sc;
   amrex::ParallelFor(vbox, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept {
+    const int icell =
+      (i - blo.x) + blen.x * ((j - blo.y) + blen.y * (k - blo.z));
+    Real* yc = (cv_y != nullptr) ? cv_y + icell * cvNeq : nullptr;
+    Real* cc = (cv_c != nullptr) ? cv_c + icell * cvNconst : nullptr;
+    if (cv_setup) {
+      // Inactive unless set below
+      for (int n = 0; n < cvNeq; ++n) {
+        yc[n] = 0.0;
+      }
+      for (int n = 0; n < cvNconst; ++n) {
+        cc[n] = 0.0;
+      }
+    }
     auto eos = pele::physics::PhysicsType::eos();
     GpuArray<Real, NUM_SPECIES> mw_fluidF;
     GpuArray<Real, NUM_SOOT_GS> mw_fluid;
@@ -437,13 +508,45 @@ SootModel::computeSootSourceImpl(
         for (int mom = 0; mom < NUM_SOOT_MOMENTS + 1; ++mom) {
           soot_state(i, j, k, sootIndx + mom) += mom_src[mom];
         }
+      } else if (cv_setup) {
+        cc[0] = 1.0;
+        cc[1] = T;
+        cc[2] = mu;
+        cc[3] = molarMass;
+        cc[4] = convT;
+        cc[5] = betaNucl;
+        cc[6] = colConst;
+        for (int mom = 0; mom < nmom; ++mom) {
+          yc[mom] = moments[mom];
+          cc[7 + mom] = mom_frc[mom];
+        }
+        for (int sp = 0; sp < NUM_SOOT_GS; ++sp) {
+          yc[nmom + sp] = xi_n[sp];
+          cc[7 + nmom + sp] = xi_frc[sp];
+        }
+        yc[nmom + NUM_SOOT_GS] = rho;
+        cc[7 + nmom + NUM_SOOT_GS] = rho_frc;
+        return;
       } else {
+        if (cv_final) {
+          // End state of the CVODE integration
+          for (int mom = 0; mom < nmom; ++mom) {
+            moments[mom] = yc[mom];
+          }
+          for (int sp = 0; sp < NUM_SOOT_GS; ++sp) {
+            xi_n[sp] = yc[nmom + sp];
+          }
+          sd->clipMoments(momentsPtr);
+        }
         int nsub = nsub_init;
         Real mindt = dt / Real(nsubMAX);
         Real sootdt = dt / Real(nsub);
         int isub = 1;
         Real tstart = 0.0;
         // Subcycling
+        if (cv_final) {
+          tstart = dt;
+        }
         while (tstart < dt && isub < nsubMAX + 1) {
           sd->computeSrcTerms(
             T, mu, rho, molarMass, convT, betaNucl, colConst, xi_n.data(),
@@ -541,6 +644,223 @@ SootModel::computeSootSourceImpl(
       soot_state(i, j, k, engIndx) += eng_src * sc.eng_src_conv;
     }
   });
+}
+
+#ifdef AMREX_USE_SUNDIALS
+namespace {
+struct SootCvodeData
+{
+  int ncells;
+  const amrex::Real* cv_c;
+  const SootData* sd;
+  const SootReaction* sr;
+};
+
+N_Vector
+sootNewVector(const int n)
+{
+  SUNContext sunctx = *amrex::sundials::The_Sundials_Context();
+#if defined(AMREX_USE_CUDA)
+  return N_VNewWithMemHelp_Cuda(
+    n, /*use_managed_mem=*/false, *amrex::sundials::The_SUNMemory_Helper(),
+    sunctx);
+#elif defined(AMREX_USE_HIP)
+  return N_VNewWithMemHelp_Hip(
+    n, /*use_managed_mem=*/false, *amrex::sundials::The_SUNMemory_Helper(),
+    sunctx);
+#elif defined(AMREX_USE_SYCL)
+  return N_VNewWithMemHelp_Sycl(
+    n, /*use_managed_mem=*/false, *amrex::sundials::The_SUNMemory_Helper(),
+    &amrex::Gpu::Device::streamQueue(), sunctx);
+#else
+  return N_VNew_Serial(n, sunctx);
+#endif
+}
+
+amrex::Real*
+sootVectorData(N_Vector v)
+{
+#if defined(AMREX_USE_CUDA)
+  return N_VGetDeviceArrayPointer_Cuda(v);
+#elif defined(AMREX_USE_HIP)
+  return N_VGetDeviceArrayPointer_Hip(v);
+#elif defined(AMREX_USE_SYCL)
+  return N_VGetDeviceArrayPointer_Sycl(v);
+#else
+  return N_VGetArrayPointer(v);
+#endif
+}
+
+// dPhi/dt = soot source(Phi) + forcing, cell by cell, with the gas
+// temperature, viscosity and molar mass held fixed over the step
+int
+sootCvodeRHS(sunrealtype /*t*/, N_Vector y_in, N_Vector ydot_in, void* udata)
+{
+  auto* ud = static_cast<SootCvodeData*>(udata);
+  const amrex::Real* y = sootVectorData(y_in);
+  amrex::Real* ydot = sootVectorData(ydot_in);
+  const amrex::Real* cv_c = ud->cv_c;
+  const SootData* sd = ud->sd;
+  const SootReaction* sr = ud->sr;
+  constexpr int neq = SootModel::cvNeq;
+  constexpr int nconst = SootModel::cvNconst;
+  constexpr int nmom = NUM_SOOT_MOMENTS + 1;
+  amrex::ParallelFor(ud->ncells, [=] AMREX_GPU_DEVICE(int icell) noexcept {
+    const amrex::Real* yc = y + icell * neq;
+    const amrex::Real* cc = cv_c + icell * nconst;
+    amrex::Real* fc = ydot + icell * neq;
+    if (cc[0] == 0.0) {
+      for (int n = 0; n < neq; ++n) {
+        fc[n] = 0.0;
+      }
+      return;
+    }
+    amrex::GpuArray<amrex::Real, nmom> moments;
+    amrex::GpuArray<amrex::Real, nmom> mom_src = {{0.0}};
+    amrex::GpuArray<amrex::Real, NUM_SOOT_MOMENTS + 2> mom_fv;
+    amrex::GpuArray<amrex::Real, NUM_SOOT_GS> xi;
+    amrex::GpuArray<amrex::Real, NUM_SOOT_GS> omega_src = {{0.0}};
+    for (int mom = 0; mom < nmom; ++mom) {
+      moments[mom] = yc[mom];
+    }
+    for (int sp = 0; sp < NUM_SOOT_GS; ++sp) {
+      xi[sp] = yc[nmom + sp];
+    }
+    const amrex::Real rho = yc[nmom + NUM_SOOT_GS];
+    sd->clipMoments(moments.data());
+    sd->computeSrcTerms(
+      cc[1], cc[2], rho, cc[3], cc[4], cc[5], cc[6], xi.data(),
+      omega_src.data(), moments.data(), mom_src.data(), mom_fv.data(), sr);
+    auto eos = pele::physics::PhysicsType::eos();
+    amrex::GpuArray<amrex::Real, NUM_SPECIES> mwF;
+    eos.molecular_weight(mwF.data());
+    amrex::Real rho_dot = cc[7 + nmom + NUM_SOOT_GS];
+    for (int mom = 0; mom < nmom; ++mom) {
+      fc[mom] = mom_src[mom] + cc[7 + mom];
+    }
+    for (int sp = 0; sp < NUM_SOOT_GS; ++sp) {
+      fc[nmom + sp] = omega_src[sp] + cc[7 + nmom + sp];
+      rho_dot += omega_src[sp] * mwF[sd->refIndx[sp]];
+    }
+    fc[nmom + NUM_SOOT_GS] = rho_dot;
+  });
+  amrex::Gpu::streamSynchronize();
+  return 0;
+}
+} // namespace
+#endif
+
+// Integrate the soot ODEs of all cells of vbox together with CVODE, from the
+// same initial state, constants and forcing as the subcycles, and add the
+// resulting source exactly as the subcycled path does
+void
+SootModel::computeSootSourceCvode(
+  const Box& vbox,
+  Array4<const Real> const& Qstate,
+  Array4<const Real> const& coeff_mu,
+  Array4<Real> const& soot_state,
+  const Real dt,
+  const bool pres_term,
+  SootForcing const& forcing) const
+{
+#ifdef AMREX_USE_SUNDIALS
+  BL_PROFILE("SootModel::computeSootSourceCvode");
+  const int ncells = static_cast<int>(vbox.numPts());
+  constexpr int neq = cvNeq;
+  constexpr int nmom = NUM_SOOT_MOMENTS + 1;
+  const int neq_tot = ncells * neq;
+
+  amrex::Gpu::DeviceVector<Real> cv_c(static_cast<size_t>(ncells) * cvNconst);
+  N_Vector y = sootNewVector(neq_tot);
+  N_Vector atol = sootNewVector(neq_tot);
+  Real* yd = sootVectorData(y);
+  Real* cd = cv_c.data();
+  computeSootSourceImpl(
+    vbox, Qstate, coeff_mu, soot_state, dt, pres_term, forcing,
+    SrcMode::CvodeSetup, yd, cd);
+
+  // Skip boxes without any soot-active cell
+  const Real nactive = amrex::Reduce::Sum<Real>(
+    ncells, [=] AMREX_GPU_DEVICE(int icell) noexcept {
+      return cd[icell * cvNconst];
+    });
+  if (nactive > 0.0) {
+    // Absolute tolerance from the largest magnitude of each unknown over the
+    // box; species absent from the box are scaled by the largest species
+    amrex::GpuArray<Real, neq> typ;
+    for (int n = 0; n < neq; ++n) {
+      typ[n] = amrex::Reduce::Max<Real>(
+        ncells, [=] AMREX_GPU_DEVICE(int icell) noexcept {
+          return std::abs(yd[icell * neq + n]);
+        });
+    }
+    Real typ_gs = 0.0;
+    for (int sp = 0; sp < NUM_SOOT_GS; ++sp) {
+      typ_gs = amrex::max(typ_gs, typ[nmom + sp]);
+    }
+    for (int n = 0; n < neq; ++n) {
+      const Real floor = (n >= nmom && n < nmom + NUM_SOOT_GS)
+                           ? 1.0e-6 * typ_gs
+                           : std::numeric_limits<Real>::min();
+      typ[n] = m_cvodeAtol * amrex::max(typ[n], floor);
+    }
+    Real* ad = sootVectorData(atol);
+    amrex::ParallelFor(neq_tot, [=] AMREX_GPU_DEVICE(int n) noexcept {
+      ad[n] = typ[n % neq];
+    });
+
+    SootCvodeData udata{ncells, cd, d_sootData, d_sootReact};
+    SUNContext sunctx = *amrex::sundials::The_Sundials_Context();
+    void* cvode_mem = CVodeCreate(m_cvodeBDF ? CV_BDF : CV_ADAMS, sunctx);
+    SUNLinearSolver LS = nullptr;
+    SUNNonlinearSolver NLS = nullptr;
+    int flag = CVodeInit(cvode_mem, sootCvodeRHS, 0.0, y);
+    flag |= CVodeSetUserData(cvode_mem, &udata);
+    flag |= CVodeSVtolerances(cvode_mem, m_cvodeRtol, atol);
+    flag |= CVodeSetMaxNumSteps(cvode_mem, m_cvodeMaxSteps);
+    if (m_cvodeBDF) {
+      LS = SUNLinSol_SPGMR(y, SUN_PREC_NONE, 0, sunctx);
+      flag |= CVodeSetLinearSolver(cvode_mem, LS, nullptr);
+    } else {
+      NLS = SUNNonlinSol_FixedPoint(y, 0, sunctx);
+      flag |= CVodeSetNonlinearSolver(cvode_mem, NLS);
+    }
+    if (flag != CV_SUCCESS) {
+      Abort("SootModel::computeSootSourceCvode(): CVODE setup failed");
+    }
+    Real tout = 0.0;
+    flag = CVode(cvode_mem, dt, y, &tout, CV_NORMAL);
+    if (flag < 0) {
+      Abort(
+        "SootModel::computeSootSourceCvode(): CVODE failed with flag " +
+        std::to_string(flag));
+    }
+    if (m_sootVerbosity >= 2) {
+      long int nsteps = 0;
+      long int nfevals = 0;
+      CVodeGetNumSteps(cvode_mem, &nsteps);
+      CVodeGetNumRhsEvals(cvode_mem, &nfevals);
+      Print() << "SootModel::computeSootSourceCvode(): " << vbox << " "
+              << nsteps << " steps, " << nfevals << " RHS evaluations\n";
+    }
+    CVodeFree(&cvode_mem);
+    if (LS != nullptr) {
+      SUNLinSolFree(LS);
+    }
+    if (NLS != nullptr) {
+      SUNNonlinSolFree(NLS);
+    }
+  }
+  computeSootSourceImpl(
+    vbox, Qstate, coeff_mu, soot_state, dt, pres_term, forcing,
+    SrcMode::CvodeFinalize, yd, cd);
+  N_VDestroy(y);
+  N_VDestroy(atol);
+#else
+  amrex::ignore_unused(
+    vbox, Qstate, coeff_mu, soot_state, dt, pres_term, forcing);
+  Abort("soot.integrator = cvode requires SUNDIALS");
+#endif
 }
 
 // Compute time step estimate for soot
