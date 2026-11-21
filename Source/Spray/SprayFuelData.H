@@ -120,7 +120,7 @@ struct SprayData
   bool mass_trans = true;   // If evaporation is on
   bool mom_trans = true;    // If momentum transfer is on
   bool fixed_parts = false; // If particles are fixed in place
-  // Particle ODE substeps: 1 - forward Euler, 2 - Heun (explicit RK2)
+  // Particle ODE substeps: 1 - forward Euler, 2 - Ralston (explicit RK2)
   int time_order = 1;
   bool do_splash = false;
   int do_breakup = 0; // 0 - no breakup modeling, 1 - TAB model, 2 - KHRT model

@@ -74,7 +74,8 @@ SprayParticleContainer::moveKickDrift(
     pele::physics::EosType,
     pele::physics::TransportType> const* ltransparm,
   const Real spray_cfl_lev,
-  const MultiFab* state_end)
+  const MultiFab* state_end,
+  const bool rate_only)
 {
   BL_PROFILE("ParticleContainer::moveKickDrift()");
   AMREX_ASSERT(level >= 0);
@@ -86,7 +87,7 @@ SprayParticleContainer::moveKickDrift(
 
   updateParticles(
     level, state, source, dt, time, state_ghosts, source_ghosts, isVirtualPart,
-    isGhostPart, do_move, ltransparm, spray_cfl_lev, state_end);
+    isGhostPart, do_move, ltransparm, spray_cfl_lev, state_end, rate_only);
 }
 
 Real
@@ -158,15 +159,17 @@ SprayParticleContainer::updateParticles(
     pele::physics::EosType,
     pele::physics::TransportType> const* ltransparm,
   const Real spray_cfl_lev,
-  const MultiFab* state_end)
+  const MultiFab* state_end,
+  const bool rate_only)
 {
   BL_PROFILE("SprayParticleContainer::updateParticles()");
   AMREX_ASSERT(OnSameGrids(level, state));
+  AMREX_ALWAYS_ASSERT(!rate_only || (!do_move && state_end == nullptr));
   const bool has_end = (state_end != nullptr);
   AMREX_ASSERT(OnSameGrids(level, source));
   bool isActive = !(isVirt || isGhost);
   bool do_splash = (m_sprayData->do_splash && isActive && do_move);
-  bool do_breakup = (m_sprayData->do_breakup > 0);
+  bool do_breakup = (m_sprayData->do_breakup > 0) && !rate_only;
   Real B0 = m_khrtB0;
   Real B1 = m_khrtB1;
   Real C3 = m_khrtC3;
@@ -415,6 +418,10 @@ SprayParticleContainer::updateParticles(
             }
             // Solve for avg mw and pressure at droplet location
             fdat->calcBoilT(gpv, cBoilT.data());
+            if (is_film && rate_only) {
+              // No instantaneous rate for wall film particles
+              continue;
+            }
             if (is_film) {
               if (has_end) {
                 // Wall film: gas held at the middle of the subcycle
@@ -434,7 +441,8 @@ SprayParticleContainer::updateParticles(
                 theta1);
             } else {
               Reyn_d = calculateSpraySource(
-                sub_dt, gpv, *fdat, p, cBoilT.data(), ltransparm);
+                sub_dt, gpv, *fdat, p, cBoilT.data(), ltransparm, nullptr, 0.,
+                1., rate_only);
             }
             IntVect cur_indx = ijkc;
             Real cvol = inv_vol;

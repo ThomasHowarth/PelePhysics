@@ -228,11 +228,15 @@ public:
       pele::physics::EosType,
       pele::physics::TransportType> const* ltransparm,
     const amrex::Real spray_cfl_lev = -1.,
-    const amrex::MultiFab* state_end = nullptr);
+    const amrex::MultiFab* state_end = nullptr,
+    const bool rate_only = false);
 
   /// \brief Update particle data and solve gas-phase source terms
   /// @param state_end If set, the gas state at the end of the step: the
   /// particles see the gas varying linearly in time from state to state_end
+  /// @param rate_only Deposit the instantaneous exchange rates at the current
+  /// particle and gas state, without updating or moving the particles
+  /// (needs do_move = false; wall film particles are skipped)
   void updateParticles(
     const int& level,
     amrex::MultiFab& state,
@@ -248,7 +252,8 @@ public:
       pele::physics::EosType,
       pele::physics::TransportType> const* ltransparm,
     const amrex::Real spray_cfl_lev,
-    const amrex::MultiFab* state_end = nullptr);
+    const amrex::MultiFab* state_end = nullptr,
+    const bool rate_only = false);
 
   /// \brief Sum boundary and copy temporary source term
   /// @param source_ghosts Number of ghost cells needed for source terms
