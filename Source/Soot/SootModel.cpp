@@ -425,6 +425,12 @@ SootModel::computeSootSourceImpl(
     Real* mom_fvPtr = mom_fv.data();
     // Array of source terms for moment equations
     GpuArray<Real, NUM_SOOT_MOMENTS + 1> mom_src;
+    // With forcing: what clipMoments added (mol of C), kept out of the
+    // reported source so that transport overshooting below the clip floor is
+    // not turned into a soot source
+    GpuArray<Real, NUM_SOOT_MOMENTS + 1> clip_add = {{0.0}};
+    // With forcing: non-negative gas concentrations for the source evaluation
+    GpuArray<Real, NUM_SOOT_GS> xi_eval;
     Real* mom_srcPtr = mom_src.data();
     // External forcing in the internal units (mol of C, mol/cm^3/s, g/cm^3/s)
     GpuArray<Real, NUM_SOOT_MOMENTS + 1> mom_frc = {{0.0}};
@@ -497,7 +503,17 @@ SootModel::computeSootSourceImpl(
       // Collision frequency between two dimer in the free
       // molecular regime with van der Waals enhancement
       // Units: cm^3/mol-s
+      if (has_forcing) {
+        for (int mom = 0; mom < NUM_SOOT_MOMENTS + 1; ++mom) {
+          clip_add[mom] -= moments[mom];
+        }
+      }
       sd->clipMoments(momentsPtr);
+      if (has_forcing) {
+        for (int mom = 0; mom < NUM_SOOT_MOMENTS + 1; ++mom) {
+          clip_add[mom] += moments[mom];
+        }
+      }
       Real RT = pele::physics::Constants::RU * T;
       const Real betaNucl = convT * betaNF;
       if (instantaneous) {
@@ -536,7 +552,17 @@ SootModel::computeSootSourceImpl(
           for (int sp = 0; sp < NUM_SOOT_GS; ++sp) {
             xi_n[sp] = yc[nmom + sp];
           }
+          if (has_forcing) {
+            for (int mom = 0; mom < NUM_SOOT_MOMENTS + 1; ++mom) {
+              clip_add[mom] -= moments[mom];
+            }
+          }
           sd->clipMoments(momentsPtr);
+          if (has_forcing) {
+            for (int mom = 0; mom < NUM_SOOT_MOMENTS + 1; ++mom) {
+              clip_add[mom] += moments[mom];
+            }
+          }
         }
         int nsub = nsub_init;
         Real mindt = dt / Real(nsubMAX);
@@ -548,8 +574,15 @@ SootModel::computeSootSourceImpl(
           tstart = dt;
         }
         while (tstart < dt && isub < nsubMAX + 1) {
+          Real* xi_src = xi_n.data();
+          if (has_forcing) {
+            for (int sp = 0; sp < NUM_SOOT_GS; ++sp) {
+              xi_eval[sp] = amrex::max<amrex::Real>(0.0, xi_n[sp]);
+            }
+            xi_src = xi_eval.data();
+          }
           sd->computeSrcTerms(
-            T, mu, rho, molarMass, convT, betaNucl, colConst, xi_n.data(),
+            T, mu, rho, molarMass, convT, betaNucl, colConst, xi_src,
             omega_src.data(), momentsPtr, mom_srcPtr, mom_fvPtr, sr);
           // Estimate subcycling time step size
           Real rate = 1.0;
@@ -576,15 +609,32 @@ SootModel::computeSootSourceImpl(
             moments[mom] += sootdt * (mom_src[mom] + mom_frc[mom]);
             mom_src[mom] = 0.0; // Reset moment source
           }
+          if (has_forcing) {
+            for (int mom = 0; mom < NUM_SOOT_MOMENTS + 1; ++mom) {
+              clip_add[mom] -= moments[mom];
+            }
+          }
           sd->clipMoments(momentsPtr);
+          if (has_forcing) {
+            for (int mom = 0; mom < NUM_SOOT_MOMENTS + 1; ++mom) {
+              clip_add[mom] += moments[mom];
+            }
+          }
           tstart += sootdt;
           isub++;
         }
         // If not finished with the time step, add remaining source
         if (tstart < dt) {
           Real remdt = dt - tstart;
+          Real* xi_src = xi_n.data();
+          if (has_forcing) {
+            for (int sp = 0; sp < NUM_SOOT_GS; ++sp) {
+              xi_eval[sp] = amrex::max<amrex::Real>(0.0, xi_n[sp]);
+            }
+            xi_src = xi_eval.data();
+          }
           sd->computeSrcTerms(
-            T, mu, rho, molarMass, convT, betaNucl, colConst, xi_n.data(),
+            T, mu, rho, molarMass, convT, betaNucl, colConst, xi_src,
             omega_src.data(), momentsPtr, mom_srcPtr, mom_fvPtr, sr);
           // Update species concentrations within subcycle
           for (int sp = 0; sp < NUM_SOOT_GS; ++sp) {
@@ -595,16 +645,28 @@ SootModel::computeSootSourceImpl(
           for (int mom = 0; mom < NUM_SOOT_MOMENTS + 1; ++mom) {
             moments[mom] += remdt * (mom_src[mom] + mom_frc[mom]);
           }
+          if (has_forcing) {
+            for (int mom = 0; mom < NUM_SOOT_MOMENTS + 1; ++mom) {
+              clip_add[mom] -= moments[mom];
+            }
+          }
           sd->clipMoments(momentsPtr);
+          if (has_forcing) {
+            for (int mom = 0; mom < NUM_SOOT_MOMENTS + 1; ++mom) {
+              clip_add[mom] += moments[mom];
+            }
+          }
         }
         sd->convertFromMol(momentsPtr);
+        sd->convertFromMol(clip_add.data());
         for (int mom = 0; mom < NUM_SOOT_MOMENTS + 1; ++mom) {
           const int peleIndx = sootIndx + mom;
           Real src = (moments[mom] - mom0[mom]) / dt;
           if (has_forcing) {
-            src -= F(i, j, k, peleIndx);
+            src -= F(i, j, k, peleIndx) + clip_add[mom] / dt;
           }
           soot_state(i, j, k, peleIndx) += src;
+          mom_src[mom] = src;
         }
       }
       Real rho_src = 0.0;
@@ -628,7 +690,8 @@ SootModel::computeSootSourceImpl(
       }
       if (conserveMass) {
         // Difference between mass lost from fluid and mass gained to soot
-        Real diff_vol = soot_state(i, j, k, sootIndx + 1) * sd->unitConv[1];
+        // Volume source of this call only (soot_state may already hold others)
+        Real diff_vol = mom_src[1] * sd->unitConv[1];
         Real del_rho_dot = rho_src + diff_vol * sc.SootDensity;
         // Add that mass to H2
         soot_state(i, j, k, absorbIndxP) -= del_rho_dot * sc.mass_src_conv;
@@ -724,7 +787,7 @@ sootCvodeRHS(sunrealtype /*t*/, N_Vector y_in, N_Vector ydot_in, void* udata)
       moments[mom] = yc[mom];
     }
     for (int sp = 0; sp < NUM_SOOT_GS; ++sp) {
-      xi[sp] = yc[nmom + sp];
+      xi[sp] = amrex::max<amrex::Real>(0.0, yc[nmom + sp]);
     }
     const amrex::Real rho = yc[nmom + NUM_SOOT_GS];
     sd->clipMoments(moments.data());
