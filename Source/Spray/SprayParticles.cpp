@@ -168,6 +168,7 @@ SprayParticleContainer::updateParticles(
   BL_PROFILE("SprayParticleContainer::updateParticles()");
   AMREX_ASSERT(OnSameGrids(level, state));
   AMREX_ALWAYS_ASSERT(!rate_only || (!do_move && state_end == nullptr));
+  AMREX_ALWAYS_ASSERT(state_end == nullptr || m_sprayData->time_order == 2);
   AMREX_ALWAYS_ASSERT(
     source_end == nullptr || (state_end != nullptr && advanceGivesEndRate()));
   const bool has_end = (state_end != nullptr);
@@ -471,29 +472,30 @@ SprayParticleContainer::updateParticles(
                 gpv_e, state_box, rhoarr_e, rhoYarr_e, Tarr_e, momarr_e,
                 engarr_e, indx_array.data(), weights.data(), fdat->eosparm,
                 fdat);
-              const GasPhaseVals gpv_s = gpv;
-              // Wall film: gas held at the middle of the subcycle
-              gpv.setFluidState(
-                gpv_s, gpv_e, is_film ? 0.5 * (theta0 + theta1) : theta0);
               GpuArray<IntVect, AMREX_D_PICK(2, 4, 8)> indx_1;
               GpuArray<Real, AMREX_D_PICK(2, 4, 8)> weights_1;
-              if (
+              const bool at_x1 =
                 moves && sdc_path &&
                 path_weights(
-                  p.pos() + sub_dt * vel0, indx_1.data(), weights_1.data())) {
-                GasPhaseVals gpv_1s;
-                gpv_1s.reset();
+                  p.pos() + sub_dt * vel0, indx_1.data(), weights_1.data());
+              // setFluidState is elementwise, so it can blend in place
+              if (!at_x1) {
+                gpv_1.setFluidState(gpv, gpv_e, theta1);
+              }
+              // Wall film: gas held at the middle of the subcycle
+              gpv.setFluidState(
+                gpv, gpv_e, is_film ? 0.5 * (theta0 + theta1) : theta0);
+              if (at_x1) {
+                gpv_1.reset();
                 InterpolateGasPhase(
-                  gpv_1s, state_box, rhoarr, rhoYarr, Tarr, momarr, engarr,
+                  gpv_1, state_box, rhoarr, rhoYarr, Tarr, momarr, engarr,
                   indx_1.data(), weights_1.data(), fdat->eosparm, fdat);
                 gpv_e.reset();
                 InterpolateGasPhase(
                   gpv_e, state_box, rhoarr_e, rhoYarr_e, Tarr_e, momarr_e,
                   engarr_e, indx_1.data(), weights_1.data(), fdat->eosparm,
                   fdat);
-                gpv_1.setFluidState(gpv_1s, gpv_e, theta1);
-              } else {
-                gpv_1.setFluidState(gpv_s, gpv_e, theta1);
+                gpv_1.setFluidState(gpv_1, gpv_e, theta1);
               }
             }
             // Solve for avg mw and pressure at droplet location
@@ -575,27 +577,36 @@ SprayParticleContainer::updateParticles(
               }
               Gpu::Atomic::Add(&engA(cur_indx), cur_coef * g.fluid_eng_src);
             };
-            // The step source: this subcycle's share of the step
-            auto deposit = [&](const IntVect& cur_indx, const Real wt) {
-              deposit_to(
-                momSrcarr, rhoSrcarr, rhoYSrcarr, engSrcarr, gpv, cur_indx,
-                wt * sub_dt / flow_dt);
+            // Deposit g * num / den, spread around pos if spread and
+            // path_weights allow it, else all to the particle cell ijkc
+            auto deposit_at = [&](
+                                Array4<Real> const& momA,
+                                Array4<Real> const& rhoA,
+                                Array4<Real> const& rhoYA,
+                                Array4<Real> const& engA, const GasPhaseVals& g,
+                                const RealVect& pos, const bool spread,
+                                const Real num, const Real den) {
+              GpuArray<IntVect, AMREX_D_PICK(2, 4, 8)> indx_d;
+              GpuArray<Real, AMREX_D_PICK(2, 4, 8)> weights_d;
+              if (
+                spread && path_weights(pos, indx_d.data(), weights_d.data())) {
+                for (int aindx = 0; aindx < AMREX_D_PICK(2, 4, 8); ++aindx) {
+                  if (weights_d[aindx] > 0.) {
+                    deposit_to(
+                      momA, rhoA, rhoYA, engA, g, indx_d[aindx],
+                      weights_d[aindx] * num / den);
+                  }
+                }
+              } else {
+                deposit_to(momA, rhoA, rhoYA, engA, g, ijkc, 1. * num / den);
+              }
             };
-            GpuArray<IntVect, AMREX_D_PICK(2, 4, 8)> indx_d;
-            GpuArray<Real, AMREX_D_PICK(2, 4, 8)> weights_d;
+            // The step source: this subcycle's share of the step
             const RealVect pos_mid =
               moves ? RealVect(p.pos() + 0.5 * sub_dt * vel_move) : p.pos();
-            if (
-              sdc_path &&
-              path_weights(pos_mid, indx_d.data(), weights_d.data())) {
-              for (int aindx = 0; aindx < AMREX_D_PICK(2, 4, 8); ++aindx) {
-                if (weights_d[aindx] > 0.) {
-                  deposit(indx_d[aindx], weights_d[aindx]);
-                }
-              }
-            } else {
-              deposit(ijkc, 1.);
-            }
+            deposit_at(
+              momSrcarr, rhoSrcarr, rhoYSrcarr, engSrcarr, gpv, pos_mid,
+              sdc_path, sub_dt, flow_dt);
             // Real new_time = static_cast<Real>(cur_iter + 1) * sub_dt;
             // Modify particle position by whole time step
             if (do_move && !fdat->fixed_parts && p.id() > 0 && !is_film) {
@@ -635,19 +646,9 @@ SprayParticleContainer::updateParticles(
             }
             if (has_rate_end && cur_iter == num_iter - 1 && p.id() > 0) {
               // End-of-step rate, spread around the end position
-              if (path_weights(p.pos(), indx_d.data(), weights_d.data())) {
-                for (int aindx = 0; aindx < AMREX_D_PICK(2, 4, 8); ++aindx) {
-                  if (weights_d[aindx] > 0.) {
-                    deposit_to(
-                      momSrcarr_r, rhoSrcarr_r, rhoYSrcarr_r, engSrcarr_r,
-                      gpv_r, indx_d[aindx], weights_d[aindx]);
-                  }
-                }
-              } else {
-                deposit_to(
-                  momSrcarr_r, rhoSrcarr_r, rhoYSrcarr_r, engSrcarr_r, gpv_r,
-                  ijkc, 1.);
-              }
+              deposit_at(
+                momSrcarr_r, rhoSrcarr_r, rhoYSrcarr_r, engSrcarr_r, gpv_r,
+                p.pos(), true, 1., 1.);
             }
           } // End of subcycle loop
         } // End of p.id() > 0 check

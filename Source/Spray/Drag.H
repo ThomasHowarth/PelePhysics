@@ -192,8 +192,10 @@ struct calcVaporState<pele::physics::eos::Manifold>
     amrex::Real& B_M,
     amrex::Real& sumXVap,
     amrex::Real& cp_skin,
-    amrex::Real& mw_skin)
+    amrex::Real& mw_skin,
+    amrex::Real* h_out = nullptr)
   {
+    amrex::ignore_unused(h_out);
     amrex::Real mbar_vap = 0.; // mean molar mass of evaporated fuel in vapor
     auto eos = pele::physics::PhysicsType::eos(fdat.eosparm);
 
@@ -316,8 +318,9 @@ struct SprayExchange
   amrex::Real mdot = 0.;
   amrex::RealVect mvel = amrex::RealVect::TheZeroVector();
   amrex::Real mke = 0.;
-  amrex::GpuArray<amrex::Real, NUM_SPECIES> midot{};
-  amrex::GpuArray<amrex::Real, NUM_SPECIES> mih{};
+  // Indexed by pc (N_pc <= SPRAY_FUEL_NUM)
+  amrex::GpuArray<amrex::Real, SPRAY_FUEL_NUM> midot{};
+  amrex::GpuArray<amrex::Real, SPRAY_FUEL_NUM> mih{};
 
   AMREX_GPU_HOST_DEVICE
   AMREX_FORCE_INLINE
@@ -371,9 +374,9 @@ addCarriedSources(
 }
 
 // Compute source terms and update particles.
-// gpv_end: if set, the gas state varies linearly in time over the call, from
-// gpv at its start to gpv_end at its end, and each rate evaluation sees the
-// gas at its own time in the call.
+// gpv_end: if set (Heun only), the gas state varies linearly in time over the
+// call, from gpv at its start to gpv_end at its end, and each rate evaluation
+// sees the gas at its own time in the call.
 // Otherwise the gas is held at gpv.
 // rate_only: only add the instantaneous exchange rates at the current particle
 // and gas state to gpv, without updating the particle.
@@ -456,14 +459,10 @@ calculateSpraySource(
   // predictor (stage 1), and the update from the start of the substep uses
   // (k0 + k1) / 2. The exchange with the gas gets the same weights. See the
   // Spray documentation for why Heun rather than another RK2.
-  const bool rk2 = (fdat.time_order == 2) && !rate_only;
-  constexpr amrex::Real rk_w0 = 0.5;
-  constexpr amrex::Real rk_w1 = 0.5;
+  const bool rk2 = fdat.time_order == 2;
+  // The time-varying gas (spray_SDC) needs Heun
+  AMREX_ASSERT(gpv_end == nullptr || rk2);
   int stage = 0;
-  // nsub is set by the first rate evaluation. With a time-varying gas and
-  // Euler, that evaluation sees the gas at the middle of a single substep:
-  // it is redone if nsub > 1, so that each substep sees its own midpoint.
-  bool nsub_set = false;
   const GasPhaseVals gpv_start = gpv;
   amrex::RealVect vel_part0 = vel_part;
   amrex::Real T_part0 = T_part;
@@ -483,11 +482,10 @@ calculateSpraySource(
   SprayExchange xsum;
   while (isub <= nsub) {
     if (gpv_end != nullptr) {
-      // Euler: gas at the middle of the substep; Heun: at its start or end
-      const amrex::Real frac = rk2 ? static_cast<amrex::Real>(isub - 1 + stage)
-                                   : (static_cast<amrex::Real>(isub) - 0.5);
+      // Gas at the start (stage 0) or end (stage 1) of the substep.
       // gpv_start and gpv_end are the gas at the start and end of this call
       // (a particle subcycle), so the fraction is of the call, not the step
+      const amrex::Real frac = static_cast<amrex::Real>(isub - 1 + stage);
       gpv.setFluidState(
         gpv_start, *gpv_end, frac / static_cast<amrex::Real>(nsub));
     }
@@ -499,9 +497,9 @@ calculateSpraySource(
       rho_part0 = rho_part;
       Y_part0 = Y_part;
     }
-    // Exchange of this rate evaluation, and whether it sets nsub
+    // Exchange of this rate evaluation, and whether it sets nsub (the first)
     SprayExchange xev;
-    const bool set_nsub = !nsub_set;
+    const bool set_nsub = (isub == 1 && stage == 0);
     amrex::Real h_part[NUM_SPECIES] = {0.};
     const amrex::Real cp_part = fdat.liqprops.cp_mix(Y_part, T_part, cBoilT);
     // Average molar mass of liquid droplet
@@ -725,7 +723,7 @@ calculateSpraySource(
     auto add_rate = [&](GasPhaseVals& g) {
       g.fluid_mom_src += xev.mom;
       g.fluid_eng_src += xev.eng;
-      amrex::Real h_pc[NUM_SPECIES] = {0.};
+      amrex::Real h_pc[SPRAY_FUEL_NUM] = {0.};
       for (int pc = 0; pc < fdat.N_pc; ++pc) {
         h_pc[pc] = h_part[fdat.pc_indx[pc]];
       }
@@ -743,12 +741,7 @@ calculateSpraySource(
       add_rate(*gpv_rate_end);
     }
     if (set_nsub) {
-      nsub_set = true;
       dt = flow_dt / static_cast<amrex::Real>(nsub);
-      if (gpv_end != nullptr && !rk2 && nsub > 1) {
-        // Redo substep 1 with the gas at its own midpoint
-        continue;
-      }
     }
     if (rk2) {
       if (stage == 0) {
@@ -758,18 +751,18 @@ calculateSpraySource(
         m_dot0 = m_dot;
         mn_dot0 = mn_dot;
       } else {
-        // Corrector: from the start of the substep with 1/4 k0 + 3/4 k1
+        // Corrector: from the start of the substep with (k0 + k1) / 2
         vel_part = vel_part0;
         T_part = T_part0;
         pmass = pmass0;
         dia_part = dia_part0;
         rho_part = rho_part0;
         Y_part = Y_part0;
-        part_vel_src = rk_w0 * part_vel_src0 + rk_w1 * part_vel_src;
-        part_temp_src = rk_w0 * part_temp_src0 + rk_w1 * part_temp_src;
-        m_dot = rk_w0 * m_dot0 + rk_w1 * m_dot;
+        part_vel_src = 0.5 * part_vel_src0 + 0.5 * part_vel_src;
+        part_temp_src = 0.5 * part_temp_src0 + 0.5 * part_temp_src;
+        m_dot = 0.5 * m_dot0 + 0.5 * m_dot;
         for (int spf = 0; spf < SPRAY_FUEL_NUM; ++spf) {
-          mn_dot[spf] = rk_w0 * mn_dot0[spf] + rk_w1 * mn_dot[spf];
+          mn_dot[spf] = 0.5 * mn_dot0[spf] + 0.5 * mn_dot[spf];
         }
       }
     }
@@ -825,10 +818,9 @@ calculateSpraySource(
     }
     // Heun: a particle that vanishes in the predictor only has the start
     // rates of this substep, which then get the weight of the whole substep
-    xsum.add(
-      xev, (!rk2 || vanished) ? 1. : (stage == 0 ? rk_w0 : rk_w1), fdat.N_pc);
+    xsum.add(xev, (!rk2 || vanished) ? 1. : 0.5, fdat.N_pc);
     if (rk2 && stage == 0 && isub <= nsub) {
-      // Evaluate the rates at 2/3 of this substep from the predictor
+      // Evaluate the rates at the end of this substep from the predictor
       stage = 1;
       continue;
     }
@@ -851,8 +843,8 @@ calculateSpraySource(
     carry_avg ? xsum.mvel / xsum.mdot : vel_part;
   const amrex::Real ke_carry =
     carry_avg ? xsum.mke / xsum.mdot : 0.5 * vel_part.radSquared();
-  amrex::Real midot[NUM_SPECIES] = {0.};
-  amrex::Real h_carry[NUM_SPECIES] = {0.};
+  amrex::Real midot[SPRAY_FUEL_NUM] = {0.};
+  amrex::Real h_carry[SPRAY_FUEL_NUM] = {0.};
   bool need_h_end = false;
   for (int pc = 0; pc < fdat.N_pc; ++pc) {
     const int pcspec = fdat.pc_indx[pc];

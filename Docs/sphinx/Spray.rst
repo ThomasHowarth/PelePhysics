@@ -474,31 +474,22 @@ substeps that resolve the drag and heat-up relaxation times. With
 the start of the substep and again at its end from an Euler predictor, and the
 update uses their average; the drag, heat and mass exchanged with the gas get
 the same weights. A droplet that vanishes in the predictor keeps the Euler
-update for that substep. The second-order integrator is needed for
-second-order spray coupling (e.g. ``peleLM.spray_SDC`` in PeleLMeX), where the
-gas the particles see varies in time over the step.
+update for that substep. The second-order integrator is required for
+second-order spray coupling (``peleLM.spray_SDC`` in PeleLMeX), where the gas
+the particles see varies in time over the step.
 
-Heun was chosen over the other two-stage second-order schemes, such as
-Ralston's method (stage at 2/3 of the substep, weights 1/4 and 3/4), for the
-following reasons. All two-stage second-order explicit Runge-Kutta schemes have
-the same stability limit, cost and order, and give identical results for
-linear relaxation; Ralston has a smaller error constant for nonlinear rates.
-In PeleLMeX spray coupling convergence tests, with fixed evaporating droplets
-(where the particle integration error dominates) Heun's errors in the gas
-temperature and fuel vapour were 2-3 times Ralston's (its density error was
-half), while with moving droplets the two agreed within 1%. Heun's stages lie
-at the
-ends of the substep, which suits second-order coupling: the gas is sampled at
-the start and at the predicted end of each particle subcycle (in time and, for
-moving particles, in position), so Heun's stages see it there without blending,
-and the last stage of a step evaluates the rates at the end of the step. That
-is an approximation (from the predicted particle state) of the instantaneous
-end-of-step exchange rate needed for the velocity divergence constraint, which
-a scheme with an interior stage could only extrapolate: ``moveKickDrift``
-returns it in ``source_end`` during the advance, which saves the coupled solver
-a separate particle pass. Breakup and splashing create particles after the
-last stage, so the separate pass is still needed with them
-(``SprayParticleContainer::advanceGivesEndRate``).
+Heun is used rather than another two-stage second-order scheme such as
+Ralston's (same cost, order and stability; smaller error constant) because its
+stages lie at the ends of the substep. The gas is sampled at the start and the
+predicted end of each particle subcycle, so the stages see it there without
+blending, and the last stage gives the end-of-step exchange rate (from the
+predicted particle state) needed for the velocity divergence constraint:
+``moveKickDrift`` returns it in ``source_end``, which saves the coupled solver
+a separate particle pass. Breakup and splashing create particles after the last
+stage, so they still need the separate pass
+(``SprayParticleContainer::advanceGivesEndRate``). In PeleLMeX convergence
+tests Heun's gas temperature and fuel vapour errors were 2-3 times Ralston's
+with fixed droplets and within 1% of them with moving droplets.
 
 .. _SprayLiquidProperties:
 
