@@ -60,18 +60,6 @@ public:
   void defineMemberData(const amrex::Real dimerVol);
 
   //
-  // Compute HMOM source term
-  //
-  void computeSootSourceTerm(
-    const amrex::Box& vbox,
-    amrex::Array4<const amrex::Real> const& Qstate,
-    amrex::Array4<const amrex::Real> const& coeff_mu,
-    amrex::Array4<amrex::Real> const& soot_state,
-    const amrex::Real time,
-    const amrex::Real dt,
-    const bool pres_term = true) const;
-
-  //
   // Optional inputs to computeSootSourceTerm, for codes that couple the soot
   // source to the rest of the step (e.g. inside SDC iterations)
   //
@@ -89,7 +77,8 @@ public:
   };
 
   //
-  // Compute HMOM source term, integrating the soot ODEs with a forcing
+  // Compute HMOM source term, optionally integrating the soot ODEs with a
+  // forcing
   //
   void computeSootSourceTerm(
     const amrex::Box& vbox,
@@ -98,8 +87,9 @@ public:
     amrex::Array4<amrex::Real> const& soot_state,
     const amrex::Real time,
     const amrex::Real dt,
-    const bool pres_term,
-    SootForcing const& forcing) const;
+    const bool pres_term = true,
+    SootForcing const& forcing = SootForcing{}) const;
+
 
   //
   // Add the instantaneous HMOM source rate at Qstate (no integration), in the

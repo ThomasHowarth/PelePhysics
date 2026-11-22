@@ -7,13 +7,7 @@
 #include <nvector/nvector_serial.h>
 #include <sunlinsol/sunlinsol_spgmr.h>
 #include <sunnonlinsol/sunnonlinsol_fixedpoint.h>
-#if defined(AMREX_USE_CUDA)
-#include <nvector/nvector_cuda.h>
-#elif defined(AMREX_USE_HIP)
-#include <nvector/nvector_hip.h>
-#elif defined(AMREX_USE_SYCL)
-#include <nvector/nvector_sycl.h>
-#endif
+#include "ReactorUtils.H"
 #endif
 
 // PelePhysics include statements
@@ -257,29 +251,8 @@ SootModel::defineMemberData(const Real dimerVol)
   m_memberDataDefined = true;
 }
 
-// Add soot source term
-void
-SootModel::computeSootSourceTerm(
-  const Box& vbox,
-  Array4<const Real> const& Qstate,
-  Array4<const Real> const& coeff_mu,
-  Array4<Real> const& soot_state,
-  const Real /*time*/,
-  const Real dt,
-  const bool pres_term) const
-{
-  BL_PROFILE("SootModel::computeSootSourceTerm");
-  if (m_useCvode) {
-    computeSootSourceCvode(
-      vbox, Qstate, coeff_mu, soot_state, dt, pres_term, SootForcing{});
-  } else {
-    computeSootSourceImpl(
-      vbox, Qstate, coeff_mu, soot_state, dt, pres_term, SootForcing{},
-      SrcMode::Subcycle);
-  }
-}
-
-// Add soot source term, integrating the soot ODEs with a constant forcing
+// Add soot source term, integrating the soot ODEs (with a constant forcing
+// if given)
 void
 SootModel::computeSootSourceTerm(
   const Box& vbox,
@@ -503,17 +476,31 @@ SootModel::computeSootSourceImpl(
       // Collision frequency between two dimer in the free
       // molecular regime with van der Waals enhancement
       // Units: cm^3/mol-s
-      if (has_forcing) {
-        for (int mom = 0; mom < NUM_SOOT_MOMENTS + 1; ++mom) {
-          clip_add[mom] -= moments[mom];
+      // clipMoments, recording with forcing what it added
+      auto clip = [&]() {
+        if (has_forcing) {
+          for (int mom = 0; mom < nmom; ++mom) {
+            clip_add[mom] -= moments[mom];
+          }
         }
-      }
-      sd->clipMoments(momentsPtr);
-      if (has_forcing) {
-        for (int mom = 0; mom < NUM_SOOT_MOMENTS + 1; ++mom) {
-          clip_add[mom] += moments[mom];
+        sd->clipMoments(momentsPtr);
+        if (has_forcing) {
+          for (int mom = 0; mom < nmom; ++mom) {
+            clip_add[mom] += moments[mom];
+          }
         }
-      }
+      };
+      // Gas concentrations for the source terms: non-negative with forcing
+      auto xi_src = [&]() {
+        if (!has_forcing) {
+          return xi_n.data();
+        }
+        for (int sp = 0; sp < NUM_SOOT_GS; ++sp) {
+          xi_eval[sp] = amrex::max<amrex::Real>(0.0, xi_n[sp]);
+        }
+        return xi_eval.data();
+      };
+      clip();
       Real RT = pele::physics::Constants::RU * T;
       const Real betaNucl = convT * betaNF;
       if (instantaneous) {
@@ -552,114 +539,68 @@ SootModel::computeSootSourceImpl(
           for (int sp = 0; sp < NUM_SOOT_GS; ++sp) {
             xi_n[sp] = yc[nmom + sp];
           }
-          if (has_forcing) {
+          clip();
+        } else {
+          int nsub = nsub_init;
+          Real mindt = dt / Real(nsubMAX);
+          Real sootdt = dt / Real(nsub);
+          int isub = 1;
+          Real tstart = 0.0;
+          // Subcycling
+          while (tstart < dt && isub < nsubMAX + 1) {
+            sd->computeSrcTerms(
+              T, mu, rho, molarMass, convT, betaNucl, colConst, xi_src(),
+              omega_src.data(), momentsPtr, mom_srcPtr, mom_fvPtr, sr);
+            // Estimate subcycling time step size
+            Real rate = 1.0;
             for (int mom = 0; mom < NUM_SOOT_MOMENTS + 1; ++mom) {
-              clip_add[mom] -= moments[mom];
+              rate = amrex::max<amrex::Real>(
+                rate,
+                1.05 * -sootdt * (mom_src[mom] + mom_frc[mom]) / moments[mom]);
             }
-          }
-          sd->clipMoments(momentsPtr);
-          if (has_forcing) {
-            for (int mom = 0; mom < NUM_SOOT_MOMENTS + 1; ++mom) {
-              clip_add[mom] += moments[mom];
+            if (rate > 1.0) {
+              sootdt = amrex::max<amrex::Real>(sootdt / rate, mindt);
             }
-          }
-        }
-        int nsub = nsub_init;
-        Real mindt = dt / Real(nsubMAX);
-        Real sootdt = dt / Real(nsub);
-        int isub = 1;
-        Real tstart = 0.0;
-        // Subcycling
-        if (cv_final) {
-          tstart = dt;
-        }
-        while (tstart < dt && isub < nsubMAX + 1) {
-          Real* xi_src = xi_n.data();
-          if (has_forcing) {
+            if (tstart + sootdt > dt) {
+              sootdt = dt - tstart;
+            }
+            // Update species concentrations within subcycle
             for (int sp = 0; sp < NUM_SOOT_GS; ++sp) {
-              xi_eval[sp] = amrex::max<amrex::Real>(0.0, xi_n[sp]);
+              xi_n[sp] += sootdt * (omega_src[sp] + xi_frc[sp]);
+              rho += sootdt * omega_src[sp] * mw_fluid[sp];
+              omega_src[sp] = 0.; // Reset omega source
             }
-            xi_src = xi_eval.data();
-          }
-          sd->computeSrcTerms(
-            T, mu, rho, molarMass, convT, betaNucl, colConst, xi_src,
-            omega_src.data(), momentsPtr, mom_srcPtr, mom_fvPtr, sr);
-          // Estimate subcycling time step size
-          Real rate = 1.0;
-          for (int mom = 0; mom < NUM_SOOT_MOMENTS + 1; ++mom) {
-            rate = amrex::max<amrex::Real>(
-              rate,
-              1.05 * -sootdt * (mom_src[mom] + mom_frc[mom]) / moments[mom]);
-          }
-          if (rate > 1.0) {
-            sootdt = amrex::max<amrex::Real>(sootdt / rate, mindt);
-          }
-          if (tstart + sootdt > dt) {
-            sootdt = dt - tstart;
-          }
-          // Update species concentrations within subcycle
-          for (int sp = 0; sp < NUM_SOOT_GS; ++sp) {
-            xi_n[sp] += sootdt * (omega_src[sp] + xi_frc[sp]);
-            rho += sootdt * omega_src[sp] * mw_fluid[sp];
-            omega_src[sp] = 0.; // Reset omega source
-          }
-          rho += sootdt * rho_frc;
-          // Update moments within subcycle
-          for (int mom = 0; mom < NUM_SOOT_MOMENTS + 1; ++mom) {
-            moments[mom] += sootdt * (mom_src[mom] + mom_frc[mom]);
-            mom_src[mom] = 0.0; // Reset moment source
-          }
-          if (has_forcing) {
+            rho += sootdt * rho_frc;
+            // Update moments within subcycle
             for (int mom = 0; mom < NUM_SOOT_MOMENTS + 1; ++mom) {
-              clip_add[mom] -= moments[mom];
+              moments[mom] += sootdt * (mom_src[mom] + mom_frc[mom]);
+              mom_src[mom] = 0.0; // Reset moment source
             }
+            clip();
+            tstart += sootdt;
+            isub++;
           }
-          sd->clipMoments(momentsPtr);
-          if (has_forcing) {
-            for (int mom = 0; mom < NUM_SOOT_MOMENTS + 1; ++mom) {
-              clip_add[mom] += moments[mom];
-            }
-          }
-          tstart += sootdt;
-          isub++;
-        }
-        // If not finished with the time step, add remaining source
-        if (tstart < dt) {
-          Real remdt = dt - tstart;
-          Real* xi_src = xi_n.data();
-          if (has_forcing) {
+          // If not finished with the time step, add remaining source
+          if (tstart < dt) {
+            Real remdt = dt - tstart;
+            sd->computeSrcTerms(
+              T, mu, rho, molarMass, convT, betaNucl, colConst, xi_src(),
+              omega_src.data(), momentsPtr, mom_srcPtr, mom_fvPtr, sr);
+            // Update species concentrations within subcycle
             for (int sp = 0; sp < NUM_SOOT_GS; ++sp) {
-              xi_eval[sp] = amrex::max<amrex::Real>(0.0, xi_n[sp]);
+              xi_n[sp] += remdt * (omega_src[sp] + xi_frc[sp]);
+              rho += remdt * omega_src[sp] * mw_fluid[sp];
             }
-            xi_src = xi_eval.data();
-          }
-          sd->computeSrcTerms(
-            T, mu, rho, molarMass, convT, betaNucl, colConst, xi_src,
-            omega_src.data(), momentsPtr, mom_srcPtr, mom_fvPtr, sr);
-          // Update species concentrations within subcycle
-          for (int sp = 0; sp < NUM_SOOT_GS; ++sp) {
-            xi_n[sp] += remdt * (omega_src[sp] + xi_frc[sp]);
-            rho += remdt * omega_src[sp] * mw_fluid[sp];
-          }
-          rho += remdt * rho_frc;
-          for (int mom = 0; mom < NUM_SOOT_MOMENTS + 1; ++mom) {
-            moments[mom] += remdt * (mom_src[mom] + mom_frc[mom]);
-          }
-          if (has_forcing) {
+            rho += remdt * rho_frc;
             for (int mom = 0; mom < NUM_SOOT_MOMENTS + 1; ++mom) {
-              clip_add[mom] -= moments[mom];
+              moments[mom] += remdt * (mom_src[mom] + mom_frc[mom]);
             }
-          }
-          sd->clipMoments(momentsPtr);
-          if (has_forcing) {
-            for (int mom = 0; mom < NUM_SOOT_MOMENTS + 1; ++mom) {
-              clip_add[mom] += moments[mom];
-            }
+            clip();
           }
         }
         sd->convertFromMol(momentsPtr);
         sd->convertFromMol(clip_add.data());
-        for (int mom = 0; mom < NUM_SOOT_MOMENTS + 1; ++mom) {
+        for (int mom = 0; mom < nmom; ++mom) {
           const int peleIndx = sootIndx + mom;
           Real src = (moments[mom] - mom0[mom]) / dt;
           if (has_forcing) {
@@ -717,38 +658,25 @@ struct SootCvodeData
   const amrex::Real* cv_c;
   const SootData* sd;
   const SootReaction* sr;
+  amrex::GpuArray<amrex::Real, NUM_SOOT_GS> mw;
 };
 
 N_Vector
 sootNewVector(const int n)
 {
-  SUNContext sunctx = *amrex::sundials::The_Sundials_Context();
-#if defined(AMREX_USE_CUDA)
-  return N_VNewWithMemHelp_Cuda(
-    n, /*use_managed_mem=*/false, *amrex::sundials::The_SUNMemory_Helper(),
-    sunctx);
-#elif defined(AMREX_USE_HIP)
-  return N_VNewWithMemHelp_Hip(
-    n, /*use_managed_mem=*/false, *amrex::sundials::The_SUNMemory_Helper(),
-    sunctx);
-#elif defined(AMREX_USE_SYCL)
-  return N_VNewWithMemHelp_Sycl(
-    n, /*use_managed_mem=*/false, *amrex::sundials::The_SUNMemory_Helper(),
-    &amrex::Gpu::Device::streamQueue(), sunctx);
+#ifdef AMREX_USE_GPU
+  return pele::physics::reactions::utils::setNVectorGPU(
+    n, 0, amrex::Gpu::gpuStream());
 #else
-  return N_VNew_Serial(n, sunctx);
+  return N_VNew_Serial(n, *amrex::sundials::The_Sundials_Context());
 #endif
 }
 
 amrex::Real*
 sootVectorData(N_Vector v)
 {
-#if defined(AMREX_USE_CUDA)
-  return N_VGetDeviceArrayPointer_Cuda(v);
-#elif defined(AMREX_USE_HIP)
-  return N_VGetDeviceArrayPointer_Hip(v);
-#elif defined(AMREX_USE_SYCL)
-  return N_VGetDeviceArrayPointer_Sycl(v);
+#ifdef AMREX_USE_GPU
+  return N_VGetDeviceArrayPointer(v);
 #else
   return N_VGetArrayPointer(v);
 #endif
@@ -765,6 +693,7 @@ sootCvodeRHS(sunrealtype /*t*/, N_Vector y_in, N_Vector ydot_in, void* udata)
   const amrex::Real* cv_c = ud->cv_c;
   const SootData* sd = ud->sd;
   const SootReaction* sr = ud->sr;
+  const auto mw = ud->mw;
   constexpr int neq = SootModel::cvNeq;
   constexpr int nconst = SootModel::cvNconst;
   constexpr int nmom = NUM_SOOT_MOMENTS + 1;
@@ -794,16 +723,13 @@ sootCvodeRHS(sunrealtype /*t*/, N_Vector y_in, N_Vector ydot_in, void* udata)
     sd->computeSrcTerms(
       cc[1], cc[2], rho, cc[3], cc[4], cc[5], cc[6], xi.data(),
       omega_src.data(), moments.data(), mom_src.data(), mom_fv.data(), sr);
-    auto eos = pele::physics::PhysicsType::eos();
-    amrex::GpuArray<amrex::Real, NUM_SPECIES> mwF;
-    eos.molecular_weight(mwF.data());
     amrex::Real rho_dot = cc[7 + nmom + NUM_SOOT_GS];
     for (int mom = 0; mom < nmom; ++mom) {
       fc[mom] = mom_src[mom] + cc[7 + mom];
     }
     for (int sp = 0; sp < NUM_SOOT_GS; ++sp) {
       fc[nmom + sp] = omega_src[sp] + cc[7 + nmom + sp];
-      rho_dot += omega_src[sp] * mwF[sd->refIndx[sp]];
+      rho_dot += omega_src[sp] * mw[sp];
     }
     fc[nmom + NUM_SOOT_GS] = rho_dot;
   });
@@ -872,7 +798,15 @@ SootModel::computeSootSourceCvode(
       ad[n] = typ[n % neq];
     });
 
-    SootCvodeData udata{ncells, cd, d_sootData, d_sootReact};
+    SootCvodeData udata{ncells, cd, d_sootData, d_sootReact, {}};
+    {
+      auto eos = pele::physics::PhysicsType::eos();
+      amrex::GpuArray<Real, NUM_SPECIES> mwF;
+      eos.molecular_weight(mwF.data());
+      for (int sp = 0; sp < NUM_SOOT_GS; ++sp) {
+        udata.mw[sp] = mwF[m_sootData->refIndx[sp]];
+      }
+    }
     SUNContext sunctx = *amrex::sundials::The_Sundials_Context();
     void* cvode_mem = CVodeCreate(m_cvodeBDF ? CV_BDF : CV_ADAMS, sunctx);
     SUNLinearSolver LS = nullptr;
@@ -907,12 +841,8 @@ SootModel::computeSootSourceCvode(
               << nsteps << " steps, " << nfevals << " RHS evaluations\n";
     }
     CVodeFree(&cvode_mem);
-    if (LS != nullptr) {
-      SUNLinSolFree(LS);
-    }
-    if (NLS != nullptr) {
-      SUNNonlinSolFree(NLS);
-    }
+    SUNLinSolFree(LS);
+    SUNNonlinSolFree(NLS);
   }
   computeSootSourceImpl(
     vbox, Qstate, coeff_mu, soot_state, dt, pres_term, forcing,
