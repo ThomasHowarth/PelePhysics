@@ -393,42 +393,91 @@ SprayParticleContainer::updateParticles(
               trilinear_interp(
                 ijk, lx, indx_array.data(), weights.data(), bflags);
             }
+            if (is_film && rate_only) {
+              // No instantaneous rate for wall film particles
+              continue;
+            }
+            // spray_SDC (has_end or rate_only): second order along the
+            // particle path, away from walls, EB and the domain boundaries.
+            // path_weights: interpolation weights at pos, if pos is away from
+            // them too.
+            const bool sdc_path = (has_end || rate_only) && !do_fe_interp &&
+                                  bflags == IntVect::TheZeroVector();
+            auto path_weights =
+              [&](const RealVect& pos, IntVect* idx, Real* wts) -> bool {
+              if (at_bounds) {
+                IntVect bf(IntVect::TheZeroVector());
+                if (
+                  check_bounds(pos, plo, phi, dx, bndry_lo, bndry_hi, bf) ||
+                  bf != IntVect::TheZeroVector()) {
+                  return false;
+                }
+              }
+              const RealVect lpos = (pos - plo) * dxi + 0.5;
+              trilinear_interp(
+                lpos.floor(), lpos, idx, wts, IntVect::TheZeroVector());
+#ifdef AMREX_USE_EB
+              if (eb_in_box) {
+                for (int aindx = 0; aindx < AMREX_D_PICK(2, 4, 8); ++aindx) {
+                  if (!flags_array(idx[aindx]).isRegular()) {
+                    return false;
+                  }
+                }
+              }
+#endif
+              return true;
+            };
+            const RealVect vel0(AMREX_D_DECL(
+              p.rdata(SprayComps::pstateVel),
+              p.rdata(SprayComps::pstateVel + 1),
+              p.rdata(SprayComps::pstateVel + 2)));
+            const bool moves =
+              has_end && do_move && !fdat->fixed_parts && !is_film;
             // Interpolate fluid state
             gpv.reset();
             InterpolateGasPhase(
               gpv, state_box, rhoarr, rhoYarr, Tarr, momarr, engarr,
               indx_array.data(), weights.data(), fdat->eosparm, fdat);
-            // Gas state at the end of the step, and the fraction of the step
-            // this subcycle covers
-            GasPhaseVals gpv_e;
+            // With has_end, the gas varies from theta = 0 (state) to 1
+            // (state_end) over the step; the subcycle starts at theta0 and
+            // ends at theta1, where gpv_1 is the gas at the particle position
+            // predicted by Euler
             const Real theta0 =
               static_cast<Real>(cur_iter) / static_cast<Real>(num_iter);
             const Real theta1 =
               static_cast<Real>(cur_iter + 1) / static_cast<Real>(num_iter);
+            GasPhaseVals gpv_1;
             if (has_end) {
+              GasPhaseVals gpv_e;
               gpv_e.reset();
-              eos.molecular_weight(gpv_e.mw.data());
-              for (int n = 0; n < NUM_CHEM_SPECIES; ++n) {
-                gpv_e.mw[n] *= SprayUnits::mass_conv;
-              }
               InterpolateGasPhase(
                 gpv_e, state_box, rhoarr_e, rhoYarr_e, Tarr_e, momarr_e,
                 engarr_e, indx_array.data(), weights.data(), fdat->eosparm,
                 fdat);
-            }
-            if (is_film && rate_only) {
-              // No instantaneous rate for wall film particles
-              continue;
-            }
-            // With has_end, the gas varies from theta = 0 (gpv) to 1 (gpv_e)
-            // over the step; the subcycle starts at theta0 and ends at theta1
-            GasPhaseVals gpv_1;
-            if (has_end) {
               const GasPhaseVals gpv_s = gpv;
               // Wall film: gas held at the middle of the subcycle
               gpv.setFluidState(
                 gpv_s, gpv_e, is_film ? 0.5 * (theta0 + theta1) : theta0);
-              gpv_1.setFluidState(gpv_s, gpv_e, theta1);
+              GpuArray<IntVect, AMREX_D_PICK(2, 4, 8)> indx_1;
+              GpuArray<Real, AMREX_D_PICK(2, 4, 8)> weights_1;
+              if (
+                moves && sdc_path &&
+                path_weights(
+                  p.pos() + sub_dt * vel0, indx_1.data(), weights_1.data())) {
+                GasPhaseVals gpv_1s;
+                gpv_1s.reset();
+                InterpolateGasPhase(
+                  gpv_1s, state_box, rhoarr, rhoYarr, Tarr, momarr, engarr,
+                  indx_1.data(), weights_1.data(), fdat->eosparm, fdat);
+                gpv_e.reset();
+                InterpolateGasPhase(
+                  gpv_e, state_box, rhoarr_e, rhoYarr_e, Tarr_e, momarr_e,
+                  engarr_e, indx_1.data(), weights_1.data(), fdat->eosparm,
+                  fdat);
+                gpv_1.setFluidState(gpv_1s, gpv_e, theta1);
+              } else {
+                gpv_1.setFluidState(gpv_s, gpv_e, theta1);
+              }
             }
             // Solve for avg mw and pressure at droplet location
             fdat->calcBoilT(gpv, cBoilT.data());
@@ -440,8 +489,14 @@ SprayParticleContainer::updateParticles(
                 sub_dt, gpv, *fdat, p, cBoilT.data(), ltransparm,
                 has_end ? &gpv_1 : nullptr, rate_only);
             }
-            IntVect cur_indx = ijkc;
-            Real cvol = inv_vol;
+            // Trapezoid in time for the position with has_end
+            RealVect vel_move(AMREX_D_DECL(
+              p.rdata(SprayComps::pstateVel),
+              p.rdata(SprayComps::pstateVel + 1),
+              p.rdata(SprayComps::pstateVel + 2)));
+            if (has_end) {
+              vel_move = 0.5 * (vel0 + vel_move);
+            }
             if (p.id() > 0 && do_breakup) {
               // Update breakup variables and determine if breakup occurs
               if (fdat->do_breakup == 1) {
@@ -461,43 +516,66 @@ SprayParticleContainer::updateParticles(
                 }
               }
             }
+            // Deposit the exchange. On the spray_SDC path it is spread over
+            // the cells around the middle of the subcycle path with the
+            // interpolation weights, which is second order in time for a
+            // moving particle; otherwise all of it goes to the particle cell.
+            auto deposit = [&](const IntVect& cur_indx, const Real wt) {
+              Real cvol = inv_vol;
 #ifdef AMREX_USE_EB
-            if (flags_array(cur_indx).isSingleValued()) {
-              cvol *= 1. / (volfrac_fab(cur_indx));
-            }
+              if (flags_array(cur_indx).isSingleValued()) {
+                cvol *= 1. / (volfrac_fab(cur_indx));
+              }
 #endif
-            Real cur_coef = -cvol * sub_dt / flow_dt;
-            if (!src_box.contains(cur_indx)) {
-              if (!isGhost) {
-                Abort(
-                  "SprayParticleContainer::updateParticles() -- source box "
-                  "too small");
+              if (!src_box.contains(cur_indx)) {
+                if (!isGhost) {
+                  Abort(
+                    "SprayParticleContainer::updateParticles() -- source box "
+                    "too small");
+                }
+                return;
               }
-            }
-            if (fdat->mom_trans) {
-              for (int dir = 0; dir < AMREX_SPACEDIM; ++dir) {
+              const Real cur_coef = -wt * cvol * sub_dt / flow_dt;
+              if (fdat->mom_trans) {
+                for (int dir = 0; dir < AMREX_SPACEDIM; ++dir) {
+                  Gpu::Atomic::Add(
+                    &momSrcarr(cur_indx, dir),
+                    cur_coef * gpv.fluid_mom_src[dir]);
+                }
+              }
+              if (fdat->mass_trans) {
                 Gpu::Atomic::Add(
-                  &momSrcarr(cur_indx, dir), cur_coef * gpv.fluid_mom_src[dir]);
+                  &rhoSrcarr(cur_indx), cur_coef * gpv.fluid_mass_src);
+                for (int pc = 0; pc < fdat->N_pc; ++pc) {
+                  const int pcspec = fdat->pc_indx[pc];
+                  Gpu::Atomic::Add(
+                    &rhoYSrcarr(cur_indx, pc),
+                    cur_coef * gpv.fluid_Y_dot[pcspec]);
+                }
               }
-            }
-            if (fdat->mass_trans) {
               Gpu::Atomic::Add(
-                &rhoSrcarr(cur_indx), cur_coef * gpv.fluid_mass_src);
-              for (int pc = 0; pc < fdat->N_pc; ++pc) {
-                const int pcspec = fdat->pc_indx[pc];
-                Gpu::Atomic::Add(
-                  &rhoYSrcarr(cur_indx, pc),
-                  cur_coef * gpv.fluid_Y_dot[pcspec]);
+                &engSrcarr(cur_indx), cur_coef * gpv.fluid_eng_src);
+            };
+            GpuArray<IntVect, AMREX_D_PICK(2, 4, 8)> indx_d;
+            GpuArray<Real, AMREX_D_PICK(2, 4, 8)> weights_d;
+            const RealVect pos_mid =
+              moves ? RealVect(p.pos() + 0.5 * sub_dt * vel_move) : p.pos();
+            if (
+              sdc_path &&
+              path_weights(pos_mid, indx_d.data(), weights_d.data())) {
+              for (int aindx = 0; aindx < AMREX_D_PICK(2, 4, 8); ++aindx) {
+                if (weights_d[aindx] > 0.) {
+                  deposit(indx_d[aindx], weights_d[aindx]);
+                }
               }
+            } else {
+              deposit(ijkc, 1.);
             }
-            Gpu::Atomic::Add(
-              &engSrcarr(cur_indx), cur_coef * gpv.fluid_eng_src);
             // Real new_time = static_cast<Real>(cur_iter + 1) * sub_dt;
             // Modify particle position by whole time step
             if (do_move && !fdat->fixed_parts && p.id() > 0 && !is_film) {
               for (int dir = 0; dir < AMREX_SPACEDIM; ++dir) {
-                const Real cvel = p.rdata(SprayComps::pstateVel + dir);
-                p.pos(dir) += sub_dt * cvel;
+                p.pos(dir) += sub_dt * vel_move[dir];
               }
               if (at_bounds || do_fe_interp) {
                 // First check if particle has exited the domain through a

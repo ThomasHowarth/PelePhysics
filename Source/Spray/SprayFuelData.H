@@ -120,8 +120,11 @@ struct SprayData
   bool mass_trans = true;   // If evaporation is on
   bool mom_trans = true;    // If momentum transfer is on
   bool fixed_parts = false; // If particles are fixed in place
-  // Particle ODE substeps: 1 - forward Euler, 2 - Ralston (explicit RK2)
+  // Particle ODE substeps: 1 - forward Euler, 2 - explicit two-stage RK2
   int time_order = 1;
+  // RK2 stage location in the substep, alpha in [1/2, 1]: 2/3 - Ralston,
+  // 1 - Heun, 1/2 - midpoint. Weights 1 - 1/(2 alpha) and 1/(2 alpha).
+  amrex::Real rk2_stage = 2. / 3.;
   bool do_splash = false;
   int do_breakup = 0; // 0 - no breakup modeling, 1 - TAB model, 2 - KHRT model
   // Min cell volume fraction to add sources to

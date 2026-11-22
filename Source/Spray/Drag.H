@@ -67,10 +67,13 @@ struct calcVaporState
     amrex::Real& B_M,
     amrex::Real& sumXVap,
     amrex::Real& cp_skin,
-    amrex::Real& mw_skin)
+    amrex::Real& mw_skin,
+    amrex::Real* h_out = nullptr)
   {
     auto eos = pele::physics::PhysicsType::eos(fdat.eosparm);
-    amrex::Real h_gas[NUM_SPECIES];
+    // Species enthalpies at T_in, also returned in h_out if given
+    amrex::Real h_local[NUM_SPECIES];
+    amrex::Real* h_gas = (h_out != nullptr) ? h_out : h_local;
     eos.T2Hi(T_in, h_gas);
 
     // Mole fraction of the droplet, need vector for many-to-one mapping later
@@ -303,6 +306,70 @@ struct calcVaporState<pele::physics::eos::Manifold>
   }
 };
 
+// Exchange with the gas summed over the rate evaluations of a particle: drag
+// and heat transfer, and the evaporation rate with the velocity, kinetic
+// energy and species enthalpies the vapour carries (weighted by the rate)
+struct SprayExchange
+{
+  amrex::RealVect mom = amrex::RealVect::TheZeroVector();
+  amrex::Real eng = 0.;
+  amrex::Real mdot = 0.;
+  amrex::RealVect mvel = amrex::RealVect::TheZeroVector();
+  amrex::Real mke = 0.;
+  amrex::GpuArray<amrex::Real, NUM_SPECIES> midot{};
+  amrex::GpuArray<amrex::Real, NUM_SPECIES> mih{};
+
+  AMREX_GPU_HOST_DEVICE
+  AMREX_FORCE_INLINE
+  void add(const SprayExchange& o, const amrex::Real w, const int N_pc)
+  {
+    mom += w * o.mom;
+    eng += w * o.eng;
+    mdot += w * o.mdot;
+    mvel += w * o.mvel;
+    mke += w * o.mke;
+    for (int pc = 0; pc < N_pc; ++pc) {
+      midot[pc] += w * o.midot[pc];
+      mih[pc] += w * o.mih[pc];
+    }
+  }
+};
+
+// Add the mass and species exchange to gpv, with the momentum and energy
+// the vapour carries. midot and h_carry are indexed by pc.
+AMREX_GPU_DEVICE
+AMREX_FORCE_INLINE
+void
+addCarriedSources(
+  GasPhaseVals& gpv,
+  const SprayData& fdat,
+  const amrex::Real num_ppp,
+  const amrex::Real mdot,
+  const amrex::RealVect& vel_carry,
+  const amrex::Real ke_carry,
+  const amrex::Real* midot,
+  const amrex::Real* h_carry)
+{
+  amrex::ignore_unused(ke_carry, h_carry);
+  gpv.fluid_mass_src = num_ppp * mdot;
+#ifndef PELELM_USE_SPRAY
+  gpv.fluid_eng_src += num_ppp * ke_carry * mdot;
+#endif
+  if (fdat.mom_trans) {
+    gpv.fluid_mom_src += num_ppp * vel_carry * mdot;
+  }
+  for (int pc = 0; pc < fdat.N_pc; ++pc) {
+    const int pcspec = fdat.pc_indx[pc];
+    gpv.fluid_Y_dot[pcspec] = num_ppp * midot[pc];
+#ifdef USE_MANIFOLD_EOS
+    gpv.fluid_eng_src = 0.0;
+#else
+    gpv.fluid_eng_src +=
+      num_ppp * midot[pc] * h_carry[pc] * SprayUnits::eng_conv;
+#endif
+  }
+}
+
 // Compute source terms and update particles.
 // gpv_end: if set, the gas state varies linearly in time over the call, from
 // gpv at its start to gpv_end at its end, and each rate evaluation sees the
@@ -379,27 +446,22 @@ calculateSpraySource(
   amrex::Real startmass = pmass;
   amrex::Real Reyn;
   amrex::RealVect part_vel_src;
-  // With a time-varying gas, a first pass only sets nsub, so that each
-  // substep then sees the gas at its own midpoint
-  GasPhaseVals gpv_start;
-  bool nsub_trial = false;
-  bool nsub_fixed = false;
-  const amrex::RealVect mom_src0 = gpv.fluid_mom_src;
-  const amrex::Real eng_src0 = gpv.fluid_eng_src;
-  if (gpv_end != nullptr) {
-    gpv_start = gpv;
-    nsub_trial = true;
-  }
-  // Ralston (RK2): each substep evaluates the rates at its start (stage 0,
-  // followed by an Euler predictor over 2/3 of the substep) and at 2/3 of it
-  // (stage 1), and the update from the start of the substep uses
-  // 1/4 k0 + 3/4 k1. The drag and heat exchange with the gas get the same
-  // weights.
+  // Two-stage RK2: each substep evaluates the rates at its start (stage 0,
+  // followed by an Euler predictor over the fraction rk_c1 of the substep)
+  // and at rk_c1 (stage 1), and the update from the start of the substep
+  // uses rk_w0 k0 + rk_w1 k1 (Ralston: rk_c1 = 2/3, weights 1/4 and 3/4;
+  // Heun: rk_c1 = 1, weights 1/2 and 1/2). The exchange with the gas gets
+  // the same weights.
   const bool rk2 = (fdat.time_order == 2) && !rate_only;
-  constexpr amrex::Real rk_c1 = 2. / 3.;
-  constexpr amrex::Real rk_w0 = 0.25;
-  constexpr amrex::Real rk_w1 = 0.75;
+  const amrex::Real rk_c1 = fdat.rk2_stage;
+  const amrex::Real rk_w1 = 0.5 / rk_c1;
+  const amrex::Real rk_w0 = 1. - rk_w1;
   int stage = 0;
+  // nsub is set by the first rate evaluation. With a time-varying gas and
+  // Euler, that evaluation sees the gas at the middle of a single substep:
+  // it is redone if nsub > 1, so that each substep sees its own midpoint.
+  bool nsub_set = false;
+  const GasPhaseVals gpv_start = gpv;
   amrex::RealVect vel_part0 = vel_part;
   amrex::Real T_part0 = T_part;
   amrex::Real pmass0 = pmass;
@@ -410,19 +472,16 @@ calculateSpraySource(
   amrex::Real part_temp_src0 = 0.;
   amrex::Real m_dot0 = 0.;
   amrex::GpuArray<amrex::Real, SPRAY_FUEL_NUM> mn_dot0{};
-  // The vapour carries the particle velocity and enthalpy at the time it
-  // leaves the particle: average them over the rate evaluations, weighted
+  // Exchange summed over the substeps, each weighted by its share of the
+  // substep. The vapour carries the particle velocity and enthalpy at the
+  // time it leaves the particle: average them over the evaluations, weighted
   // with the evaporation rate, rather than taking the end-of-step values
-  // (first order in dt)
-  amrex::Real mdot_wsum = 0.;
-  amrex::RealVect mvel_wsum = amrex::RealVect::TheZeroVector();
-  amrex::Real mke_wsum = 0.;
-  amrex::GpuArray<amrex::Real, NUM_SPECIES> midot_wsum{};
-  amrex::GpuArray<amrex::Real, NUM_SPECIES> mih_wsum{};
+  // (first order in dt).
+  SprayExchange xsum;
   while (isub <= nsub) {
     if (gpv_end != nullptr) {
-      // Euler: gas at the middle of the substep; Ralston: at its start or at
-      // 2/3 of it
+      // Euler: gas at the middle of the substep; RK2: at its start or at
+      // rk_c1 of it
       const amrex::Real frac =
         rk2 ? static_cast<amrex::Real>(isub - 1) + rk_c1 * stage
             : (static_cast<amrex::Real>(isub) - 0.5);
@@ -431,7 +490,7 @@ calculateSpraySource(
       gpv.setFluidState(
         gpv_start, *gpv_end, frac / static_cast<amrex::Real>(nsub));
     }
-    if (stage == 0) {
+    if (rk2 && stage == 0) {
       vel_part0 = vel_part;
       T_part0 = T_part;
       pmass0 = pmass;
@@ -439,19 +498,10 @@ calculateSpraySource(
       rho_part0 = rho_part;
       Y_part0 = Y_part;
     }
-    // Weight of this rate evaluation in the gas exchange, which is divided by
-    // the number of evaluations at the end
-    const amrex::Real src_wt = rk2 ? 2. * (stage == 0 ? rk_w0 : rk_w1) : 1.;
-    // The exchange before this evaluation, for a particle that vanishes in
-    // the Ralston predictor (see below)
-    const amrex::RealVect mom_src_prev = gpv.fluid_mom_src;
-    const amrex::Real eng_src_prev = gpv.fluid_eng_src;
-    const amrex::Real mdot_wsum_prev = mdot_wsum;
-    const amrex::RealVect mvel_wsum_prev = mvel_wsum;
-    const amrex::Real mke_wsum_prev = mke_wsum;
-    const amrex::GpuArray<amrex::Real, NUM_SPECIES> midot_wsum_prev =
-      midot_wsum;
-    const amrex::GpuArray<amrex::Real, NUM_SPECIES> mih_wsum_prev = mih_wsum;
+    // Exchange of this rate evaluation, and whether it sets nsub
+    SprayExchange xev;
+    const bool set_nsub = !nsub_set;
+    amrex::Real h_part[NUM_SPECIES] = {0.};
     const amrex::Real cp_part = fdat.liqprops.cp_mix(Y_part, T_part, cBoilT);
     // Average molar mass of liquid droplet
     const amrex::Real mw_part = fdat.liqprops.mw_mix(Y_part);
@@ -470,7 +520,8 @@ calculateSpraySource(
     if (fdat.mass_trans) {
       calcVaporState<pele::physics::PhysicsType::eos_type>()(
         fdat, gpv, rule, T_part, C_eps, mw_part, Y_part.data(), T_skin, cBoilT,
-        Y_skin.data(), X_vn.data(), L_n.data(), B_M, sumXVap, cp_skin, mw_skin);
+        Y_skin.data(), X_vn.data(), L_n.data(), B_M, sumXVap, cp_skin, mw_skin,
+        h_part);
     } else {
       for (int n = 0; n < NUM_SPECIES; ++n) {
         Y_skin[n] = gpv.Y_fluid[n];
@@ -544,13 +595,13 @@ calculateSpraySource(
     part_vel_src = drag_force_p * diff_vel + fdat.body_force;
 
     if (fdat.mom_trans) {
-      gpv.fluid_mom_src += src_wt * num_ppp * drag_force * diff_vel;
+      xev.mom += num_ppp * drag_force * diff_vel;
 #ifndef PELELM_USE_SPRAY
       // s_d,mu dot u_d
       amrex::Real S_dmu_dot_u = diff_vel.dotProduct(vel_part);
-      gpv.fluid_eng_src += src_wt * num_ppp * drag_force * S_dmu_dot_u;
+      xev.eng += num_ppp * drag_force * S_dmu_dot_u;
 #endif
-      if (isub == 1 && stage == 0 && !nsub_fixed) {
+      if (set_nsub) {
         amrex::Real inv_tau_var = drag_force_p;
         nsub = amrex::min<int>(
           amrex::max<int>(nsub, static_cast<int>(flow_dt * inv_tau_var) + 1),
@@ -641,9 +692,9 @@ calculateSpraySource(
       }
 
       amrex::Real conv_src = M_PI * lambda_skin * dia_part * delT * Nu_num;
-      gpv.fluid_eng_src += src_wt * num_ppp * conv_src;
+      xev.eng += num_ppp * conv_src;
       part_temp_src = (sumL + conv_src) * inv_pmass / cp_part;
-      if (isub == 1 && stage == 0 && !nsub_fixed && delT > C_eps) {
+      if (set_nsub && delT > C_eps) {
         // Limit dt so change in mass does not exceed 10%
         amrex::Real inv_tau_d = -m_dot / (0.2 * pmass);
         amrex::Real inv_tau_T = conv_src * inv_pmass / (cp_part * delT);
@@ -657,67 +708,38 @@ calculateSpraySource(
       }
     }
 
-    if (fdat.mass_trans && !rate_only) {
-      mdot_wsum += src_wt * m_dot;
-      mvel_wsum += src_wt * m_dot * vel_part;
-      mke_wsum += src_wt * m_dot * 0.5 * vel_part.radSquared();
-#ifndef USE_MANIFOLD_EOS
-      amrex::Real h_eval[NUM_SPECIES];
-      eos.T2Hi(T_part, h_eval);
+    if (fdat.mass_trans) {
+      xev.mdot = m_dot;
+      xev.mvel = m_dot * vel_part;
+      xev.mke = m_dot * 0.5 * vel_part.radSquared();
       for (int pc = 0; pc < fdat.N_pc; ++pc) {
         const int pcspec = fdat.pc_indx[pc];
-        const amrex::Real midot =
+        xev.midot[pc] =
           fdat.binary_csr_rowdotprod(pcspec, fdat.L_row, fdat.L_col, mn_dot);
-        midot_wsum[pc] += src_wt * midot;
-        mih_wsum[pc] += src_wt * midot * h_eval[pcspec];
+        xev.mih[pc] = xev.midot[pc] * h_part[pcspec];
       }
-#endif
     }
 
     if (rate_only) {
-      // Instantaneous exchange: the drag and heat transfer were added above;
-      // add the mass, species and the energy and momentum they carry, as the
-      // end of this function does for the change over the step
-      gpv.fluid_mass_src = num_ppp * m_dot;
-#ifndef PELELM_USE_SPRAY
-      gpv.fluid_eng_src += num_ppp * 0.5 * vel_part.radSquared() * m_dot;
-#endif
-      if (fdat.mom_trans) {
-        gpv.fluid_mom_src += num_ppp * vel_part * m_dot;
-      }
-#ifndef USE_MANIFOLD_EOS
-      amrex::Real h_gas_r[NUM_SPECIES];
-      eos.T2Hi(T_part, h_gas_r);
-#endif
+      // Instantaneous exchange at the current particle and gas state
+      gpv.fluid_mom_src += xev.mom;
+      gpv.fluid_eng_src += xev.eng;
+      amrex::Real h_pc[NUM_SPECIES] = {0.};
       for (int pc = 0; pc < fdat.N_pc; ++pc) {
-        const int pcspec = fdat.pc_indx[pc];
-        const amrex::Real midot =
-          fdat.binary_csr_rowdotprod(pcspec, fdat.L_row, fdat.L_col, mn_dot);
-        gpv.fluid_Y_dot[pcspec] = num_ppp * midot;
-#ifdef USE_MANIFOLD_EOS
-        gpv.fluid_eng_src = 0.0;
-#else
-        gpv.fluid_eng_src +=
-          num_ppp * midot * h_gas_r[pcspec] * SprayUnits::eng_conv;
-#endif
+        h_pc[pc] = h_part[fdat.pc_indx[pc]];
       }
+      addCarriedSources(
+        gpv, fdat, num_ppp, m_dot, vel_part, 0.5 * vel_part.radSquared(),
+        xev.midot.data(), h_pc);
       return Reyn;
     }
-    if (isub == 1) {
+    if (set_nsub) {
+      nsub_set = true;
       dt = flow_dt / static_cast<amrex::Real>(nsub);
-    }
-    if (nsub_trial) {
-      // Discard the sources of the trial pass and redo substep 1
-      nsub_trial = false;
-      nsub_fixed = true;
-      gpv.fluid_mom_src = mom_src0;
-      gpv.fluid_eng_src = eng_src0;
-      mdot_wsum = 0.;
-      mvel_wsum = amrex::RealVect::TheZeroVector();
-      mke_wsum = 0.;
-      midot_wsum.fill(0.);
-      mih_wsum.fill(0.);
-      continue;
+      if (gpv_end != nullptr && !rk2 && nsub > 1) {
+        // Redo substep 1 with the gas at its own midpoint
+        continue;
+      }
     }
     if (rk2) {
       if (stage == 0) {
@@ -742,7 +764,7 @@ calculateSpraySource(
         }
       }
     }
-    // Ralston predictor: Euler over 2/3 of the substep
+    // RK2 predictor: Euler over rk_c1 of the substep
     const amrex::Real part_dt =
       (rk2 && stage == 0) ? rk_c1 * fdat.dtmod * dt : fdat.dtmod * dt;
     if (!fdat.fixed_parts) {
@@ -752,6 +774,7 @@ calculateSpraySource(
         , vel_part[1] += part_dt * part_vel_src[1];
         , vel_part[2] += part_dt * part_vel_src[2];);
     }
+    bool vanished = false;
     if (fdat.mass_trans) {
       amrex::Real newT = T_part + part_dt * part_temp_src;
       amrex::Real new_mass = pmass + m_dot * part_dt;
@@ -790,23 +813,13 @@ calculateSpraySource(
         p.id() = -1;
         nsub = isub;
         isub = nsub + 1;
-        if (rk2 && stage == 0) {
-          // Only the start rates of this substep were evaluated: give them
-          // the weight of the whole substep, as with Euler, for the
-          // normalisation by the number of evaluations below
-          const amrex::Real s = (2. - src_wt) / src_wt;
-          gpv.fluid_mom_src += s * (gpv.fluid_mom_src - mom_src_prev);
-          gpv.fluid_eng_src += s * (gpv.fluid_eng_src - eng_src_prev);
-          mdot_wsum += s * (mdot_wsum - mdot_wsum_prev);
-          mvel_wsum += s * (mvel_wsum - mvel_wsum_prev);
-          mke_wsum += s * (mke_wsum - mke_wsum_prev);
-          for (int pc = 0; pc < fdat.N_pc; ++pc) {
-            midot_wsum[pc] += s * (midot_wsum[pc] - midot_wsum_prev[pc]);
-            mih_wsum[pc] += s * (mih_wsum[pc] - mih_wsum_prev[pc]);
-          }
-        }
+        vanished = true;
       }
     }
+    // RK2: a particle that vanishes in the predictor only has the start
+    // rates of this substep, which then get the weight of the whole substep
+    xsum.add(
+      xev, (!rk2 || vanished) ? 1. : (stage == 0 ? rk_w0 : rk_w1), fdat.N_pc);
     if (rk2 && stage == 0 && isub <= nsub) {
       // Evaluate the rates at 2/3 of this substep from the predictor
       stage = 1;
@@ -815,49 +828,51 @@ calculateSpraySource(
     stage = 0;
     ++isub;
   }
-  // Weighted average of the drag and heat exchange over the rate evaluations
-  const int neval = rk2 ? 2 * nsub : nsub;
-  if (neval > 1) {
-    gpv.fluid_eng_src /= static_cast<amrex::Real>(neval);
-    gpv.fluid_mom_src /= static_cast<amrex::Real>(neval);
-  }
+  // Average of the drag and heat exchange over the substeps
+  const amrex::Real inv_nsub = 1. / static_cast<amrex::Real>(nsub);
+  gpv.fluid_mom_src = inv_nsub * xsum.mom;
+  gpv.fluid_eng_src = inv_nsub * xsum.eng;
   // Must add any mass related sources at the end in case
   // some species disappear completely
-  amrex::Real mdot_total = (pmass - startmass) / (fdat.dtmod * flow_dt);
-  gpv.fluid_mass_src = num_ppp * mdot_total;
-  const bool carry_avg = mdot_wsum != 0.;
-#ifndef PELELM_USE_SPRAY
-  const amrex::Real part_ke =
-    carry_avg ? mke_wsum / mdot_wsum : 0.5 * vel_part.radSquared();
-  gpv.fluid_eng_src += num_ppp * part_ke * mdot_total;
-#endif
-  if (fdat.mom_trans) {
-    const amrex::RealVect vel_carry =
-      carry_avg ? mvel_wsum / mdot_wsum : vel_part;
-    gpv.fluid_mom_src += num_ppp * vel_carry * mdot_total;
-  }
-
-#ifndef USE_MANIFOLD_EOS
-  amrex::Real h_gas[NUM_SPECIES];
-  eos.T2Hi(T_part, h_gas);
-#endif
+  const amrex::Real inv_dt = 1. / (fdat.dtmod * flow_dt);
+  const amrex::Real mdot_total = (pmass - startmass) * inv_dt;
+  const bool carry_avg = xsum.mdot != 0.;
+  const amrex::RealVect vel_carry =
+    carry_avg ? xsum.mvel / xsum.mdot : vel_part;
+  const amrex::Real ke_carry =
+    carry_avg ? xsum.mke / xsum.mdot : 0.5 * vel_part.radSquared();
+  amrex::Real midot[NUM_SPECIES] = {0.};
+  amrex::Real h_carry[NUM_SPECIES] = {0.};
+  bool need_h_end = false;
   for (int pc = 0; pc < fdat.N_pc; ++pc) {
     const int pcspec = fdat.pc_indx[pc];
-    amrex::Real oldY_part_pc =
+    const amrex::Real oldY_part_pc =
       fdat.binary_csr_rowdotprod(pcspec, fdat.L_row, fdat.L_col, oldY_part);
-    amrex::Real newY =
+    const amrex::Real newY =
       fdat.binary_csr_rowdotprod(pcspec, fdat.L_row, fdat.L_col, Y_part);
-    amrex::Real midot =
-      (newY * pmass - oldY_part_pc * startmass) / (fdat.dtmod * flow_dt);
-    gpv.fluid_Y_dot[pcspec] = num_ppp * midot;
-#ifdef USE_MANIFOLD_EOS
-    gpv.fluid_eng_src = 0.0;
-#else
-    const amrex::Real h_carry =
-      (midot_wsum[pc] != 0.) ? mih_wsum[pc] / midot_wsum[pc] : h_gas[pcspec];
-    gpv.fluid_eng_src += num_ppp * midot * h_carry * SprayUnits::eng_conv;
-#endif
+    midot[pc] = (newY * pmass - oldY_part_pc * startmass) * inv_dt;
+    if (xsum.midot[pc] != 0.) {
+      h_carry[pc] = xsum.mih[pc] / xsum.midot[pc];
+    } else {
+      need_h_end = true;
+    }
   }
+#ifndef USE_MANIFOLD_EOS
+  if (need_h_end) {
+    // No evaporation was evaluated: the end-of-step enthalpy
+    amrex::Real h_gas[NUM_SPECIES];
+    eos.T2Hi(T_part, h_gas);
+    for (int pc = 0; pc < fdat.N_pc; ++pc) {
+      if (xsum.midot[pc] == 0.) {
+        h_carry[pc] = h_gas[fdat.pc_indx[pc]];
+      }
+    }
+  }
+#else
+  amrex::ignore_unused(need_h_end);
+#endif
+  addCarriedSources(
+    gpv, fdat, num_ppp, mdot_total, vel_carry, ke_carry, midot, h_carry);
   AMREX_D_TERM(p.rdata(SprayComps::pstateVel) = vel_part[0];
                , p.rdata(SprayComps::pstateVel + 1) = vel_part[1];
                , p.rdata(SprayComps::pstateVel + 2) = vel_part[2];);
