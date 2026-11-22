@@ -75,7 +75,8 @@ SprayParticleContainer::moveKickDrift(
     pele::physics::TransportType> const* ltransparm,
   const Real spray_cfl_lev,
   const MultiFab* state_end,
-  const bool rate_only)
+  const bool rate_only,
+  MultiFab* source_end)
 {
   BL_PROFILE("ParticleContainer::moveKickDrift()");
   AMREX_ASSERT(level >= 0);
@@ -87,7 +88,8 @@ SprayParticleContainer::moveKickDrift(
 
   updateParticles(
     level, state, source, dt, time, state_ghosts, source_ghosts, isVirtualPart,
-    isGhostPart, do_move, ltransparm, spray_cfl_lev, state_end, rate_only);
+    isGhostPart, do_move, ltransparm, spray_cfl_lev, state_end, rate_only,
+    source_end);
 }
 
 Real
@@ -160,12 +162,16 @@ SprayParticleContainer::updateParticles(
     pele::physics::TransportType> const* ltransparm,
   const Real spray_cfl_lev,
   const MultiFab* state_end,
-  const bool rate_only)
+  const bool rate_only,
+  MultiFab* source_end)
 {
   BL_PROFILE("SprayParticleContainer::updateParticles()");
   AMREX_ASSERT(OnSameGrids(level, state));
   AMREX_ALWAYS_ASSERT(!rate_only || (!do_move && state_end == nullptr));
+  AMREX_ALWAYS_ASSERT(
+    source_end == nullptr || (state_end != nullptr && advanceGivesEndRate()));
   const bool has_end = (state_end != nullptr);
+  const bool has_rate_end = (source_end != nullptr);
   AMREX_ASSERT(OnSameGrids(level, source));
   bool isActive = !(isVirt || isGhost);
   bool do_splash = (m_sprayData->do_splash && isActive && do_move);
@@ -285,6 +291,14 @@ SprayParticleContainer::updateParticles(
       Array4<Real> const& rhoSrcarr = source.array(pti, SPI.rhoSrcIndx);
       Array4<Real> const& momSrcarr = source.array(pti, SPI.momSrcIndx);
       Array4<Real> const& engSrcarr = source.array(pti, SPI.engSrcIndx);
+      // End-of-step exchange rate (only with source_end)
+      Array4<Real> rhoYSrcarr_r, rhoSrcarr_r, momSrcarr_r, engSrcarr_r;
+      if (has_rate_end) {
+        rhoYSrcarr_r = source_end->array(pti, SPI.specSrcIndx);
+        rhoSrcarr_r = source_end->array(pti, SPI.rhoSrcIndx);
+        momSrcarr_r = source_end->array(pti, SPI.momSrcIndx);
+        engSrcarr_r = source_end->array(pti, SPI.engSrcIndx);
+      }
       bool eb_in_box = false;
 
 #ifdef AMREX_USE_EB
@@ -447,6 +461,9 @@ SprayParticleContainer::updateParticles(
             const Real theta1 =
               static_cast<Real>(cur_iter + 1) / static_cast<Real>(num_iter);
             GasPhaseVals gpv_1;
+            // End-of-step exchange rate, from the last subcycle
+            GasPhaseVals gpv_r;
+            gpv_r.reset();
             if (has_end) {
               GasPhaseVals gpv_e;
               gpv_e.reset();
@@ -487,7 +504,8 @@ SprayParticleContainer::updateParticles(
             } else {
               Reyn_d = calculateSpraySource(
                 sub_dt, gpv, *fdat, p, cBoilT.data(), ltransparm,
-                has_end ? &gpv_1 : nullptr, rate_only);
+                has_end ? &gpv_1 : nullptr, rate_only,
+                (has_rate_end && cur_iter == num_iter - 1) ? &gpv_r : nullptr);
             }
             // Trapezoid in time for the position with has_end
             RealVect vel_move(AMREX_D_DECL(
@@ -520,7 +538,12 @@ SprayParticleContainer::updateParticles(
             // the cells around the middle of the subcycle path with the
             // interpolation weights, which is second order in time for a
             // moving particle; otherwise all of it goes to the particle cell.
-            auto deposit = [&](const IntVect& cur_indx, const Real wt) {
+            auto deposit_to = [&](
+                                Array4<Real> const& momA,
+                                Array4<Real> const& rhoA,
+                                Array4<Real> const& rhoYA,
+                                Array4<Real> const& engA, const GasPhaseVals& g,
+                                const IntVect& cur_indx, const Real wt) {
               Real cvol = inv_vol;
 #ifdef AMREX_USE_EB
               if (flags_array(cur_indx).isSingleValued()) {
@@ -535,26 +558,28 @@ SprayParticleContainer::updateParticles(
                 }
                 return;
               }
-              const Real cur_coef = -wt * cvol * sub_dt / flow_dt;
+              const Real cur_coef = -wt * cvol;
               if (fdat->mom_trans) {
                 for (int dir = 0; dir < AMREX_SPACEDIM; ++dir) {
                   Gpu::Atomic::Add(
-                    &momSrcarr(cur_indx, dir),
-                    cur_coef * gpv.fluid_mom_src[dir]);
+                    &momA(cur_indx, dir), cur_coef * g.fluid_mom_src[dir]);
                 }
               }
               if (fdat->mass_trans) {
-                Gpu::Atomic::Add(
-                  &rhoSrcarr(cur_indx), cur_coef * gpv.fluid_mass_src);
+                Gpu::Atomic::Add(&rhoA(cur_indx), cur_coef * g.fluid_mass_src);
                 for (int pc = 0; pc < fdat->N_pc; ++pc) {
                   const int pcspec = fdat->pc_indx[pc];
                   Gpu::Atomic::Add(
-                    &rhoYSrcarr(cur_indx, pc),
-                    cur_coef * gpv.fluid_Y_dot[pcspec]);
+                    &rhoYA(cur_indx, pc), cur_coef * g.fluid_Y_dot[pcspec]);
                 }
               }
-              Gpu::Atomic::Add(
-                &engSrcarr(cur_indx), cur_coef * gpv.fluid_eng_src);
+              Gpu::Atomic::Add(&engA(cur_indx), cur_coef * g.fluid_eng_src);
+            };
+            // The step source: this subcycle's share of the step
+            auto deposit = [&](const IntVect& cur_indx, const Real wt) {
+              deposit_to(
+                momSrcarr, rhoSrcarr, rhoYSrcarr, engSrcarr, gpv, cur_indx,
+                wt * sub_dt / flow_dt);
             };
             GpuArray<IntVect, AMREX_D_PICK(2, 4, 8)> indx_d;
             GpuArray<Real, AMREX_D_PICK(2, 4, 8)> weights_d;
@@ -607,6 +632,22 @@ SprayParticleContainer::updateParticles(
             }
             if (isGhost && !src_box.contains(ijkc)) {
               p.id() = -1;
+            }
+            if (has_rate_end && cur_iter == num_iter - 1 && p.id() > 0) {
+              // End-of-step rate, spread around the end position
+              if (path_weights(p.pos(), indx_d.data(), weights_d.data())) {
+                for (int aindx = 0; aindx < AMREX_D_PICK(2, 4, 8); ++aindx) {
+                  if (weights_d[aindx] > 0.) {
+                    deposit_to(
+                      momSrcarr_r, rhoSrcarr_r, rhoYSrcarr_r, engSrcarr_r,
+                      gpv_r, indx_d[aindx], weights_d[aindx]);
+                  }
+                }
+              } else {
+                deposit_to(
+                  momSrcarr_r, rhoSrcarr_r, rhoYSrcarr_r, engSrcarr_r, gpv_r,
+                  ijkc, 1.);
+              }
             }
           } // End of subcycle loop
         } // End of p.id() > 0 check

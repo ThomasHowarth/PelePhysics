@@ -446,6 +446,10 @@ Spray Flags and Inputs
    +------------------------+-------------------------------+-------------+-------------------+
    |``fixed_parts``         |Fix particles in space         |No           |``0``              |
    +------------------------+-------------------------------+-------------+-------------------+
+   |``time_order``          |Particle ODE integrator: ``1`` |No           |``1``              |
+   |                        |forward Euler, ``2`` Heun      |             |                   |
+   |                        |(see below)                    |             |                   |
+   +------------------------+-------------------------------+-------------+-------------------+
    |``parcel_size``         |:math:`N_{d}`; Number of       |No           |``1.``             |
    |                        |droplets per parcel            |             |                   |
    +------------------------+-------------------------------+-------------+-------------------+
@@ -459,6 +463,42 @@ Spray Flags and Inputs
    |                        |droplets                       |             |                   |
    +------------------------+-------------------------------+-------------+-------------------+
 
+
+Particle time integration
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The particle velocity, temperature, mass and composition are advanced in
+substeps that resolve the drag and heat-up relaxation times. With
+``particles.time_order = 1`` each substep is forward Euler. With
+``particles.time_order = 2`` it is Heun's method: the rates are evaluated at
+the start of the substep and again at its end from an Euler predictor, and the
+update uses their average; the drag, heat and mass exchanged with the gas get
+the same weights. A droplet that vanishes in the predictor keeps the Euler
+update for that substep. The second-order integrator is needed for
+second-order spray coupling (e.g. ``peleLM.spray_SDC`` in PeleLMeX), where the
+gas the particles see varies in time over the step.
+
+Heun was chosen over the other two-stage second-order schemes, such as
+Ralston's method (stage at 2/3 of the substep, weights 1/4 and 3/4), for the
+following reasons. All two-stage second-order explicit Runge-Kutta schemes have
+the same stability limit, cost and order, and give identical results for
+linear relaxation; Ralston has a smaller error constant for nonlinear rates.
+In PeleLMeX spray coupling convergence tests, with fixed evaporating droplets
+(where the particle integration error dominates) Heun's errors in the gas
+temperature and fuel vapour were 2-3 times Ralston's (its density error was
+half), while with moving droplets the two agreed within 1%. Heun's stages lie
+at the
+ends of the substep, which suits second-order coupling: the gas is sampled at
+the start and at the predicted end of each particle subcycle (in time and, for
+moving particles, in position), so Heun's stages see it there without blending,
+and the last stage of a step evaluates the rates at the end of the step. That
+is an approximation (from the predicted particle state) of the instantaneous
+end-of-step exchange rate needed for the velocity divergence constraint, which
+a scheme with an interior stage could only extrapolate: ``moveKickDrift``
+returns it in ``source_end`` during the advance, which saves the coupled solver
+a separate particle pass. Breakup and splashing create particles after the
+last stage, so the separate pass is still needed with them
+(``SprayParticleContainer::advanceGivesEndRate``).
 
 .. _SprayLiquidProperties:
 

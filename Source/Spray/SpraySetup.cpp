@@ -46,11 +46,7 @@ SprayParticleContainer::readSprayParams(int& particle_verbose)
   pp.query("fixed_parts", m_sprayData->fixed_parts);
   pp.query("time_order", m_sprayData->time_order);
   if (m_sprayData->time_order != 1 && m_sprayData->time_order != 2) {
-    amrex::Abort("particles.time_order must be 1 (Euler) or 2 (RK2)");
-  }
-  pp.query("rk2_stage", m_sprayData->rk2_stage);
-  if (m_sprayData->rk2_stage < 0.5 || m_sprayData->rk2_stage > 1.) {
-    amrex::Abort("particles.rk2_stage must be in [0.5, 1]");
+    amrex::Abort("particles.time_order must be 1 (Euler) or 2 (Heun)");
   }
 #ifdef PELELM_USE_SPRAY
   Real max_cfl = 2.;

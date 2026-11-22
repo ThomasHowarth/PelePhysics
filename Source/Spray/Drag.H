@@ -377,6 +377,10 @@ addCarriedSources(
 // Otherwise the gas is held at gpv.
 // rate_only: only add the instantaneous exchange rates at the current particle
 // and gas state to gpv, without updating the particle.
+// gpv_rate_end: if set (with Heun and gpv_end), the instantaneous exchange
+// rates of the last stage, at the end of the call, are returned in its
+// sources: the end-of-step rate, from the predicted particle state (zero if
+// the particle vanishes).
 AMREX_GPU_DEVICE
 AMREX_FORCE_INLINE
 amrex::Real
@@ -390,7 +394,8 @@ calculateSpraySource(
     pele::physics::EosType,
     pele::physics::TransportType> const* trans_parm,
   const GasPhaseVals* gpv_end = nullptr,
-  const bool rate_only = false)
+  const bool rate_only = false,
+  GasPhaseVals* gpv_rate_end = nullptr)
 {
   auto eos = pele::physics::PhysicsType::eos(fdat.eosparm);
   const amrex::Real rule = 1. / 3.;
@@ -446,16 +451,14 @@ calculateSpraySource(
   amrex::Real startmass = pmass;
   amrex::Real Reyn;
   amrex::RealVect part_vel_src;
-  // Two-stage RK2: each substep evaluates the rates at its start (stage 0,
-  // followed by an Euler predictor over the fraction rk_c1 of the substep)
-  // and at rk_c1 (stage 1), and the update from the start of the substep
-  // uses rk_w0 k0 + rk_w1 k1 (Ralston: rk_c1 = 2/3, weights 1/4 and 3/4;
-  // Heun: rk_c1 = 1, weights 1/2 and 1/2). The exchange with the gas gets
-  // the same weights.
+  // Heun (RK2): each substep evaluates the rates at its start (stage 0,
+  // followed by an Euler predictor over the substep) and at its end from the
+  // predictor (stage 1), and the update from the start of the substep uses
+  // (k0 + k1) / 2. The exchange with the gas gets the same weights. See the
+  // Spray documentation for why Heun rather than another RK2.
   const bool rk2 = (fdat.time_order == 2) && !rate_only;
-  const amrex::Real rk_c1 = fdat.rk2_stage;
-  const amrex::Real rk_w1 = 0.5 / rk_c1;
-  const amrex::Real rk_w0 = 1. - rk_w1;
+  constexpr amrex::Real rk_w0 = 0.5;
+  constexpr amrex::Real rk_w1 = 0.5;
   int stage = 0;
   // nsub is set by the first rate evaluation. With a time-varying gas and
   // Euler, that evaluation sees the gas at the middle of a single substep:
@@ -480,11 +483,9 @@ calculateSpraySource(
   SprayExchange xsum;
   while (isub <= nsub) {
     if (gpv_end != nullptr) {
-      // Euler: gas at the middle of the substep; RK2: at its start or at
-      // rk_c1 of it
-      const amrex::Real frac =
-        rk2 ? static_cast<amrex::Real>(isub - 1) + rk_c1 * stage
-            : (static_cast<amrex::Real>(isub) - 0.5);
+      // Euler: gas at the middle of the substep; Heun: at its start or end
+      const amrex::Real frac = rk2 ? static_cast<amrex::Real>(isub - 1 + stage)
+                                   : (static_cast<amrex::Real>(isub) - 0.5);
       // gpv_start and gpv_end are the gas at the start and end of this call
       // (a particle subcycle), so the fraction is of the call, not the step
       gpv.setFluidState(
@@ -720,18 +721,26 @@ calculateSpraySource(
       }
     }
 
-    if (rate_only) {
-      // Instantaneous exchange at the current particle and gas state
-      gpv.fluid_mom_src += xev.mom;
-      gpv.fluid_eng_src += xev.eng;
+    // Instantaneous exchange of this evaluation
+    auto add_rate = [&](GasPhaseVals& g) {
+      g.fluid_mom_src += xev.mom;
+      g.fluid_eng_src += xev.eng;
       amrex::Real h_pc[NUM_SPECIES] = {0.};
       for (int pc = 0; pc < fdat.N_pc; ++pc) {
         h_pc[pc] = h_part[fdat.pc_indx[pc]];
       }
       addCarriedSources(
-        gpv, fdat, num_ppp, m_dot, vel_part, 0.5 * vel_part.radSquared(),
+        g, fdat, num_ppp, m_dot, vel_part, 0.5 * vel_part.radSquared(),
         xev.midot.data(), h_pc);
+    };
+    if (rate_only) {
+      add_rate(gpv);
       return Reyn;
+    }
+    if (gpv_rate_end != nullptr && rk2 && stage == 1 && isub == nsub) {
+      // Heun's last stage is at the end of the call
+      gpv_rate_end->reset();
+      add_rate(*gpv_rate_end);
     }
     if (set_nsub) {
       nsub_set = true;
@@ -764,9 +773,7 @@ calculateSpraySource(
         }
       }
     }
-    // RK2 predictor: Euler over rk_c1 of the substep
-    const amrex::Real part_dt =
-      (rk2 && stage == 0) ? rk_c1 * fdat.dtmod * dt : fdat.dtmod * dt;
+    const amrex::Real part_dt = fdat.dtmod * dt;
     if (!fdat.fixed_parts) {
       // Update particle velocity
       AMREX_D_TERM(
@@ -816,7 +823,7 @@ calculateSpraySource(
         vanished = true;
       }
     }
-    // RK2: a particle that vanishes in the predictor only has the start
+    // Heun: a particle that vanishes in the predictor only has the start
     // rates of this substep, which then get the weight of the whole substep
     xsum.add(
       xev, (!rk2 || vanished) ? 1. : (stage == 0 ? rk_w0 : rk_w1), fdat.N_pc);
@@ -827,6 +834,9 @@ calculateSpraySource(
     }
     stage = 0;
     ++isub;
+  }
+  if (gpv_rate_end != nullptr && p.id() < 0) {
+    gpv_rate_end->reset();
   }
   // Average of the drag and heat exchange over the substeps
   const amrex::Real inv_nsub = 1. / static_cast<amrex::Real>(nsub);

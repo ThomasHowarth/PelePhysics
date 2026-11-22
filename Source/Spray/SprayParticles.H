@@ -196,6 +196,15 @@ public:
     return ghost_source;
   }
 
+  /// \brief Whether moveKickDrift with state_end can also give the
+  /// end-of-step exchange rate (source_end): with Heun, from its last stage,
+  /// and without breakup or splashing, which make new particles after it
+  static bool advanceGivesEndRate()
+  {
+    return m_sprayData->time_order == 2 && m_sprayData->do_breakup == 0 &&
+           !m_sprayData->do_splash;
+  }
+
   /// \brief Update but do not move particles
   void moveKick(
     amrex::MultiFab& state,
@@ -229,7 +238,8 @@ public:
       pele::physics::TransportType> const* ltransparm,
     const amrex::Real spray_cfl_lev = -1.,
     const amrex::MultiFab* state_end = nullptr,
-    const bool rate_only = false);
+    const bool rate_only = false,
+    amrex::MultiFab* source_end = nullptr);
 
   /// \brief Update particle data and solve gas-phase source terms
   /// @param state_end If set, the gas state at the end of the step: the
@@ -253,7 +263,8 @@ public:
       pele::physics::TransportType> const* ltransparm,
     const amrex::Real spray_cfl_lev,
     const amrex::MultiFab* state_end = nullptr,
-    const bool rate_only = false);
+    const bool rate_only = false,
+    amrex::MultiFab* source_end = nullptr);
 
   /// \brief Sum boundary and copy temporary source term
   /// @param source_ghosts Number of ghost cells needed for source terms
