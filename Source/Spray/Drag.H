@@ -817,8 +817,9 @@ calculateSpraySource(
       }
     }
     // Heun: a particle that vanishes in the predictor only has the start
-    // rates of this substep, which then get the weight of the whole substep
-    xsum.add(xev, (!rk2 || vanished) ? 1. : 0.5, fdat.N_pc);
+    // rates of this substep, which then get the weight of the whole substep;
+    // one that vanishes in the corrector has both stages at 1/2
+    xsum.add(xev, (!rk2 || (vanished && stage == 0)) ? 1. : 0.5, fdat.N_pc);
     if (rk2 && stage == 0 && isub <= nsub) {
       // Evaluate the rates at the end of this substep from the predictor
       stage = 1;
