@@ -412,6 +412,15 @@ calculateSpraySource(
   amrex::Real part_temp_src0 = 0.;
   amrex::Real m_dot0 = 0.;
   amrex::GpuArray<amrex::Real, SPRAY_FUEL_NUM> mn_dot0{};
+  // The vapour carries the particle velocity and enthalpy at the time it
+  // leaves the particle: average them over the rate evaluations, weighted
+  // with the evaporation rate, rather than taking the end-of-step values
+  // (first order in dt)
+  amrex::Real mdot_wsum = 0.;
+  amrex::RealVect mvel_wsum = amrex::RealVect::TheZeroVector();
+  amrex::Real mke_wsum = 0.;
+  amrex::GpuArray<amrex::Real, NUM_SPECIES> midot_wsum{};
+  amrex::GpuArray<amrex::Real, NUM_SPECIES> mih_wsum{};
   while (isub <= nsub) {
     if (gpv_end != nullptr) {
       // Euler: gas at the middle of the substep; Ralston: at its start or at
@@ -639,6 +648,23 @@ calculateSpraySource(
       }
     }
 
+    if (fdat.mass_trans && !rate_only) {
+      mdot_wsum += src_wt * m_dot;
+      mvel_wsum += src_wt * m_dot * vel_part;
+      mke_wsum += src_wt * m_dot * 0.5 * vel_part.radSquared();
+#ifndef USE_MANIFOLD_EOS
+      amrex::Real h_eval[NUM_SPECIES];
+      eos.T2Hi(T_part, h_eval);
+      for (int pc = 0; pc < fdat.N_pc; ++pc) {
+        const int pcspec = fdat.pc_indx[pc];
+        const amrex::Real midot =
+          fdat.binary_csr_rowdotprod(pcspec, fdat.L_row, fdat.L_col, mn_dot);
+        midot_wsum[pc] += src_wt * midot;
+        mih_wsum[pc] += src_wt * midot * h_eval[pcspec];
+      }
+#endif
+    }
+
     if (rate_only) {
       // Instantaneous exchange: the drag and heat transfer were added above;
       // add the mass, species and the energy and momentum they carry, as the
@@ -677,6 +703,11 @@ calculateSpraySource(
       nsub_fixed = true;
       gpv.fluid_mom_src = mom_src0;
       gpv.fluid_eng_src = eng_src0;
+      mdot_wsum = 0.;
+      mvel_wsum = amrex::RealVect::TheZeroVector();
+      mke_wsum = 0.;
+      midot_wsum.fill(0.);
+      mih_wsum.fill(0.);
       continue;
     }
     if (rk2) {
@@ -770,12 +801,16 @@ calculateSpraySource(
   // some species disappear completely
   amrex::Real mdot_total = (pmass - startmass) / (fdat.dtmod * flow_dt);
   gpv.fluid_mass_src = num_ppp * mdot_total;
+  const bool carry_avg = mdot_wsum != 0.;
 #ifndef PELELM_USE_SPRAY
-  amrex::Real part_ke = 0.5 * vel_part.radSquared();
+  const amrex::Real part_ke =
+    carry_avg ? mke_wsum / mdot_wsum : 0.5 * vel_part.radSquared();
   gpv.fluid_eng_src += num_ppp * part_ke * mdot_total;
 #endif
   if (fdat.mom_trans) {
-    gpv.fluid_mom_src += num_ppp * vel_part * mdot_total;
+    const amrex::RealVect vel_carry =
+      carry_avg ? mvel_wsum / mdot_wsum : vel_part;
+    gpv.fluid_mom_src += num_ppp * vel_carry * mdot_total;
   }
 
 #ifndef USE_MANIFOLD_EOS
@@ -794,7 +829,9 @@ calculateSpraySource(
 #ifdef USE_MANIFOLD_EOS
     gpv.fluid_eng_src = 0.0;
 #else
-    gpv.fluid_eng_src += num_ppp * midot * h_gas[pcspec] * SprayUnits::eng_conv;
+    const amrex::Real h_carry =
+      (midot_wsum[pc] != 0.) ? mih_wsum[pc] / midot_wsum[pc] : h_gas[pcspec];
+    gpv.fluid_eng_src += num_ppp * midot * h_carry * SprayUnits::eng_conv;
 #endif
   }
   AMREX_D_TERM(p.rdata(SprayComps::pstateVel) = vel_part[0];
