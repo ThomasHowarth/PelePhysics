@@ -847,7 +847,9 @@ calculateSpraySource(
   amrex::Real midot[SPRAY_FUEL_NUM] = {0.};
   amrex::Real h_carry[SPRAY_FUEL_NUM] = {0.};
   bool need_h_end = false;
-  for (int pc = 0; pc < fdat.N_pc; ++pc) {
+  // Without mass transfer oldY_part is not set, and nothing evaporates
+  const int n_pc_evap = fdat.mass_trans ? fdat.N_pc : 0;
+  for (int pc = 0; pc < n_pc_evap; ++pc) {
     const int pcspec = fdat.pc_indx[pc];
     const amrex::Real oldY_part_pc =
       fdat.binary_csr_rowdotprod(pcspec, fdat.L_row, fdat.L_col, oldY_part);
