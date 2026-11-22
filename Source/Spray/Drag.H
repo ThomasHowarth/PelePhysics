@@ -305,8 +305,8 @@ struct calcVaporState<pele::physics::eos::Manifold>
 
 // Compute source terms and update particles.
 // gpv_end: if set, the gas state varies linearly in time over the call, from
-// gpv at theta0 to gpv_end at theta1 of the flow step (theta is the fraction
-// of the step), and each particle substep sees the gas at its midpoint.
+// gpv at its start to gpv_end at its end, and each rate evaluation sees the
+// gas at its own time in the call.
 // Otherwise the gas is held at gpv.
 // rate_only: only add the instantaneous exchange rates at the current particle
 // and gas state to gpv, without updating the particle.
@@ -323,8 +323,6 @@ calculateSpraySource(
     pele::physics::EosType,
     pele::physics::TransportType> const* trans_parm,
   const GasPhaseVals* gpv_end = nullptr,
-  const amrex::Real theta0 = 0.,
-  const amrex::Real theta1 = 1.,
   const bool rate_only = false)
 {
   auto eos = pele::physics::PhysicsType::eos(fdat.eosparm);
@@ -428,9 +426,10 @@ calculateSpraySource(
       const amrex::Real frac =
         rk2 ? static_cast<amrex::Real>(isub - 1) + rk_c1 * stage
             : (static_cast<amrex::Real>(isub) - 0.5);
-      const amrex::Real theta =
-        theta0 + (theta1 - theta0) * frac / static_cast<amrex::Real>(nsub);
-      gpv.setFluidState(gpv_start, *gpv_end, theta);
+      // gpv_start and gpv_end are the gas at the start and end of this call
+      // (a particle subcycle), so the fraction is of the call, not the step
+      gpv.setFluidState(
+        gpv_start, *gpv_end, frac / static_cast<amrex::Real>(nsub));
     }
     if (stage == 0) {
       vel_part0 = vel_part;
@@ -443,6 +442,16 @@ calculateSpraySource(
     // Weight of this rate evaluation in the gas exchange, which is divided by
     // the number of evaluations at the end
     const amrex::Real src_wt = rk2 ? 2. * (stage == 0 ? rk_w0 : rk_w1) : 1.;
+    // The exchange before this evaluation, for a particle that vanishes in
+    // the Ralston predictor (see below)
+    const amrex::RealVect mom_src_prev = gpv.fluid_mom_src;
+    const amrex::Real eng_src_prev = gpv.fluid_eng_src;
+    const amrex::Real mdot_wsum_prev = mdot_wsum;
+    const amrex::RealVect mvel_wsum_prev = mvel_wsum;
+    const amrex::Real mke_wsum_prev = mke_wsum;
+    const amrex::GpuArray<amrex::Real, NUM_SPECIES> midot_wsum_prev =
+      midot_wsum;
+    const amrex::GpuArray<amrex::Real, NUM_SPECIES> mih_wsum_prev = mih_wsum;
     const amrex::Real cp_part = fdat.liqprops.cp_mix(Y_part, T_part, cBoilT);
     // Average molar mass of liquid droplet
     const amrex::Real mw_part = fdat.liqprops.mw_mix(Y_part);
@@ -781,6 +790,21 @@ calculateSpraySource(
         p.id() = -1;
         nsub = isub;
         isub = nsub + 1;
+        if (rk2 && stage == 0) {
+          // Only the start rates of this substep were evaluated: give them
+          // the weight of the whole substep, as with Euler, for the
+          // normalisation by the number of evaluations below
+          const amrex::Real s = (2. - src_wt) / src_wt;
+          gpv.fluid_mom_src += s * (gpv.fluid_mom_src - mom_src_prev);
+          gpv.fluid_eng_src += s * (gpv.fluid_eng_src - eng_src_prev);
+          mdot_wsum += s * (mdot_wsum - mdot_wsum_prev);
+          mvel_wsum += s * (mvel_wsum - mvel_wsum_prev);
+          mke_wsum += s * (mke_wsum - mke_wsum_prev);
+          for (int pc = 0; pc < fdat.N_pc; ++pc) {
+            midot_wsum[pc] += s * (midot_wsum[pc] - midot_wsum_prev[pc]);
+            mih_wsum[pc] += s * (mih_wsum[pc] - mih_wsum_prev[pc]);
+          }
+        }
       }
     }
     if (rk2 && stage == 0 && isub <= nsub) {

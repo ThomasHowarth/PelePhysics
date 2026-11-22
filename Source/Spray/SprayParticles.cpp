@@ -416,33 +416,29 @@ SprayParticleContainer::updateParticles(
                 engarr_e, indx_array.data(), weights.data(), fdat->eosparm,
                 fdat);
             }
-            // Solve for avg mw and pressure at droplet location
-            fdat->calcBoilT(gpv, cBoilT.data());
             if (is_film && rate_only) {
               // No instantaneous rate for wall film particles
               continue;
             }
+            // With has_end, the gas varies from theta = 0 (gpv) to 1 (gpv_e)
+            // over the step; the subcycle starts at theta0 and ends at theta1
+            GasPhaseVals gpv_1;
+            if (has_end) {
+              const GasPhaseVals gpv_s = gpv;
+              // Wall film: gas held at the middle of the subcycle
+              gpv.setFluidState(
+                gpv_s, gpv_e, is_film ? 0.5 * (theta0 + theta1) : theta0);
+              gpv_1.setFluidState(gpv_s, gpv_e, theta1);
+            }
+            // Solve for avg mw and pressure at droplet location
+            fdat->calcBoilT(gpv, cBoilT.data());
             if (is_film) {
-              if (has_end) {
-                // Wall film: gas held at the middle of the subcycle
-                const GasPhaseVals gpv_s = gpv;
-                gpv.setFluidState(gpv_s, gpv_e, 0.5 * (theta0 + theta1));
-              }
               calculateFilmSource(
                 sub_dt, gpv, *fdat, p, cBoilT.data(), ltransparm);
-            } else if (has_end) {
-              // The gas varies from theta = 0 (gpv) to 1 (gpv_e) over the step
-              const GasPhaseVals gpv_s = gpv;
-              gpv.setFluidState(gpv_s, gpv_e, theta0);
-              GasPhaseVals gpv_1;
-              gpv_1.setFluidState(gpv_s, gpv_e, theta1);
-              Reyn_d = calculateSpraySource(
-                sub_dt, gpv, *fdat, p, cBoilT.data(), ltransparm, &gpv_1, theta0,
-                theta1);
             } else {
               Reyn_d = calculateSpraySource(
-                sub_dt, gpv, *fdat, p, cBoilT.data(), ltransparm, nullptr, 0.,
-                1., rate_only);
+                sub_dt, gpv, *fdat, p, cBoilT.data(), ltransparm,
+                has_end ? &gpv_1 : nullptr, rate_only);
             }
             IntVect cur_indx = ijkc;
             Real cvol = inv_vol;
