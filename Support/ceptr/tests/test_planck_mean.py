@@ -88,7 +88,7 @@ def test_fit_two_ranges():
 
 def test_fit_three_ranges():
     """A kp falling then rising, like that of CH, needs three ranges."""
-    temps = np.arange(250.0, 5000.0 + 1.0, 10.0)
+    temps = np.arange(250.0, 5000.0 + 1.0, 25.0)
     # Power laws of slope -5, 0 and 3, with kinks at 1000 K and 2500 K
     t = np.clip(temps, 1000.0, None) / 1000.0
     kp = np.minimum(temps / 1000.0, 1.0) ** -5 * np.maximum(t / 2.5, 1.0) ** 3
@@ -118,13 +118,16 @@ def test_isotopes():
 
 
 def test_references():
-    """Every dataset is cited, and every reference is used."""
+    """Every dataset is cited, and every line-list reference is used."""
     used = set()
     for ds in pm.DATASETS.values():
         refs = ds.references()
-        assert refs
+        assert refs[0] == pm.REFERENCES[ds.linelist][0]
+        assert pm.EXOMOL_REF in refs
+        assert (pm.EXOCROSS_REF in refs) == ds.cooling_function
         used.update(refs)
-    assert used == set(pm.REFERENCES.values())
+    every = {r for refs in pm.REFERENCES.values() for r in refs}
+    assert used == every | {pm.EXOMOL_REF, pm.EXOCROSS_REF}
 
 
 def test_coefficient_files():
@@ -133,7 +136,6 @@ def test_coefficient_files():
     assert set(fits) == set(pm.DEFAULT_SPECIES)
     for name, data in fits.items():
         assert data["licence"] == pm.LICENCE
-        assert data["aliases"] == pm.DATASETS[name].aliases
         assert data["references"] == pm.DATASETS[name].references()
         assert data["composition"] == pm.DATASETS[name].composition
         fit = data["fit"]

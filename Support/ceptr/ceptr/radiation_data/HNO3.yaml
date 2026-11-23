@@ -7,8 +7,6 @@
 # released under CC BY-SA 4.0 (https://creativecommons.org/licenses/by-sa/4.0/).
 # Cite the references below when using it.
 species: HNO3
-aliases:
-- HONO2
 composition:
   H: 1
   N: 1

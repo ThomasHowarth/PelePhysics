@@ -53,6 +53,8 @@ import urllib.request
 import numpy as np
 import yaml
 
+from ceptr.radiation import FIT_DIR, LICENCE
+
 # CGS constants (CODATA 2018)
 H = 6.62607015e-27  # erg s
 C = 2.99792458e10  # cm/s
@@ -70,177 +72,186 @@ MAX_RANGES = 3  # most polynomial ranges of a fit
 
 EXOMOL = "https://www.exomol.com"
 EXOMOL_DB = f"{EXOMOL}/db"
-LICENCE = "CC BY-SA 4.0 (https://creativecommons.org/licenses/by-sa/4.0/)"
-FIT_DIR = pathlib.Path(__file__).parent / "radiation_data"
 
+EXOMOL_REF = (
+    "J. Tennyson et al., The ExoMol database: molecular line lists for "
+    "exoplanet and other hot atmospheres, J. Mol. Spectrosc. 327, 73-94 "
+    "(2016), doi:10.1016/j.jms.2016.05.002"
+)
+EXOCROSS_REF = (
+    "S. N. Yurchenko, A. F. Al-Refaie, J. Tennyson, ExoCross: a general "
+    "program for generating spectra from molecular line lists, Astron. "
+    "Astrophys. 614, A131 (2018), doi:10.1051/0004-6361/201732531"
+)
+
+# References of the ExoMol line lists, by line-list name
 REFERENCES = {
-    "ExoMol2016": (
-        "J. Tennyson et al., The ExoMol database: molecular line lists for "
-        "exoplanet and other hot atmospheres, J. Mol. Spectrosc. 327, 73-94 "
-        "(2016), doi:10.1016/j.jms.2016.05.002"
-    ),
-    "ExoCross2018": (
-        "S. N. Yurchenko, A. F. Al-Refaie, J. Tennyson, ExoCross: a general "
-        "program for generating spectra from molecular line lists, Astron. "
-        "Astrophys. 614, A131 (2018), doi:10.1051/0004-6361/201732531"
-    ),
-    "POKAZATEL": (
-        "O. L. Polyansky, A. A. Kyuberis, N. F. Zobov, J. Tennyson, S. N. "
-        "Yurchenko, L. Lodi, ExoMol molecular line lists XXX: a complete "
-        "high-accuracy line list for water, Mon. Not. R. Astron. Soc. 480, "
-        "2597-2608 (2018), doi:10.1093/mnras/sty1877"
-    ),
-    "UCL-4000": (
-        "S. N. Yurchenko, T. M. Mellor, R. S. Freedman, J. Tennyson, ExoMol "
-        "line lists - XXXIX. Ro-vibrational molecular line list for CO2, Mon. "
-        "Not. R. Astron. Soc. 496, 5282-5291 (2020), doi:10.1093/mnras/staa1874"
-    ),
-    "Li2015": (
+    "POKAZATEL": [
+        "O. L. Polyansky, A. A. Kyuberis, N. F. Zobov, J. Tennyson, S. N."
+        " Yurchenko, L. Lodi, ExoMol molecular line lists XXX: a complete"
+        " high-accuracy line list for water, Mon. Not. R. Astron. Soc. "
+        "480, 2597-2608 (2018), doi:10.1093/mnras/sty1877",
+    ],
+    "UCL-4000": [
+        "S. N. Yurchenko, T. M. Mellor, R. S. Freedman, J. Tennyson, "
+        "ExoMol line lists - XXXIX. Ro-vibrational molecular line list "
+        "for CO2, Mon. Not. R. Astron. Soc. 496, 5282-5291 (2020), "
+        "doi:10.1093/mnras/staa1874",
+    ],
+    "Li2015": [
         "G. Li, I. E. Gordon, L. S. Rothman, Y. Tan, S.-M. Hu, S. Kassi, "
         "A. Campargue, E. S. Medvedev, Rovibrational line lists for nine "
-        "isotopologues of the CO molecule in the X 1Sigma+ ground electronic "
-        "state, Astrophys. J. Suppl. Ser. 216, 15 (2015), "
-        "doi:10.1088/0067-0049/216/1/15"
-    ),
-    "MM": (
-        "S. N. Yurchenko, A. Owens, K. Kefala, J. Tennyson, ExoMol line lists "
-        "- LVII: High accuracy ro-vibrational line list for methane (CH4), "
-        "Mon. Not. R. Astron. Soc. 528, 3719-3729 (2024), "
-        "doi:10.1093/mnras/stae148"
-    ),
-    "MaYTY": (
+        "isotopologues of the CO molecule in the X 1Sigma+ ground "
+        "electronic state, Astrophys. J. Suppl. Ser. 216, 15 (2015), "
+        "doi:10.1088/0067-0049/216/1/15",
+    ],
+    "MM": [
+        "S. N. Yurchenko, A. Owens, K. Kefala, J. Tennyson, ExoMol line "
+        "lists - LVII: High accuracy ro-vibrational line list for methane"
+        " (CH4), Mon. Not. R. Astron. Soc. 528, 3719-3729 (2024), "
+        "doi:10.1093/mnras/stae148",
+    ],
+    "MaYTY": [
         "B. P. Mant, A. Yachmenev, J. Tennyson, S. N. Yurchenko, ExoMol "
-        "molecular line lists - XXVII: spectra of C2H4, Mon. Not. R. Astron. "
-        "Soc. 478, 3220-3232 (2018), doi:10.1093/mnras/sty1239"
-    ),
-    "aCeTY": (
-        "K. L. Chubb, J. Tennyson, S. N. Yurchenko, ExoMol molecular line lists "
-        "- XXXVII: spectra of acetylene, Mon. Not. R. Astron. Soc. 493, "
-        "1531-1545 (2020), doi:10.1093/mnras/staa229"
-    ),
-    "CoYuTe": (
-        "P. A. Coles, S. N. Yurchenko, J. Tennyson, ExoMol molecular line lists "
-        "- XXXV. A rotation-vibration line list for hot ammonia, Mon. Not. R. "
-        "Astron. Soc. 490, 4638-4647 (2019), doi:10.1093/mnras/stz2778"
-    ),
-    "CoYuTe-MARVEL": (
+        "molecular line lists - XXVII: spectra of C2H4, Mon. Not. R. "
+        "Astron. Soc. 478, 3220-3232 (2018), doi:10.1093/mnras/sty1239",
+    ],
+    "aCeTY": [
+        "K. L. Chubb, J. Tennyson, S. N. Yurchenko, ExoMol molecular line"
+        " lists - XXXVII: spectra of acetylene, Mon. Not. R. Astron. Soc."
+        " 493, 1531-1545 (2020), doi:10.1093/mnras/staa229",
+    ],
+    "CoYuTe": [
+        "P. A. Coles, S. N. Yurchenko, J. Tennyson, ExoMol molecular line"
+        " lists - XXXV. A rotation-vibration line list for hot ammonia, "
+        "Mon. Not. R. Astron. Soc. 490, 4638-4647 (2019), "
+        "doi:10.1093/mnras/stz2778",
         "A. R. Al Derzi, T. Furtenbacher, J. Tennyson, S. N. Yurchenko, "
-        "A. G. Csaszar, MARVEL analysis of the measured high-resolution spectra "
-        "of 14NH3, J. Quant. Spectrosc. Radiat. Transf. 161, 117-130 (2015), "
-        "doi:10.1016/j.jqsrt.2015.03.034"
-    ),
-    "XABC": (
-        "Q. Qu, S. N. Yurchenko, J. Tennyson, ExoMol molecular line lists - "
-        "XLII. Rovibronic molecular line list for the low-lying states of NO, "
-        "Mon. Not. R. Astron. Soc. 504, 5768-5777 (2021), "
-        "doi:10.1093/mnras/stab1154"
-    ),
-    "TYM": (
-        "S. N. Yurchenko, T. M. Mellor, J. Tennyson, ExoMol line lists - LIX. "
-        "High-temperature line list for N2O, Mon. Not. R. Astron. Soc. 534, "
-        "1364-1375 (2024), doi:10.1093/mnras/stae2201"
-    ),
-    "MYTHOS": (
-        "G. B. Mitev, C. A. Bowesman, J. Zhang, S. N. Yurchenko, J. Tennyson, "
-        "ExoMol line lists - LXI. A trihybrid line list for rovibronic "
-        "transitions of the hydroxyl radical (OH), Mon. Not. R. Astron. Soc. "
-        "536, 3401-3420 (2025), doi:10.1093/mnras/stae2803"
-    ),
-    "Harris": (
-        "G. J. Harris, J. Tennyson, B. M. Kaminsky, Ya. V. Pavlenko, "
-        "H. R. A. Jones, Improved HCN/HNC linelist, model atmospheres and "
-        "synthetic spectra for WZ Cas, Mon. Not. R. Astron. Soc. 367, 400-406 "
-        "(2006), doi:10.1111/j.1365-2966.2005.09960.x"
-    ),
-    "Harris-Barber": (
-        "R. J. Barber, J. K. Strange, C. Hill, O. L. Polyansky, G. Ch. Mellau, "
-        "S. N. Yurchenko, J. Tennyson, ExoMol line lists - III. An improved hot "
-        "rotation-vibration line list for HCN and HNC, Mon. Not. R. Astron. "
-        "Soc. 437, 1828-1835 (2014), doi:10.1093/mnras/stt2011"
-    ),
-    "ExoAmes": (
+        "A. G. Csaszar, MARVEL analysis of the measured high-resolution "
+        "spectra of 14NH3, J. Quant. Spectrosc. Radiat. Transf. 161, "
+        "117-130 (2015), doi:10.1016/j.jqsrt.2015.03.034",
+    ],
+    "XABC": [
+        "Q. Qu, S. N. Yurchenko, J. Tennyson, ExoMol molecular line lists"
+        " - XLII. Rovibronic molecular line list for the low-lying states"
+        " of NO, Mon. Not. R. Astron. Soc. 504, 5768-5777 (2021), "
+        "doi:10.1093/mnras/stab1154",
+    ],
+    "TYM": [
+        "S. N. Yurchenko, T. M. Mellor, J. Tennyson, ExoMol line lists - "
+        "LIX. High-temperature line list for N2O, Mon. Not. R. Astron. "
+        "Soc. 534, 1364-1375 (2024), doi:10.1093/mnras/stae2201",
+    ],
+    "MYTHOS": [
+        "G. B. Mitev, C. A. Bowesman, J. Zhang, S. N. Yurchenko, J. "
+        "Tennyson, ExoMol line lists - LXI. A trihybrid line list for "
+        "rovibronic transitions of the hydroxyl radical (OH), Mon. Not. "
+        "R. Astron. Soc. 536, 3401-3420 (2025), "
+        "doi:10.1093/mnras/stae2803",
+    ],
+    "Harris": [
+        "G. J. Harris, J. Tennyson, B. M. Kaminsky, Ya. V. Pavlenko, H. "
+        "R. A. Jones, Improved HCN/HNC linelist, model atmospheres and "
+        "synthetic spectra for WZ Cas, Mon. Not. R. Astron. Soc. 367, "
+        "400-406 (2006), doi:10.1111/j.1365-2966.2005.09960.x",
+        "R. J. Barber, J. K. Strange, C. Hill, O. L. Polyansky, G. Ch. "
+        "Mellau, S. N. Yurchenko, J. Tennyson, ExoMol line lists - III. "
+        "An improved hot rotation-vibration line list for HCN and HNC, "
+        "Mon. Not. R. Astron. Soc. 437, 1828-1835 (2014), "
+        "doi:10.1093/mnras/stt2011",
+    ],
+    "AYYJ": [
+        "A. Y. Adam, A. Yachmenev, S. N. Yurchenko, P. Jensen, "
+        "Variationally computed IR line list for the methyl radical CH3, "
+        "J. Phys. Chem. A 123, 4755-4763 (2019), "
+        "doi:10.1021/acs.jpca.9b02919",
+    ],
+    "MoLLIST": [
+        "P. F. Bernath, MoLLIST: Molecular line lists, intensities and "
+        "spectra, J. Quant. Spectrosc. Radiat. Transf. 240, 106687 "
+        "(2020), doi:10.1016/j.jqsrt.2019.106687",
+        "T. Masseron et al., CH in stellar atmospheres: an extensive "
+        "linelist, Astron. Astrophys. 571, A47 (2014), "
+        "doi:10.1051/0004-6361/201423956",
+    ],
+    "kNigHt": [
+        "A. N. Perri, L. K. McKemmish, Full spectroscopic model and "
+        "trihybrid experimental-perturbative-variational line list for "
+        "NH, Mon. Not. R. Astron. Soc. 531, 3023-3033 (2024), "
+        "doi:10.1093/mnras/stae1340",
+    ],
+    "KTPSYT": [
+        "S. V. Kozlov, V. A. Terashkevich, E. A. Pazyuk, A. V. Stolyarov,"
+        " S. N. Yurchenko, J. Tennyson, An upgraded line list for "
+        "radiative transitions between the B 2Sigma+, A 2Pi, and X "
+        "2Sigma+ states of the CN radical, Astrophys. J. Suppl. Ser. 275,"
+        " 29 (2024), doi:10.3847/1538-4365/ad8b40",
+    ],
+    "Coxon-Hajig": [
+        "J. A. Coxon, P. G. Hajigeorgiou, Improved direct potential fit "
+        "analyses for the ground electronic states of the hydrogen "
+        "halides: HF/DF/TF, HCl/DCl/TCl, HBr/DBr/TBr and HI/DI/TI, J. "
+        "Quant. Spectrosc. Radiat. Transf. 151, 133-154 (2015), "
+        "doi:10.1016/j.jqsrt.2014.08.028",
+        "G. Li, I. E. Gordon, R. J. Le Roy, P. G. Hajigeorgiou, J. A. "
+        "Coxon, P. F. Bernath, L. S. Rothman, Reference spectroscopic "
+        "data for hydrogen halides. Part I: Construction and validation "
+        "of the ro-vibrational dipole moment functions, J. Quant. "
+        "Spectrosc. Radiat. Transf. 121, 78-90 (2013), "
+        "doi:10.1016/j.jqsrt.2013.02.005",
+        "W. Somogyi, S. N. Yurchenko, A. Yachmenev, Calculation of "
+        "electric quadrupole linestrengths for diatomic molecules: "
+        "Application to the H2, CO, HF, and O2 molecules, J. Chem. Phys. "
+        "155, 214303 (2021), doi:10.1063/5.0063256",
+    ],
+    "OYKYT": [
+        "A. Owens, A. Yachmenev, J. Kupper, S. N. Yurchenko, W. Thiel, "
+        "The rotation-vibration spectrum of methyl fluoride from first "
+        "principles, Phys. Chem. Chem. Phys. 21, 3496-3505 (2019), "
+        "doi:10.1039/C8CP01721B",
+    ],
+    "AIJS": [
+        "A. I. Pavlyuchko, S. N. Yurchenko, J. Tennyson, ExoMol molecular"
+        " line lists - XI. The spectrum of nitric acid, Mon. Not. R. "
+        "Astron. Soc. 452, 1702-1706 (2015), doi:10.1093/mnras/stv1376",
+    ],
+    "ExoAmes": [
         "D. S. Underwood, J. Tennyson, S. N. Yurchenko, X. Huang, D. W. "
-        "Schwenke, T. J. Lee, S. Clausen, A. Fateev, ExoMol molecular line "
-        "lists - XIV. The rotation-vibration spectrum of hot SO2, Mon. Not. R. "
-        "Astron. Soc. 459, 3890-3899 (2016), doi:10.1093/mnras/stw849"
-    ),
-    "ExoAmes-MARVEL": (
+        "Schwenke, T. J. Lee, S. Clausen, A. Fateev, ExoMol molecular "
+        "line lists - XIV. The rotation-vibration spectrum of hot SO2, "
+        "Mon. Not. R. Astron. Soc. 459, 3890-3899 (2016), "
+        "doi:10.1093/mnras/stw849",
         "R. Tobias et al., Critical evaluation of measured rotational-"
-        "vibrational transitions of four sulphur isotopologues of S16O2, J. "
-        "Quant. Spectrosc. Radiat. Transf. 208, 152-163 (2018), "
-        "doi:10.1016/j.jqsrt.2018.01.006"
-    ),
-    "AYT2": (
-        "A. A. A. Azzam, J. Tennyson, S. N. Yurchenko, O. V. Naumenko, ExoMol "
-        "molecular line lists - XVI. The rotation-vibration spectrum of hot "
-        "H2S, Mon. Not. R. Astron. Soc. 460, 4063-4074 (2016), "
-        "doi:10.1093/mnras/stw1133"
-    ),
-    "AYT2-MARVEL": (
-        "K. L. Chubb et al., Marvel analysis of the measured high-resolution "
-        "rovibrational spectra of H2 32S, J. Quant. Spectrosc. Radiat. Transf. "
-        "218, 178-186 (2018), doi:10.1016/j.jqsrt.2018.07.012"
-    ),
-    "OYT8": (
-        "A. Owens, S. N. Yurchenko, J. Tennyson, ExoMol line lists - LVIII. "
-        "High-temperature molecular line list of carbonyl sulfide (OCS), Mon. "
-        "Not. R. Astron. Soc. 530, 4004-4015 (2024), doi:10.1093/mnras/stae1110"
-    ),
-    "AYYJ": (
-        "A. Y. Adam, A. Yachmenev, S. N. Yurchenko, P. Jensen, Variationally "
-        "computed IR line list for the methyl radical CH3, J. Phys. Chem. A 123, "
-        "4755-4763 (2019), doi:10.1021/acs.jpca.9b02919"
-    ),
-    "MoLLIST": (
-        "P. F. Bernath, MoLLIST: Molecular line lists, intensities and spectra, "
-        "J. Quant. Spectrosc. Radiat. Transf. 240, 106687 (2020), "
-        "doi:10.1016/j.jqsrt.2019.106687"
-    ),
-    "MoLLIST-CH": (
-        "T. Masseron et al., CH in stellar atmospheres: an extensive linelist, "
-        "Astron. Astrophys. 571, A47 (2014), doi:10.1051/0004-6361/201423956"
-    ),
-    "kNigHt": (
-        "A. N. Perri, L. K. McKemmish, Full spectroscopic model and trihybrid "
-        "experimental-perturbative-variational line list for NH, Mon. Not. R. "
-        "Astron. Soc. 531, 3023-3033 (2024), doi:10.1093/mnras/stae1340"
-    ),
-    "KTPSYT": (
-        "S. V. Kozlov, V. A. Terashkevich, E. A. Pazyuk, A. V. Stolyarov, S. N. "
-        "Yurchenko, J. Tennyson, An upgraded line list for radiative transitions "
-        "between the B 2Sigma+, A 2Pi, and X 2Sigma+ states of the CN radical, "
-        "Astrophys. J. Suppl. Ser. 275, 29 (2024), doi:10.3847/1538-4365/ad8b40"
-    ),
-    "Coxon-Hajig": (
-        "J. A. Coxon, P. G. Hajigeorgiou, Improved direct potential fit analyses "
-        "for the ground electronic states of the hydrogen halides: HF/DF/TF, "
-        "HCl/DCl/TCl, HBr/DBr/TBr and HI/DI/TI, J. Quant. Spectrosc. Radiat. "
-        "Transf. 151, 133-154 (2015), doi:10.1016/j.jqsrt.2014.08.028"
-    ),
-    "Coxon-Hajig-Li": (
-        "G. Li, I. E. Gordon, R. J. Le Roy, P. G. Hajigeorgiou, J. A. Coxon, P. "
-        "F. Bernath, L. S. Rothman, Reference spectroscopic data for hydrogen "
-        "halides. Part I: Construction and validation of the ro-vibrational "
-        "dipole moment functions, J. Quant. Spectrosc. Radiat. Transf. 121, "
-        "78-90 (2013), doi:10.1016/j.jqsrt.2013.02.005"
-    ),
-    "Coxon-Hajig-Somogyi": (
-        "W. Somogyi, S. N. Yurchenko, A. Yachmenev, Calculation of electric "
-        "quadrupole linestrengths for diatomic molecules: Application to the H2, "
-        "CO, HF, and O2 molecules, J. Chem. Phys. 155, 214303 (2021), "
-        "doi:10.1063/5.0063256"
-    ),
-    "OYKYT": (
-        "A. Owens, A. Yachmenev, J. Kupper, S. N. Yurchenko, W. Thiel, The "
-        "rotation-vibration spectrum of methyl fluoride from first principles, "
-        "Phys. Chem. Chem. Phys. 21, 3496-3505 (2019), doi:10.1039/C8CP01721B"
-    ),
-    "AIJS": (
-        "A. I. Pavlyuchko, S. N. Yurchenko, J. Tennyson, ExoMol molecular line "
-        "lists - XI. The spectrum of nitric acid, Mon. Not. R. Astron. Soc. 452, "
-        "1702-1706 (2015), doi:10.1093/mnras/stv1376"
-    ),
+        "vibrational transitions of four sulphur isotopologues of S16O2, "
+        "J. Quant. Spectrosc. Radiat. Transf. 208, 152-163 (2018), "
+        "doi:10.1016/j.jqsrt.2018.01.006",
+    ],
+    "AYT2": [
+        "A. A. A. Azzam, J. Tennyson, S. N. Yurchenko, O. V. Naumenko, "
+        "ExoMol molecular line lists - XVI. The rotation-vibration "
+        "spectrum of hot H2S, Mon. Not. R. Astron. Soc. 460, 4063-4074 "
+        "(2016), doi:10.1093/mnras/stw1133",
+        "K. L. Chubb et al., Marvel analysis of the measured high-"
+        "resolution rovibrational spectra of H2 32S, J. Quant. Spectrosc."
+        " Radiat. Transf. 218, 178-186 (2018), "
+        "doi:10.1016/j.jqsrt.2018.07.012",
+    ],
+    "OYT8": [
+        "A. Owens, S. N. Yurchenko, J. Tennyson, ExoMol line lists - "
+        "LVIII. High-temperature molecular line list of carbonyl sulfide "
+        "(OCS), Mon. Not. R. Astron. Soc. 530, 4004-4015 (2024), "
+        "doi:10.1093/mnras/stae1110",
+    ],
 }
+
+
+def _slug_composition(slug):
+    """Elemental composition of an ExoMol isotopologue slug like 14N2-16O."""
+    composition = {}
+    for part in slug.split("-"):
+        _, el, n = re.fullmatch(r"(\d+)([A-Z][a-z]?)(\d*)", part).groups()
+        composition[el] = composition.get(el, 0) + int(n or 1)
+    return composition
 
 
 class Dataset:
@@ -248,36 +259,42 @@ class Dataset:
 
     Parameters
     ----------
-    composition : dict
-        Elemental composition, to match mechanism species
-    linelist : str
-        ExoMol line list name
     path : str
-        Directory of the line list under EXOMOL_DB
+        Directory of the line list under EXOMOL_DB: molecule/isotopologue/line list
     files : str or dict
         Cooling function file name, or {temperature: super-lines file name}
     t_max : float
         Maximum temperature of the line list, K
-    isotopologue : str
-        What the file covers: "natural abundance", or the main isotopologue,
-        whose kp then stands for the gas (for CO the two agree to 0.2%)
-    refs : list of str
-        References of the line list: keys of REFERENCES, or full references
-    aliases : list of str
-        Other names of the species in mechanisms (CHEMKIN style)
+    refs : list of str, optional
+        References of the line list (default: REFERENCES of the line list)
     """
 
-    def __init__(
-        self, composition, linelist, path, files, t_max, isotopologue, refs, aliases=()
-    ):
-        self.composition = composition
-        self.linelist = linelist
+    def __init__(self, path, files, t_max, refs=None):
         self.path = path
         self.files = files
         self.t_max = t_max
-        self.isotopologue = isotopologue
-        self.refs = refs
-        self.aliases = list(aliases)
+        _, self.slug, self.linelist = path.split("/")
+        self.refs = REFERENCES[self.linelist] if refs is None else refs
+
+    @property
+    def cooling_function(self):
+        """Whether kp comes from a cooling function (else from super-lines)."""
+        return isinstance(self.files, str)
+
+    @property
+    def isotopologue(self):
+        """What the data cover: natural abundance, or the main isotopologue.
+
+        The main isotopologue then stands for the gas (for CO the two agree to
+        0.2%).
+        """
+        natabund = self.cooling_function and "natabund" in self.files
+        return "natural abundance" if natabund else self.slug
+
+    @property
+    def composition(self):
+        """Elemental composition, to match mechanism species."""
+        return _slug_composition(self.slug)
 
     def url(self, name):
         """Download URL of one of the dataset files."""
@@ -285,16 +302,13 @@ class Dataset:
 
     def sources(self):
         """URLs of the files kp is computed from."""
-        if isinstance(self.files, str):
-            return [self.url(self.files)]
-        return [self.url(f) for f in self.files.values()]
+        names = [self.files] if self.cooling_function else self.files.values()
+        return [self.url(f) for f in names]
 
     def references(self):
         """Full references to cite for this dataset."""
-        keys = [*self.refs, "ExoMol2016"]
-        if isinstance(self.files, str):
-            keys.append("ExoCross2018")
-        return [REFERENCES.get(k, k) for k in keys]
+        generic = [EXOMOL_REF, EXOCROSS_REF] if self.cooling_function else [EXOMOL_REF]
+        return [*self.refs, *generic]
 
 
 def _super(iso, linelist, wavenumbers, temps):
@@ -302,198 +316,36 @@ def _super(iso, linelist, wavenumbers, temps):
 
 
 DATASETS = {
-    "H2O": Dataset(
-        {"H": 2, "O": 1},
-        "POKAZATEL",
-        "H2O/1H2-16O/POKAZATEL",
-        "H2O__POKAZATEL__natabund.cf",
-        6000.0,
-        "natural abundance",
-        ["POKAZATEL"],
-    ),
-    "CO2": Dataset(
-        {"C": 1, "O": 2},
-        "UCL-4000",
-        "CO2/12C-16O2/UCL-4000",
-        "12C-16O2__UCL-4000.cf",
-        4000.0,
-        "12C-16O2",
-        ["UCL-4000"],
-    ),
-    "CO": Dataset(
-        {"C": 1, "O": 1},
-        "Li2015",
-        "CO/12C-16O/Li2015",
-        "CO__Li2015__natabund.cf",
-        9000.0,
-        "natural abundance",
-        ["Li2015"],
-    ),
-    "CH4": Dataset(
-        {"C": 1, "H": 4},
-        "MM",
-        "CH4/12C-1H4/MM",
-        "12C-1H4__MM.cf",
-        2000.0,
-        "12C-1H4",
-        ["MM"],
-    ),
+    "H2O": Dataset("H2O/1H2-16O/POKAZATEL", "H2O__POKAZATEL__natabund.cf", 6000.0),
+    "CO2": Dataset("CO2/12C-16O2/UCL-4000", "12C-16O2__UCL-4000.cf", 4000.0),
+    "CO": Dataset("CO/12C-16O/Li2015", "CO__Li2015__natabund.cf", 9000.0),
+    "CH4": Dataset("CH4/12C-1H4/MM", "12C-1H4__MM.cf", 2000.0),
     "C2H4": Dataset(
-        {"C": 2, "H": 4},
-        "MaYTY",
         "C2H4/12C2-1H4/MaYTY",
         _super("12C2-1H4", "MaYTY", "00000-07100", range(200, 701, 100)),
         700.0,
-        "12C2-1H4",
-        ["MaYTY"],
     ),
-    "C2H2": Dataset(
-        {"C": 2, "H": 2},
-        "aCeTY",
-        "C2H2/12C2-1H2/aCeTY",
-        "12C2-1H2__aCeTY.cf",
-        2200.0,
-        "12C2-1H2",
-        ["aCeTY"],
-    ),
+    "C2H2": Dataset("C2H2/12C2-1H2/aCeTY", "12C2-1H2__aCeTY.cf", 2200.0),
     "NH3": Dataset(
-        {"N": 1, "H": 3},
-        "CoYuTe",
         "NH3/14N-1H3/CoYuTe",
         _super("14N-1H3", "CoYuTe", "0-20000", range(200, 2001, 100)),
         2000.0,
-        "14N-1H3",
-        ["CoYuTe", "CoYuTe-MARVEL"],
     ),
-    "NO": Dataset(
-        {"N": 1, "O": 1},
-        "XABC",
-        "NO/14N-16O/XABC",
-        "14N-16O__XABC.cf",
-        3500.0,
-        "14N-16O",
-        ["XABC"],
-    ),
-    "N2O": Dataset(
-        {"N": 2, "O": 1},
-        "TYM",
-        "N2O/14N2-16O/TYM",
-        "N2O__TYM__natabund.cf",
-        2000.0,
-        "natural abundance",
-        ["TYM"],
-    ),
-    "OH": Dataset(
-        {"O": 1, "H": 1},
-        "MYTHOS",
-        "OH/16O-1H/MYTHOS",
-        "16O-1H__MYTHOS.cf",
-        10000.0,
-        "16O-1H",
-        ["MYTHOS"],
-    ),
-    "HCN": Dataset(
-        {"H": 1, "C": 1, "N": 1},
-        "Harris",
-        "HCN/1H-12C-14N/Harris",
-        "1H-12C-14N__Harris.cf",
-        4000.0,
-        "1H-12C-14N",
-        ["Harris", "Harris-Barber"],
-    ),
-    "CH3": Dataset(
-        {"C": 1, "H": 3},
-        "AYYJ",
-        "CH3/12C-1H3/AYYJ",
-        "12C-1H3__AYYJ.cf",
-        2000.0,
-        "12C-1H3",
-        ["AYYJ"],
-    ),
-    "CH": Dataset(
-        {"C": 1, "H": 1},
-        "MoLLIST",
-        "CH/12C-1H/MoLLIST",
-        "12C-1H__MoLLIST.cf",
-        8000.0,
-        "12C-1H",
-        ["MoLLIST", "MoLLIST-CH"],
-    ),
-    "NH": Dataset(
-        {"N": 1, "H": 1},
-        "kNigHt",
-        "NH/14N-1H/kNigHt",
-        "14N-1H__kNigHt.cf",
-        10000.0,
-        "14N-1H",
-        ["kNigHt"],
-    ),
-    "CN": Dataset(
-        {"C": 1, "N": 1},
-        "KTPSYT",
-        "CN/12C-14N/KTPSYT",
-        "12C-14N__KTPSYT.cf",
-        10000.0,
-        "12C-14N",
-        ["KTPSYT"],
-    ),
-    "HF": Dataset(
-        {"H": 1, "F": 1},
-        "Coxon-Hajig",
-        "HF/1H-19F/Coxon-Hajig",
-        "1H-19F__Coxon-Hajig.cf",
-        5000.0,
-        "1H-19F",
-        ["Coxon-Hajig", "Coxon-Hajig-Li", "Coxon-Hajig-Somogyi"],
-    ),
-    "CH3F": Dataset(
-        {"C": 1, "H": 3, "F": 1},
-        "OYKYT",
-        "CH3F/12C-1H3-19F/OYKYT",
-        "12C-1H3-19F__OYKYT.cf",
-        500.0,
-        "12C-1H3-19F",
-        ["OYKYT"],
-    ),
-    "HNO3": Dataset(
-        {"H": 1, "N": 1, "O": 3},
-        "AIJS",
-        "HNO3/1H-14N-16O3/AIJS",
-        "1H-14N-16O3__AIJS.cf",
-        500.0,
-        "1H-14N-16O3",
-        ["AIJS"],
-        aliases=["HONO2"],
-    ),
-    "SO2": Dataset(
-        {"S": 1, "O": 2},
-        "ExoAmes",
-        "SO2/32S-16O2/ExoAmes",
-        "32S-16O2__ExoAmes.cf",
-        2000.0,
-        "32S-16O2",
-        ["ExoAmes", "ExoAmes-MARVEL"],
-    ),
-    "H2S": Dataset(
-        {"H": 2, "S": 1},
-        "AYT2",
-        "H2S/1H2-32S/AYT2",
-        "1H2-32S__AYT2.cf",
-        1500.0,
-        "1H2-32S",
-        ["AYT2", "AYT2-MARVEL"],
-    ),
-    "OCS": Dataset(
-        {"O": 1, "C": 1, "S": 1},
-        "OYT8",
-        "OCS/16O-12C-32S/OYT8",
-        "16O-12C-32S__OYT8.cf",
-        2000.0,
-        "16O-12C-32S",
-        ["OYT8"],
-    ),
+    "NO": Dataset("NO/14N-16O/XABC", "14N-16O__XABC.cf", 3500.0),
+    "N2O": Dataset("N2O/14N2-16O/TYM", "N2O__TYM__natabund.cf", 2000.0),
+    "OH": Dataset("OH/16O-1H/MYTHOS", "16O-1H__MYTHOS.cf", 10000.0),
+    "HCN": Dataset("HCN/1H-12C-14N/Harris", "1H-12C-14N__Harris.cf", 4000.0),
+    "CH3": Dataset("CH3/12C-1H3/AYYJ", "12C-1H3__AYYJ.cf", 2000.0),
+    "CH": Dataset("CH/12C-1H/MoLLIST", "12C-1H__MoLLIST.cf", 8000.0),
+    "NH": Dataset("NH/14N-1H/kNigHt", "14N-1H__kNigHt.cf", 10000.0),
+    "CN": Dataset("CN/12C-14N/KTPSYT", "12C-14N__KTPSYT.cf", 10000.0),
+    "HF": Dataset("HF/1H-19F/Coxon-Hajig", "1H-19F__Coxon-Hajig.cf", 5000.0),
+    "CH3F": Dataset("CH3F/12C-1H3-19F/OYKYT", "12C-1H3-19F__OYKYT.cf", 500.0),
+    "HNO3": Dataset("HNO3/1H-14N-16O3/AIJS", "1H-14N-16O3__AIJS.cf", 500.0),
+    "SO2": Dataset("SO2/32S-16O2/ExoAmes", "32S-16O2__ExoAmes.cf", 2000.0),
+    "H2S": Dataset("H2S/1H2-32S/AYT2", "1H2-32S__AYT2.cf", 1500.0),
+    "OCS": Dataset("OCS/16O-12C-32S/OYT8", "16O-12C-32S__OYT8.cf", 2000.0),
 }
-
 
 # Most abundant isotope of the elements of ExoMol molecules, to pick the main
 # isotopologue
@@ -512,6 +364,11 @@ GENERIC_DOIS = {
     "10.1051/0004-6361/202038350",
     "10.1093/rasti/rzae016",
 }
+
+
+def _download(url):
+    request = urllib.request.Request(url, headers={"User-Agent": "ceptr"})
+    return urllib.request.urlopen(request, timeout=600)
 
 
 def _get(url):
@@ -568,11 +425,7 @@ def discover(formula):
     main = [
         k for k in isos if all(MAIN_ISOTOPE.get(el) == a for a, el, _ in _isotopes(k))
     ]
-    iso_formula = (main or list(isos))[0]
-    entry = isos[iso_formula]
-    composition = {}
-    for _, el, n in _isotopes(iso_formula):
-        composition[el] = composition.get(el, 0) + n
+    entry = isos[(main or list(isos))[0]]
     datasets = [
         (name, ds) for name, ds in entry["linelist"].items()
         if isinstance(ds, dict) and ds.get("files")
@@ -596,20 +449,17 @@ def discover(formula):
         t_max = info["dataset"].get("max_temperature")
         if not t_max:
             continue
-        if natabund or cfs:
-            files, isotopologue = (
-                (natabund[0], "natural abundance") if natabund else (cfs[0], slug)
-            )
+        if cfs:
+            files = (natabund or cfs)[0]
         else:
             files = {t: f for t, f in sorted(supers.items()) if t <= t_max}
-            isotopologue = slug
         dois = sorted(
             set(re.findall(r"doi(?:\.org)?/(10\.[^\"<> ]+)", page)) - GENERIC_DOIS
         )
         refs = [citation(d) for d in dois] or [
             f"See {EXOMOL}/data/molecules/{path}/ for the references"
         ]
-        return Dataset(composition, name, path, files, t_max, isotopologue, refs)
+        return Dataset(path, files, t_max, refs)
     raise ValueError(f"{formula}: no ExoMol cooling function or super-lines")
 
 
@@ -631,8 +481,8 @@ DEFAULT_SPECIES = [
 def kp_cooling_function(t_cf, w_cf, temps):
     """Return kp, 1/(cm bar), from a cooling function W(t_cf), erg/(s sr molec)."""
     temps = np.asarray(temps, dtype=np.float64)
-    w = np.interp(temps, t_cf, w_cf)
-    return P_REF / (KB * temps) * np.pi * w / (SIGMA * temps**4)
+    # Kirchhoff: pi W is the Planck sum of the lines
+    return kp_planck_sum(np.pi * np.interp(temps, t_cf, w_cf), temps)
 
 
 def planck_sum(nu, s, temp):
@@ -645,13 +495,8 @@ def planck_sum(nu, s, temp):
 
 
 def kp_planck_sum(total, temp):
-    """Return kp, 1/(cm bar), from a planck_sum at temperature temp."""
+    """Return kp, 1/(cm bar), from a planck_sum at temperature(s) temp."""
     return P_REF / (KB * temp) * total / (SIGMA * temp**4)
-
-
-def _download(url):
-    request = urllib.request.Request(url, headers={"User-Agent": "ceptr"})
-    return urllib.request.urlopen(request, timeout=600)
 
 
 def read_columns(text: bytes):
@@ -680,9 +525,8 @@ def super_line_sum(url, temp, chunk_bytes=1 << 24):
 def sample(ds):
     """Temperatures (K) and kp (1/(cm bar)) of a Dataset from ExoMol."""
     t_max = min(ds.t_max, T_CAP)
-    if isinstance(ds.files, str):
-        with _download(ds.url(ds.files)) as response:
-            t_cf, w_cf = read_columns(response.read())
+    if ds.cooling_function:
+        t_cf, w_cf = read_columns(_get(ds.url(ds.files)))
         temps = np.arange(T_LOW, t_max + 0.5 * DT_SAMPLE, DT_SAMPLE)
         return temps, kp_cooling_function(t_cf, w_cf, temps)
     temps = np.array(sorted(ds.files), dtype=np.float64)
@@ -703,47 +547,40 @@ def _range_error(x, y, coeffs):
     return float(np.max(np.abs(np.expm1(_polyval(x, coeffs) - y))))
 
 
-def _fit_ranges(x, y, deg, tol, n_ranges, y0=None):
+def _fit_ranges(x, y, deg, n_ranges, y0=None, bound=np.inf):
     """Smallest largest error of ``n_ranges`` continuous ranges fitting y(x).
 
-    The first range starts at y0 if given. Ranges whose error exceeds tol are
-    not split further.
+    The first range starts at y0 if given. Splits whose low range alone has
+    an error of at least ``bound`` are skipped: they cannot do better.
 
     Returns
     -------
     (float, list of (int, int, ndarray))
-        Error, and the (first, last) sample index and coefficients of each range
+        Error, and the (first, last) sample index and coefficients of each
+        range; (inf, None) if no split beats ``bound``
     """
     if n_ranges == 1:
         coeffs = _polyfit(x, y, deg)
         if y0 is not None:
             coeffs[0] += y0 - _polyval(x[0], coeffs)
         return _range_error(x, y, coeffs), [(0, len(x) - 1, coeffs)]
-    best = (np.inf, None)
+    best = (bound, None)
     for i in range(deg + 2, len(x) - (deg + 2) * (n_ranges - 1)):
-        err_lo, lo = _fit_ranges(x[: i + 1], y[: i + 1], deg, tol, 1, y0)
-        if err_lo > tol:
+        err_lo, lo = _fit_ranges(x[: i + 1], y[: i + 1], deg, 1, y0)
+        if err_lo >= best[0]:
             continue
         y_i = _polyval(x[i], lo[0][2])
-        err_hi, hi = _fit_ranges(x[i:], y[i:], deg, tol, n_ranges - 1, y_i)
+        err_hi, hi = _fit_ranges(x[i:], y[i:], deg, n_ranges - 1, y_i, best[0])
         err = max(err_lo, err_hi)
         if err < best[0]:
             best = (err, lo + [(a + i, b + i, c) for a, b, c in hi])
-    return best
+    return best if best[1] is not None else (np.inf, None)
 
 
-def fit_ln_kp(
-    temps,
-    kp,
-    t_low=T_LOW,
-    t_max=None,
-    degree=DEGREE,
-    tol=TOLERANCE,
-    max_ranges=MAX_RANGES,
-):
-    """Fit ln kp as polynomials in x = ln(T / 1000 K).
+def fit_ln_kp(temps, kp, t_max=None, tol=TOLERANCE):
+    """Fit ln kp as polynomials in x = ln(T / 1000 K), from T_LOW to t_max.
 
-    The fewest ranges (up to ``max_ranges``) of degree ``degree`` (at most the
+    The fewest ranges (up to MAX_RANGES) of degree DEGREE (at most the
     number of samples minus 2) within ``tol``: the breaks are at sample
     temperatures, chosen for the smallest error, and each range is shifted to
     be continuous with the one below.
@@ -757,17 +594,18 @@ def fit_ln_kp(
     temps = np.asarray(temps, dtype=np.float64)
     kp = np.asarray(kp, dtype=np.float64)
     t_max = temps[-1] if t_max is None else t_max
-    use = (temps >= t_low - 1e-9) & (temps <= t_max + 1e-9)
+    use = (temps >= T_LOW - 1e-9) & (temps <= t_max + 1e-9)
     temps, x, y = temps[use], np.log(temps[use] / 1000.0), np.log(kp[use])
     t_low, t_max = float(temps[0]), float(temps[-1])
 
-    deg = min(degree, len(x) - 2)
-    for n_ranges in range(1, max_ranges + 1):
-        err, pieces = _fit_ranges(x, y, deg, tol, n_ranges)
+    deg = min(DEGREE, len(x) - 2)
+    for n_ranges in range(1, MAX_RANGES + 1):
+        # Only fits within tol are kept: prune the others early
+        err, pieces = _fit_ranges(x, y, deg, n_ranges, bound=np.nextafter(tol, 1.0))
         if err <= tol:
             break
     else:
-        raise ValueError(f"no fit of ln kp within {tol:.1%} in {max_ranges} ranges")
+        raise ValueError(f"no fit of ln kp within {tol:.1%} in {MAX_RANGES} ranges")
     ranges = [(temps[a], temps[b], c) for a, b, c in pieces]
 
     last = ranges[-1][2]
@@ -825,7 +663,6 @@ def write_fit(species, ds, temps, kp, directory=FIT_DIR):
     fit = fit_ln_kp(temps, kp, t_max=min(ds.t_max, T_CAP))
     data = {
         "species": species,
-        "aliases": ds.aliases,
         "composition": ds.composition,
         "units": "1/(cm bar)",
         "fit": {

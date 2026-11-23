@@ -14,6 +14,10 @@ import yaml
 import ceptr.writer as cw
 
 FIT_DIR = pathlib.Path(__file__).parent / "radiation_data"
+LICENCE = "CC BY-SA 4.0 (https://creativecommons.org/licenses/by-sa/4.0/)"
+
+# Other names of the species of the fits in mechanisms
+ALIASES = {"HNO3": ["HONO2"]}
 
 
 def load_fits(directory=FIT_DIR):
@@ -26,7 +30,7 @@ def load_fits(directory=FIT_DIR):
     return fits
 
 
-def match_species(mechanism, species_list, fits):
+def match_species(mechanism, species_list, fits, aliases=ALIASES):
     """Pair gas species with fits: same name or alias (any case), same composition.
 
     Returns
@@ -38,7 +42,7 @@ def match_species(mechanism, species_list, fits):
     by_name = {
         alias.upper(): data
         for name, data in fits.items()
-        for alias in [name, *data.get("aliases", [])]
+        for alias in [name, *aliases.get(name, [])]
     }
     for idx, name in enumerate(species_list):
         data = by_name.get(name.upper())
@@ -101,15 +105,9 @@ def planck_mean(fstream, mechanism, species_info, fits=None):
     if pairs:
         cw.writer(
             fstream,
-            cw.comment(
-                "Fits of ExoMol data (www.exomol.com), released like it under"
-                " CC BY-SA 4.0"
-            ),
+            cw.comment("Fits of ExoMol data (www.exomol.com), released like it under"),
         )
-        cw.writer(
-            fstream,
-            cw.comment("(https://creativecommons.org/licenses/by-sa/4.0/)."),
-        )
+        cw.writer(fstream, cw.comment(f"{LICENCE}."))
         cw.writer(fstream, cw.comment("Cite the references of each species."))
     cw.writer(fstream, f"#define NUM_PLANCK_MEAN_SPECIES {len(pairs)}")
     cw.writer(
