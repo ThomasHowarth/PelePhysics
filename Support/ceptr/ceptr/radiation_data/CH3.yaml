@@ -1,0 +1,58 @@
+# Planck-mean absorption coefficient kp(T) of CH3, per unit partial
+# pressure, 1/(cm bar): a fit of ln kp to ExoMol data, written by planck-mean
+# (Support/ceptr/ceptr/planck_mean.py). convert --radiation writes it into
+# mechanism.H.
+#
+# Licence: derived from the ExoMol database (www.exomol.com) and, like it,
+# released under CC BY-SA 4.0 (https://creativecommons.org/licenses/by-sa/4.0/).
+# Cite the references below when using it.
+species: CH3
+aliases: []
+composition:
+  C: 1
+  H: 3
+units: 1/(cm bar)
+fit:
+  variable: x = ln(T / 1000 K)
+  form: ln kp = polynomial in x on each range (increasing powers); kp held at its T_low value
+    below T_low; kp = kp(T_max) (T / T_max)^exponent above T_max
+  T_low: 250.0
+  T_max: 2000.0
+  ranges:
+  - T_min: 250.0
+    T_max: 950.0
+    coefficients:
+    - -4.101504927790087
+    - -2.046118601745927
+    - 0.1285282238760671
+    - -1.6141879842524247
+    - -2.449308315760074
+    - -1.277693362624329
+    - -0.25693120534262165
+  - T_min: 950.0
+    T_max: 2000.0
+    coefficients:
+    - -4.100932077962786
+    - -2.0281996626148326
+    - 0.29675031560776005
+    - -0.8315863905830555
+    - -1.0127746718934825
+    - 0.5713112658428106
+    - 0.05870744185778905
+  exponent: -3.44879311078007
+  max_relative_error: 8.73e-05
+source:
+  database: ExoMol
+  linelist: AYYJ
+  isotopologue: 12C-1H3
+  linelist_max_temperature: 2000.0
+  files:
+  - https://www.exomol.com/db/CH3/12C-1H3/AYYJ/12C-1H3__AYYJ.cf
+licence: CC BY-SA 4.0 (https://creativecommons.org/licenses/by-sa/4.0/)
+references:
+- A. Y. Adam, A. Yachmenev, S. N. Yurchenko, P. Jensen, Variationally computed IR line list
+  for the methyl radical CH3, J. Phys. Chem. A 123, 4755-4763 (2019), doi:10.1021/acs.jpca.9b02919
+- 'J. Tennyson et al., The ExoMol database: molecular line lists for exoplanet and other hot
+  atmospheres, J. Mol. Spectrosc. 327, 73-94 (2016), doi:10.1016/j.jms.2016.05.002'
+- 'S. N. Yurchenko, A. F. Al-Refaie, J. Tennyson, ExoCross: a general program for generating
+  spectra from molecular line lists, Astron. Astrophys. 614, A131 (2018), doi:10.1051/0004-6361/201732531'

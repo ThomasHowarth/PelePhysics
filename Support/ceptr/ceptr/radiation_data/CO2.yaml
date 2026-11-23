@@ -1,0 +1,58 @@
+# Planck-mean absorption coefficient kp(T) of CO2, per unit partial
+# pressure, 1/(cm bar): a fit of ln kp to ExoMol data, written by planck-mean
+# (Support/ceptr/ceptr/planck_mean.py). convert --radiation writes it into
+# mechanism.H.
+#
+# Licence: derived from the ExoMol database (www.exomol.com) and, like it,
+# released under CC BY-SA 4.0 (https://creativecommons.org/licenses/by-sa/4.0/).
+# Cite the references below when using it.
+species: CO2
+aliases: []
+composition:
+  C: 1
+  O: 2
+units: 1/(cm bar)
+fit:
+  variable: x = ln(T / 1000 K)
+  form: ln kp = polynomial in x on each range (increasing powers); kp held at its T_low value
+    below T_low; kp = kp(T_max) (T / T_max)^exponent above T_max
+  T_low: 250.0
+  T_max: 4000.0
+  ranges:
+  - T_min: 250.0
+    T_max: 480.0
+    coefficients:
+    - 11.640635464360178
+    - 83.40528663932051
+    - 224.9046143759628
+    - 315.9060358225834
+    - 240.63760264330745
+    - 94.05779248985019
+    - 14.79455231356523
+  - T_min: 480.0
+    T_max: 4000.0
+    coefficients:
+    - -1.4690986860000534
+    - -1.5971732639924845
+    - -1.4746312034039755
+    - 0.5372044824461154
+    - 0.03955380033892975
+    - -0.301905433122333
+    - 0.09759580659774196
+  exponent: -4.744020359950984
+  max_relative_error: 0.00109
+source:
+  database: ExoMol
+  linelist: UCL-4000
+  isotopologue: 12C-16O2
+  linelist_max_temperature: 4000.0
+  files:
+  - https://www.exomol.com/db/CO2/12C-16O2/UCL-4000/12C-16O2__UCL-4000.cf
+licence: CC BY-SA 4.0 (https://creativecommons.org/licenses/by-sa/4.0/)
+references:
+- S. N. Yurchenko, T. M. Mellor, R. S. Freedman, J. Tennyson, ExoMol line lists - XXXIX. Ro-vibrational
+  molecular line list for CO2, Mon. Not. R. Astron. Soc. 496, 5282-5291 (2020), doi:10.1093/mnras/staa1874
+- 'J. Tennyson et al., The ExoMol database: molecular line lists for exoplanet and other hot
+  atmospheres, J. Mol. Spectrosc. 327, 73-94 (2016), doi:10.1016/j.jms.2016.05.002'
+- 'S. N. Yurchenko, A. F. Al-Refaie, J. Tennyson, ExoCross: a general program for generating
+  spectra from molecular line lists, Astron. Astrophys. 614, A131 (2018), doi:10.1051/0004-6361/201732531'

@@ -1,0 +1,59 @@
+# Planck-mean absorption coefficient kp(T) of NO, per unit partial
+# pressure, 1/(cm bar): a fit of ln kp to ExoMol data, written by planck-mean
+# (Support/ceptr/ceptr/planck_mean.py). convert --radiation writes it into
+# mechanism.H.
+#
+# Licence: derived from the ExoMol database (www.exomol.com) and, like it,
+# released under CC BY-SA 4.0 (https://creativecommons.org/licenses/by-sa/4.0/).
+# Cite the references below when using it.
+species: 'NO'
+aliases: []
+composition:
+  N: 1
+  O: 1
+units: 1/(cm bar)
+fit:
+  variable: x = ln(T / 1000 K)
+  form: ln kp = polynomial in x on each range (increasing powers); kp held at its T_low value
+    below T_low; kp = kp(T_max) (T / T_max)^exponent above T_max
+  T_low: 250.0
+  T_max: 3500.0
+  ranges:
+  - T_min: 250.0
+    T_max: 1890.0
+    coefficients:
+    - 11.55446602498595
+    - -2.098046912758143
+    - -1.159989454931912
+    - 0.4838508812431924
+    - -0.14297781807399304
+    - 0.02949426099923194
+    - 0.009712943994552086
+  - T_min: 1890.0
+    T_max: 3500.0
+    coefficients:
+    - 26.464362058734395
+    - -107.47919518928154
+    - 307.10574816085375
+    - -477.39494837747304
+    - 414.0913487417456
+    - -190.4230481713823
+    - 36.30203265856034
+  exponent: -2.153342761593649
+  max_relative_error: 0.000941
+source:
+  database: ExoMol
+  linelist: XABC
+  isotopologue: 14N-16O
+  linelist_max_temperature: 3500.0
+  files:
+  - https://www.exomol.com/db/NO/14N-16O/XABC/14N-16O__XABC.cf
+licence: CC BY-SA 4.0 (https://creativecommons.org/licenses/by-sa/4.0/)
+references:
+- Q. Qu, S. N. Yurchenko, J. Tennyson, ExoMol molecular line lists - XLII. Rovibronic molecular
+  line list for the low-lying states of NO, Mon. Not. R. Astron. Soc. 504, 5768-5777 (2021),
+  doi:10.1093/mnras/stab1154
+- 'J. Tennyson et al., The ExoMol database: molecular line lists for exoplanet and other hot
+  atmospheres, J. Mol. Spectrosc. 327, 73-94 (2016), doi:10.1016/j.jms.2016.05.002'
+- 'S. N. Yurchenko, A. F. Al-Refaie, J. Tennyson, ExoCross: a general program for generating
+  spectra from molecular line lists, Astron. Astrophys. 614, A131 (2018), doi:10.1051/0004-6361/201732531'

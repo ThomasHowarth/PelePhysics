@@ -166,3 +166,231 @@ To generate all mechanisms::
   $ uv run convert -l ${PELE_PHYSICS_HOME}/Mechanisms/list_mech
   $ uv run qssa -lq ${PELE_PHYSICS_HOME}/Mechanisms/list_qss_mech
   $ uv run convert -lq ${PELE_PHYSICS_HOME}/Mechanisms/list_qss_mech
+
+Planck-mean absorption coefficients for radiation
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+With ``--radiation``, CEPTR also writes the Planck-mean absorption coefficients of the radiating gases in the mechanism
+into ``mechanism.H``::
+
+  $ uv run convert -f ${PELE_PHYSICS_HOME}/Mechanisms/dodecane_lu/mechanism.yaml --radiation
+
+``get_planck_mean_kp(T, kp)`` then gives, for each gas species ``k``, its Planck-mean absorption coefficient per unit
+partial pressure ``kp[k]``, in 1/(cm bar), and 0 for species without data. The absorption coefficient of the mixture is
+:math:`\kappa_P = \sum_k X_k P k_{p,k}(T)`. ``NUM_PLANCK_MEAN_SPECIES`` is the number of species with data. Mechanisms
+converted without ``--radiation`` are unchanged.
+
+The data are fits of :math:`\ln k_p` against :math:`x = \ln(T / 1000\,\mathrm{K})`, one coefficient file per species in
+``Support/ceptr/ceptr/radiation_data``. A species of the mechanism uses a file when it has the same name or one of its
+aliases (in any case), and the same elemental composition. As with the NASA polynomials of the thermodynamics, nothing
+is computed from spectroscopic data during a conversion. Each fit has
+
+* the fewest polynomial ranges (up to three) of degree up to 6 between :math:`T_\mathrm{low}` and
+  :math:`T_\mathrm{max}`, continuous at the breaks, within 0.5% of the data; :math:`T_\mathrm{low}` is 250 K, or 300 K
+  for C2H4 and NH3, whose data are given every 100 K;
+* :math:`k_p` held at its :math:`T_\mathrm{low}` value below :math:`T_\mathrm{low}`;
+* above :math:`T_\mathrm{max}`, the highest temperature of the line list (at most 5000 K), the power law
+  :math:`k_p(T) = k_p(T_\mathrm{max}) (T / T_\mathrm{max})^s`, with :math:`s` the slope of
+  :math:`\ln k_p` against :math:`\ln T` at :math:`T_\mathrm{max}` (0 if the fit still rises there).
+
+The coefficient files, and the comments of the generated code, give the source, the fit ranges, the exponent :math:`s`
+and the largest fit error of each species.
+
+The coefficient files are written by the ``planck-mean`` utility, which downloads ExoMol data [ExoMol2016]_ and fits
+them; it is only needed to add a species or to update the data::
+
+  $ cd ${PELE_PHYSICS_HOME}/Support/ceptr
+  $ uv run planck-mean            # the species of the table below
+  $ uv run planck-mean CO2 H2O    # some of them
+  $ uv run planck-mean SO2        # another ExoMol molecule
+
+The species of the table are those of the PelePhysics mechanisms with ExoMol data, with the line lists chosen in
+``DATASETS`` of ``ceptr/planck_mean.py`` (where SO2, H2S and OCS are also set up). Any other ExoMol molecule can be
+given by its formula: ``planck-mean`` then takes the cooling function (or super-lines) of the recommended line list of
+its main isotopologue, or of another of its line lists, and the references listed on its ExoMol page, which should be
+checked. Left out of the table are N2, O2 and H2, whose :math:`k_p`, from weak electric-quadrupole and electronic
+transitions, is 7 to over 100 orders of magnitude below that of H2O, and CH2O and H2O2, which ExoMol only has as full
+line lists (120-190 GB).
+
+In local thermodynamic equilibrium the Planck-mean absorption coefficient is the total spontaneous emission of the gas
+over that of a black body (Kirchhoff's law). ExoMol tabulates the former as the cooling function :math:`W(T)`, the
+power emitted per molecule and steradian, computed with ExoCross [ExoCross2018]_ from line lists of up to billions of
+lines, so that
+
+.. math::
+
+   k_p(T) = \frac{N \pi W(T)}{\sigma T^4}, \qquad N = \frac{P}{k_B T}, \quad P = 1\ \mathrm{bar}.
+
+For NH3 and C2H4, which have no cooling function, :math:`k_p = N \sum S\, E_b(\nu, T) / (\sigma T^4)` is computed from
+the ExoMol super-lines (line intensities :math:`S` summed in narrow wavenumber bins) at each temperature they are given
+for; these files are read as they download and are not stored. Where ExoMol has no natural-abundance data, the main
+isotopologue stands for the gas (for CO, the two agree to 0.2%).
+
+.. list-table:: Data of the Planck-mean absorption coefficients
+   :header-rows: 1
+
+   * - Species
+     - ExoMol line list
+     - Data
+     - Line list up to
+     - References
+   * - H2O
+     - POKAZATEL (natural abundance)
+     - cooling function
+     - 6000 K
+     - [POKAZATEL]_
+   * - CO2
+     - UCL-4000 (12C-16O2)
+     - cooling function
+     - 4000 K
+     - [UCL4000]_
+   * - CO
+     - Li2015 (natural abundance)
+     - cooling function
+     - 9000 K
+     - [Li2015]_
+   * - CH4
+     - MM (12C-1H4)
+     - cooling function
+     - 2000 K
+     - [MM]_
+   * - C2H4
+     - MaYTY (12C2-1H4)
+     - super-lines, 200-700 K
+     - 700 K
+     - [MaYTY]_
+   * - C2H2
+     - aCeTY (12C2-1H2)
+     - cooling function
+     - 2200 K
+     - [aCeTY]_
+   * - NH3
+     - CoYuTe (14N-1H3)
+     - super-lines, 200-2000 K
+     - 2000 K
+     - [CoYuTe]_ [CoYuTeM]_
+   * - NO
+     - XABC (14N-16O)
+     - cooling function
+     - 3500 K
+     - [XABC]_
+   * - N2O
+     - TYM (natural abundance)
+     - cooling function
+     - 2000 K
+     - [TYM]_
+   * - OH
+     - MYTHOS (16O-1H)
+     - cooling function
+     - 10000 K
+     - [MYTHOS]_
+   * - HCN
+     - Harris (1H-12C-14N)
+     - cooling function
+     - 4000 K
+     - [Harris]_ [HarrisB]_
+   * - CH3
+     - AYYJ (12C-1H3)
+     - cooling function
+     - 2000 K
+     - [AYYJ]_
+   * - CH
+     - MoLLIST (12C-1H)
+     - cooling function
+     - 8000 K
+     - [MoLLIST]_ [MoLLISTCH]_
+   * - NH
+     - kNigHt (14N-1H)
+     - cooling function
+     - 10000 K
+     - [kNigHt]_
+   * - CN
+     - KTPSYT (12C-14N)
+     - cooling function
+     - 10000 K
+     - [KTPSYT]_
+   * - HF
+     - Coxon-Hajig (1H-19F)
+     - cooling function
+     - 5000 K
+     - [CoxonHajig]_ [CoxonHajigL]_ [CoxonHajigS]_
+   * - CH3F
+     - OYKYT (12C-1H3-19F)
+     - cooling function
+     - 500 K
+     - [OYKYT]_
+   * - HNO3 (also HONO2)
+     - AIJS (1H-14N-16O3)
+     - cooling function
+     - 500 K
+     - [AIJS]_
+
+.. note::
+
+   **Licence and attribution.** The ExoMol data are released under the Creative Commons Attribution-ShareAlike 4.0
+   International licence (`CC BY-SA 4.0 <https://creativecommons.org/licenses/by-sa/4.0/>`_). The coefficient files in
+   ``Support/ceptr/ceptr/radiation_data``, and the fits written into ``mechanism.H`` with ``--radiation``, are derived
+   from them and are released under CC BY-SA 4.0 too; the rest of PelePhysics keeps its own licence. Work using these
+   coefficients should cite the ExoMol database [ExoMol2016]_ and the line lists of the species used, listed above, in
+   the coefficient files and in the generated code; those from cooling functions also ExoCross [ExoCross2018]_.
+
+.. [ExoMol2016] J. Tennyson et al., The ExoMol database: molecular line lists for exoplanet and other hot atmospheres,
+   J. Mol. Spectrosc. 327, 73-94 (2016), doi:10.1016/j.jms.2016.05.002
+.. [ExoCross2018] S. N. Yurchenko, A. F. Al-Refaie, J. Tennyson, ExoCross: a general program for generating spectra
+   from molecular line lists, Astron. Astrophys. 614, A131 (2018), doi:10.1051/0004-6361/201732531
+.. [POKAZATEL] O. L. Polyansky, A. A. Kyuberis, N. F. Zobov, J. Tennyson, S. N. Yurchenko, L. Lodi, ExoMol molecular
+   line lists XXX: a complete high-accuracy line list for water, Mon. Not. R. Astron. Soc. 480, 2597-2608 (2018),
+   doi:10.1093/mnras/sty1877
+.. [UCL4000] S. N. Yurchenko, T. M. Mellor, R. S. Freedman, J. Tennyson, ExoMol line lists - XXXIX. Ro-vibrational
+   molecular line list for CO2, Mon. Not. R. Astron. Soc. 496, 5282-5291 (2020), doi:10.1093/mnras/staa1874
+.. [Li2015] G. Li, I. E. Gordon, L. S. Rothman, Y. Tan, S.-M. Hu, S. Kassi, A. Campargue, E. S. Medvedev,
+   Rovibrational line lists for nine isotopologues of the CO molecule in the X 1Sigma+ ground electronic state,
+   Astrophys. J. Suppl. Ser. 216, 15 (2015), doi:10.1088/0067-0049/216/1/15
+.. [MM] S. N. Yurchenko, A. Owens, K. Kefala, J. Tennyson, ExoMol line lists - LVII: High accuracy ro-vibrational line
+   list for methane (CH4), Mon. Not. R. Astron. Soc. 528, 3719-3729 (2024), doi:10.1093/mnras/stae148
+.. [MaYTY] B. P. Mant, A. Yachmenev, J. Tennyson, S. N. Yurchenko, ExoMol molecular line lists - XXVII: spectra of
+   C2H4, Mon. Not. R. Astron. Soc. 478, 3220-3232 (2018), doi:10.1093/mnras/sty1239
+.. [aCeTY] K. L. Chubb, J. Tennyson, S. N. Yurchenko, ExoMol molecular line lists - XXXVII: spectra of acetylene,
+   Mon. Not. R. Astron. Soc. 493, 1531-1545 (2020), doi:10.1093/mnras/staa229
+.. [CoYuTe] P. A. Coles, S. N. Yurchenko, J. Tennyson, ExoMol molecular line lists - XXXV. A rotation-vibration line
+   list for hot ammonia, Mon. Not. R. Astron. Soc. 490, 4638-4647 (2019), doi:10.1093/mnras/stz2778
+.. [CoYuTeM] A. R. Al Derzi, T. Furtenbacher, J. Tennyson, S. N. Yurchenko, A. G. Csaszar, MARVEL analysis of the
+   measured high-resolution spectra of 14NH3, J. Quant. Spectrosc. Radiat. Transf. 161, 117-130 (2015),
+   doi:10.1016/j.jqsrt.2015.03.034
+.. [XABC] Q. Qu, S. N. Yurchenko, J. Tennyson, ExoMol molecular line lists - XLII. Rovibronic molecular line list for
+   the low-lying states of NO, Mon. Not. R. Astron. Soc. 504, 5768-5777 (2021), doi:10.1093/mnras/stab1154
+.. [TYM] S. N. Yurchenko, T. M. Mellor, J. Tennyson, ExoMol line lists - LIX. High-temperature line list for N2O,
+   Mon. Not. R. Astron. Soc. 534, 1364-1375 (2024), doi:10.1093/mnras/stae2201
+.. [MYTHOS] G. B. Mitev, C. A. Bowesman, J. Zhang, S. N. Yurchenko, J. Tennyson, ExoMol line lists - LXI. A trihybrid
+   line list for rovibronic transitions of the hydroxyl radical (OH), Mon. Not. R. Astron. Soc. 536, 3401-3420
+   (2025), doi:10.1093/mnras/stae2803
+.. [Harris] G. J. Harris, J. Tennyson, B. M. Kaminsky, Ya. V. Pavlenko, H. R. A. Jones, Improved HCN/HNC linelist,
+   model atmospheres and synthetic spectra for WZ Cas, Mon. Not. R. Astron. Soc. 367, 400-406 (2006),
+   doi:10.1111/j.1365-2966.2005.09960.x
+.. [HarrisB] R. J. Barber, J. K. Strange, C. Hill, O. L. Polyansky, G. Ch. Mellau, S. N. Yurchenko, J. Tennyson,
+   ExoMol line lists - III. An improved hot rotation-vibration line list for HCN and HNC, Mon. Not. R. Astron. Soc.
+   437, 1828-1835 (2014), doi:10.1093/mnras/stt2011
+.. [AYYJ] A. Y. Adam, A. Yachmenev, S. N. Yurchenko, P. Jensen, Variationally computed IR line list for the methyl
+   radical CH3, J. Phys. Chem. A 123, 4755-4763 (2019), doi:10.1021/acs.jpca.9b02919
+.. [MoLLIST] P. F. Bernath, MoLLIST: Molecular line lists, intensities and spectra, J. Quant. Spectrosc. Radiat. Transf.
+   240, 106687 (2020), doi:10.1016/j.jqsrt.2019.106687
+.. [MoLLISTCH] T. Masseron et al., CH in stellar atmospheres: an extensive linelist, Astron. Astrophys. 571, A47 (2014),
+   doi:10.1051/0004-6361/201423956
+.. [kNigHt] A. N. Perri, L. K. McKemmish, Full spectroscopic model and trihybrid experimental-perturbative-variational
+   line list for NH, Mon. Not. R. Astron. Soc. 531, 3023-3033 (2024), doi:10.1093/mnras/stae1340
+.. [KTPSYT] S. V. Kozlov, V. A. Terashkevich, E. A. Pazyuk, A. V. Stolyarov, S. N. Yurchenko, J. Tennyson, An upgraded
+   line list for radiative transitions between the B 2Sigma+, A 2Pi, and X 2Sigma+ states of the CN radical,
+   Astrophys. J. Suppl. Ser. 275, 29 (2024), doi:10.3847/1538-4365/ad8b40
+.. [CoxonHajig] J. A. Coxon, P. G. Hajigeorgiou, Improved direct potential fit analyses for the ground electronic states
+   of the hydrogen halides: HF/DF/TF, HCl/DCl/TCl, HBr/DBr/TBr and HI/DI/TI, J. Quant. Spectrosc. Radiat. Transf. 151,
+   133-154 (2015), doi:10.1016/j.jqsrt.2014.08.028
+.. [CoxonHajigL] G. Li, I. E. Gordon, R. J. Le Roy, P. G. Hajigeorgiou, J. A. Coxon, P. F. Bernath, L. S. Rothman,
+   Reference spectroscopic data for hydrogen halides. Part I: Construction and validation of the ro-vibrational dipole
+   moment functions, J. Quant. Spectrosc. Radiat. Transf. 121, 78-90 (2013), doi:10.1016/j.jqsrt.2013.02.005
+.. [CoxonHajigS] W. Somogyi, S. N. Yurchenko, A. Yachmenev, Calculation of electric quadrupole linestrengths for
+   diatomic molecules: Application to the H2, CO, HF, and O2 molecules, J. Chem. Phys. 155, 214303 (2021),
+   doi:10.1063/5.0063256
+.. [OYKYT] A. Owens, A. Yachmenev, J. Kupper, S. N. Yurchenko, W. Thiel, The rotation-vibration spectrum of methyl
+   fluoride from first principles, Phys. Chem. Chem. Phys. 21, 3496-3505 (2019), doi:10.1039/C8CP01721B
+.. [AIJS] A. I. Pavlyuchko, S. N. Yurchenko, J. Tennyson, ExoMol molecular line lists - XI. The spectrum of nitric
+   acid, Mon. Not. R. Astron. Soc. 452, 1702-1706 (2015), doi:10.1093/mnras/stv1376

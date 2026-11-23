@@ -1,0 +1,58 @@
+# Planck-mean absorption coefficient kp(T) of N2O, per unit partial
+# pressure, 1/(cm bar): a fit of ln kp to ExoMol data, written by planck-mean
+# (Support/ceptr/ceptr/planck_mean.py). convert --radiation writes it into
+# mechanism.H.
+#
+# Licence: derived from the ExoMol database (www.exomol.com) and, like it,
+# released under CC BY-SA 4.0 (https://creativecommons.org/licenses/by-sa/4.0/).
+# Cite the references below when using it.
+species: N2O
+aliases: []
+composition:
+  N: 2
+  O: 1
+units: 1/(cm bar)
+fit:
+  variable: x = ln(T / 1000 K)
+  form: ln kp = polynomial in x on each range (increasing powers); kp held at its T_low value
+    below T_low; kp = kp(T_max) (T / T_max)^exponent above T_max
+  T_low: 250.0
+  T_max: 2000.0
+  ranges:
+  - T_min: 250.0
+    T_max: 660.0
+    coefficients:
+    - -1.8866395907604327
+    - -1.9132799978151935
+    - -1.862061465936036
+    - -1.359719552692341
+    - -2.749563486123024
+    - -2.1195424639288603
+    - -0.5138485130719768
+  - T_min: 660.0
+    T_max: 2000.0
+    coefficients:
+    - -1.8876522345615236
+    - -1.8489155450298613
+    - -1.3171778531124447
+    - 0.3471381621723218
+    - -0.22005842693135358
+    - -0.2819020216440266
+    - 0.16431757822899212
+  exponent: -3.63531744074217
+  max_relative_error: 0.000101
+source:
+  database: ExoMol
+  linelist: TYM
+  isotopologue: natural abundance
+  linelist_max_temperature: 2000.0
+  files:
+  - https://www.exomol.com/db/N2O/14N2-16O/TYM/N2O__TYM__natabund.cf
+licence: CC BY-SA 4.0 (https://creativecommons.org/licenses/by-sa/4.0/)
+references:
+- S. N. Yurchenko, T. M. Mellor, J. Tennyson, ExoMol line lists - LIX. High-temperature line
+  list for N2O, Mon. Not. R. Astron. Soc. 534, 1364-1375 (2024), doi:10.1093/mnras/stae2201
+- 'J. Tennyson et al., The ExoMol database: molecular line lists for exoplanet and other hot
+  atmospheres, J. Mol. Spectrosc. 327, 73-94 (2016), doi:10.1016/j.jms.2016.05.002'
+- 'S. N. Yurchenko, A. F. Al-Refaie, J. Tennyson, ExoCross: a general program for generating
+  spectra from molecular line lists, Astron. Astrophys. 614, A131 (2018), doi:10.1051/0004-6361/201732531'

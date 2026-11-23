@@ -1,0 +1,50 @@
+# Planck-mean absorption coefficient kp(T) of CH3F, per unit partial
+# pressure, 1/(cm bar): a fit of ln kp to ExoMol data, written by planck-mean
+# (Support/ceptr/ceptr/planck_mean.py). convert --radiation writes it into
+# mechanism.H.
+#
+# Licence: derived from the ExoMol database (www.exomol.com) and, like it,
+# released under CC BY-SA 4.0 (https://creativecommons.org/licenses/by-sa/4.0/).
+# Cite the references below when using it.
+species: CH3F
+aliases: []
+composition:
+  C: 1
+  H: 3
+  F: 1
+units: 1/(cm bar)
+fit:
+  variable: x = ln(T / 1000 K)
+  form: ln kp = polynomial in x on each range (increasing powers); kp held at its T_low value
+    below T_low; kp = kp(T_max) (T / T_max)^exponent above T_max
+  T_low: 250.0
+  T_max: 500.0
+  ranges:
+  - T_min: 250.0
+    T_max: 500.0
+    coefficients:
+    - -2.6757879403453035
+    - -1.0843737951623966
+    - 0.8565454032580553
+    - 0.17062551641360013
+    - -0.6020071617664322
+    - -0.17854356674965258
+    - -0.014078949426832825
+  exponent: -1.4164869145578525
+  max_relative_error: 3.52e-05
+source:
+  database: ExoMol
+  linelist: OYKYT
+  isotopologue: 12C-1H3-19F
+  linelist_max_temperature: 500.0
+  files:
+  - https://www.exomol.com/db/CH3F/12C-1H3-19F/OYKYT/12C-1H3-19F__OYKYT.cf
+licence: CC BY-SA 4.0 (https://creativecommons.org/licenses/by-sa/4.0/)
+references:
+- A. Owens, A. Yachmenev, J. Kupper, S. N. Yurchenko, W. Thiel, The rotation-vibration spectrum
+  of methyl fluoride from first principles, Phys. Chem. Chem. Phys. 21, 3496-3505 (2019),
+  doi:10.1039/C8CP01721B
+- 'J. Tennyson et al., The ExoMol database: molecular line lists for exoplanet and other hot
+  atmospheres, J. Mol. Spectrosc. 327, 73-94 (2016), doi:10.1016/j.jms.2016.05.002'
+- 'S. N. Yurchenko, A. F. Al-Refaie, J. Tennyson, ExoCross: a general program for generating
+  spectra from molecular line lists, Astron. Astrophys. 614, A131 (2018), doi:10.1051/0004-6361/201732531'

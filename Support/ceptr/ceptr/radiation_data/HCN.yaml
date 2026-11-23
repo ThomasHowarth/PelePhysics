@@ -1,0 +1,63 @@
+# Planck-mean absorption coefficient kp(T) of HCN, per unit partial
+# pressure, 1/(cm bar): a fit of ln kp to ExoMol data, written by planck-mean
+# (Support/ceptr/ceptr/planck_mean.py). convert --radiation writes it into
+# mechanism.H.
+#
+# Licence: derived from the ExoMol database (www.exomol.com) and, like it,
+# released under CC BY-SA 4.0 (https://creativecommons.org/licenses/by-sa/4.0/).
+# Cite the references below when using it.
+species: HCN
+aliases: []
+composition:
+  H: 1
+  C: 1
+  N: 1
+units: 1/(cm bar)
+fit:
+  variable: x = ln(T / 1000 K)
+  form: ln kp = polynomial in x on each range (increasing powers); kp held at its T_low value
+    below T_low; kp = kp(T_max) (T / T_max)^exponent above T_max
+  T_low: 250.0
+  T_max: 4000.0
+  ranges:
+  - T_min: 250.0
+    T_max: 930.0
+    coefficients:
+    - -3.418792837113478
+    - -1.8018033760235872
+    - -1.3821227768739968
+    - -4.271659810666733
+    - -4.161887064047244
+    - -1.605566056650163
+    - -0.2286479715830122
+  - T_min: 930.0
+    T_max: 4000.0
+    coefficients:
+    - -3.4116191234797615
+    - -1.63949874024996
+    - -0.29893384563017666
+    - -0.9748677128757675
+    - 1.6334586245573994
+    - -1.314215816980308
+    - 0.3606289788037837
+  exponent: -3.8720952299532003
+  max_relative_error: 0.000909
+source:
+  database: ExoMol
+  linelist: Harris
+  isotopologue: 1H-12C-14N
+  linelist_max_temperature: 4000.0
+  files:
+  - https://www.exomol.com/db/HCN/1H-12C-14N/Harris/1H-12C-14N__Harris.cf
+licence: CC BY-SA 4.0 (https://creativecommons.org/licenses/by-sa/4.0/)
+references:
+- G. J. Harris, J. Tennyson, B. M. Kaminsky, Ya. V. Pavlenko, H. R. A. Jones, Improved HCN/HNC
+  linelist, model atmospheres and synthetic spectra for WZ Cas, Mon. Not. R. Astron. Soc.
+  367, 400-406 (2006), doi:10.1111/j.1365-2966.2005.09960.x
+- R. J. Barber, J. K. Strange, C. Hill, O. L. Polyansky, G. Ch. Mellau, S. N. Yurchenko, J.
+  Tennyson, ExoMol line lists - III. An improved hot rotation-vibration line list for HCN
+  and HNC, Mon. Not. R. Astron. Soc. 437, 1828-1835 (2014), doi:10.1093/mnras/stt2011
+- 'J. Tennyson et al., The ExoMol database: molecular line lists for exoplanet and other hot
+  atmospheres, J. Mol. Spectrosc. 327, 73-94 (2016), doi:10.1016/j.jms.2016.05.002'
+- 'S. N. Yurchenko, A. F. Al-Refaie, J. Tennyson, ExoCross: a general program for generating
+  spectra from molecular line lists, Astron. Astrophys. 614, A131 (2018), doi:10.1051/0004-6361/201732531'

@@ -1,0 +1,48 @@
+# Planck-mean absorption coefficient kp(T) of C2H2, per unit partial
+# pressure, 1/(cm bar): a fit of ln kp to ExoMol data, written by planck-mean
+# (Support/ceptr/ceptr/planck_mean.py). convert --radiation writes it into
+# mechanism.H.
+#
+# Licence: derived from the ExoMol database (www.exomol.com) and, like it,
+# released under CC BY-SA 4.0 (https://creativecommons.org/licenses/by-sa/4.0/).
+# Cite the references below when using it.
+species: C2H2
+aliases: []
+composition:
+  C: 2
+  H: 2
+units: 1/(cm bar)
+fit:
+  variable: x = ln(T / 1000 K)
+  form: ln kp = polynomial in x on each range (increasing powers); kp held at its T_low value
+    below T_low; kp = kp(T_max) (T / T_max)^exponent above T_max
+  T_low: 250.0
+  T_max: 2200.0
+  ranges:
+  - T_min: 250.0
+    T_max: 2200.0
+    coefficients:
+    - -2.9521383946291864
+    - -2.1434733448918895
+    - 0.06919267972377255
+    - -0.8091733032781222
+    - -0.5297477031789887
+    - 0.40203067297599093
+    - 0.22384196351196953
+  exponent: -3.39599926330727
+  max_relative_error: 0.00356
+source:
+  database: ExoMol
+  linelist: aCeTY
+  isotopologue: 12C2-1H2
+  linelist_max_temperature: 2200.0
+  files:
+  - https://www.exomol.com/db/C2H2/12C2-1H2/aCeTY/12C2-1H2__aCeTY.cf
+licence: CC BY-SA 4.0 (https://creativecommons.org/licenses/by-sa/4.0/)
+references:
+- 'K. L. Chubb, J. Tennyson, S. N. Yurchenko, ExoMol molecular line lists - XXXVII: spectra
+  of acetylene, Mon. Not. R. Astron. Soc. 493, 1531-1545 (2020), doi:10.1093/mnras/staa229'
+- 'J. Tennyson et al., The ExoMol database: molecular line lists for exoplanet and other hot
+  atmospheres, J. Mol. Spectrosc. 327, 73-94 (2016), doi:10.1016/j.jms.2016.05.002'
+- 'S. N. Yurchenko, A. F. Al-Refaie, J. Tennyson, ExoCross: a general program for generating
+  spectra from molecular line lists, Astron. Astrophys. 614, A131 (2018), doi:10.1051/0004-6361/201732531'

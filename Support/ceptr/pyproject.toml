@@ -43,6 +43,7 @@ plot = [
 [project.scripts]
 convert = "ceptr.ceptr:main"
 qssa = "ceptr.qssa:main"
+planck-mean = "ceptr.planck_mean:main"
 
 [dependency-groups]
 # Only ruff, so that CI can lint without installing CEPTR

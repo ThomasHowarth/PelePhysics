@@ -88,11 +88,13 @@ def convert(
     interface_name,
     plog_pressure,
     ask_plog=False,
+    radiation=False,
 ):
     """Convert a mechanism file.
 
     With ask_plog, the PLOG pressure is asked for when it is needed and not
-    given.
+    given. With radiation, mechanism.H gets the Planck-mean absorption
+    coefficients of the species that have them (ceptr/radiation.py).
     """
     print(f"""Converting file {fname}""")
 
@@ -123,6 +125,7 @@ def convert(
         qss_format_input,
         qss_symbolic_jac,
         plog_pressure,
+        radiation,
     )
     conv.writer()
     conv.formatter()
@@ -138,6 +141,7 @@ def convert_many(
     gas_name,
     interface_name,
     plog_pressures,
+    radiation=False,
 ):
     """Convert mechanisms in parallel."""
     print(f"Using {ncpu} processes")
@@ -153,6 +157,8 @@ def convert_many(
                 repeat(gas_name),
                 repeat(interface_name),
                 plog_pressures,
+                repeat(False),
+                repeat(radiation),
             ),
         )
 
@@ -167,6 +173,7 @@ def convert_lst(
     gas_name,
     interface_name,
     plog_pressure=None,
+    radiation=False,
 ):
     """Convert mechanisms from a file containing a list of directories."""
     mechnames, plog_pressures = parse_lst_file(lst, plog_pressure)
@@ -180,6 +187,7 @@ def convert_lst(
         gas_name,
         interface_name,
         plog_pressures,
+        radiation,
     )
 
 
@@ -191,6 +199,7 @@ def convert_lst_qss(
     gas_name,
     interface_name,
     plog_pressure=None,
+    radiation=False,
 ):
     """Convert QSS mechanisms from a file of directories and format input."""
     mechnames, qss_format_inputs, plog_pressures = parse_qss_lst_file(
@@ -206,6 +215,7 @@ def convert_lst_qss(
         gas_name,
         interface_name,
         plog_pressures,
+        radiation,
     )
 
 
@@ -281,6 +291,13 @@ def main():
         default=None,
     )
 
+    parser.add_argument(
+        "--radiation",
+        action="store_true",
+        help="Write the Planck-mean absorption coefficients of the species"
+        " that have them (fits of ExoMol data, CC BY-SA 4.0)",
+    )
+
     args = parser.parse_args()
 
     if args.chemistry == "heterogeneous":
@@ -299,6 +316,7 @@ def main():
             args.interface_name,
             args.plog_pressure,
             ask_plog=True,
+            radiation=args.radiation,
         )
     elif args.lst:
         convert_lst(
@@ -311,6 +329,7 @@ def main():
             args.gas_name,
             args.interface_name,
             args.plog_pressure,
+            args.radiation,
         )
     elif args.lst_qss:
         convert_lst_qss(
@@ -321,6 +340,7 @@ def main():
             args.gas_name,
             args.interface_name,
             args.plog_pressure,
+            args.radiation,
         )
     end = time.time()
     print(f"CEPTR run time: {end - start:.2f} s")

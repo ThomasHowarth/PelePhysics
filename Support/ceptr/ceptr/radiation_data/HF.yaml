@@ -1,0 +1,66 @@
+# Planck-mean absorption coefficient kp(T) of HF, per unit partial
+# pressure, 1/(cm bar): a fit of ln kp to ExoMol data, written by planck-mean
+# (Support/ceptr/ceptr/planck_mean.py). convert --radiation writes it into
+# mechanism.H.
+#
+# Licence: derived from the ExoMol database (www.exomol.com) and, like it,
+# released under CC BY-SA 4.0 (https://creativecommons.org/licenses/by-sa/4.0/).
+# Cite the references below when using it.
+species: HF
+aliases: []
+composition:
+  H: 1
+  F: 1
+units: 1/(cm bar)
+fit:
+  variable: x = ln(T / 1000 K)
+  form: ln kp = polynomial in x on each range (increasing powers); kp held at its T_low value
+    below T_low; kp = kp(T_max) (T / T_max)^exponent above T_max
+  T_low: 250.0
+  T_max: 5000.0
+  ranges:
+  - T_min: 250.0
+    T_max: 930.0
+    coefficients:
+    - -3.443429159756387
+    - -1.254570096467578
+    - -1.4819313980127191
+    - -8.114914072760083
+    - -10.032363387230342
+    - -5.325438909926971
+    - -1.0645559052678832
+  - T_min: 930.0
+    T_max: 5000.0
+    coefficients:
+    - -3.43559182055886
+    - -1.0611573520439321
+    - 0.07772275024027897
+    - -2.0124578702022893
+    - 1.7331832537235046
+    - -0.6808157661593571
+    - 0.10681259026123743
+  exponent: -3.4669822335575082
+  max_relative_error: 0.000522
+source:
+  database: ExoMol
+  linelist: Coxon-Hajig
+  isotopologue: 1H-19F
+  linelist_max_temperature: 5000.0
+  files:
+  - https://www.exomol.com/db/HF/1H-19F/Coxon-Hajig/1H-19F__Coxon-Hajig.cf
+licence: CC BY-SA 4.0 (https://creativecommons.org/licenses/by-sa/4.0/)
+references:
+- 'J. A. Coxon, P. G. Hajigeorgiou, Improved direct potential fit analyses for the ground
+  electronic states of the hydrogen halides: HF/DF/TF, HCl/DCl/TCl, HBr/DBr/TBr and HI/DI/TI,
+  J. Quant. Spectrosc. Radiat. Transf. 151, 133-154 (2015), doi:10.1016/j.jqsrt.2014.08.028'
+- 'G. Li, I. E. Gordon, R. J. Le Roy, P. G. Hajigeorgiou, J. A. Coxon, P. F. Bernath, L. S.
+  Rothman, Reference spectroscopic data for hydrogen halides. Part I: Construction and validation
+  of the ro-vibrational dipole moment functions, J. Quant. Spectrosc. Radiat. Transf. 121,
+  78-90 (2013), doi:10.1016/j.jqsrt.2013.02.005'
+- 'W. Somogyi, S. N. Yurchenko, A. Yachmenev, Calculation of electric quadrupole linestrengths
+  for diatomic molecules: Application to the H2, CO, HF, and O2 molecules, J. Chem. Phys.
+  155, 214303 (2021), doi:10.1063/5.0063256'
+- 'J. Tennyson et al., The ExoMol database: molecular line lists for exoplanet and other hot
+  atmospheres, J. Mol. Spectrosc. 327, 73-94 (2016), doi:10.1016/j.jms.2016.05.002'
+- 'S. N. Yurchenko, A. F. Al-Refaie, J. Tennyson, ExoCross: a general program for generating
+  spectra from molecular line lists, Astron. Astrophys. 614, A131 (2018), doi:10.1051/0004-6361/201732531'

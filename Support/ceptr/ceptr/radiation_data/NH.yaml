@@ -1,0 +1,68 @@
+# Planck-mean absorption coefficient kp(T) of NH, per unit partial
+# pressure, 1/(cm bar): a fit of ln kp to ExoMol data, written by planck-mean
+# (Support/ceptr/ceptr/planck_mean.py). convert --radiation writes it into
+# mechanism.H.
+#
+# Licence: derived from the ExoMol database (www.exomol.com) and, like it,
+# released under CC BY-SA 4.0 (https://creativecommons.org/licenses/by-sa/4.0/).
+# Cite the references below when using it.
+species: NH
+aliases: []
+composition:
+  N: 1
+  H: 1
+units: 1/(cm bar)
+fit:
+  variable: x = ln(T / 1000 K)
+  form: ln kp = polynomial in x on each range (increasing powers); kp held at its T_low value
+    below T_low; kp = kp(T_max) (T / T_max)^exponent above T_max
+  T_low: 250.0
+  T_max: 5000.0
+  ranges:
+  - T_min: 250.0
+    T_max: 1070.0
+    coefficients:
+    - -4.170363286658226
+    - -1.4385938262385838
+    - -0.5501537932600964
+    - -2.3435183556010575
+    - -0.9149222153699881
+    - 0.5590180806686595
+    - 0.30918947075097464
+  - T_min: 1070.0
+    T_max: 2350.0
+    coefficients:
+    - -4.166388756875804
+    - -1.6121173990306576
+    - 1.479282893834832
+    - -8.430837100632534
+    - 17.583135772663
+    - -18.695209827686853
+    - 7.996827497964981
+  - T_min: 2350.0
+    T_max: 5000.0
+    coefficients:
+    - -454.15065588437733
+    - 2294.808326037471
+    - -4783.178073832844
+    - 5200.972336881278
+    - -3118.476864174563
+    - 981.1995550809606
+    - -126.96571871807627
+  exponent: 0.0
+  max_relative_error: 0.00312
+source:
+  database: ExoMol
+  linelist: kNigHt
+  isotopologue: 14N-1H
+  linelist_max_temperature: 10000.0
+  files:
+  - https://www.exomol.com/db/NH/14N-1H/kNigHt/14N-1H__kNigHt.cf
+licence: CC BY-SA 4.0 (https://creativecommons.org/licenses/by-sa/4.0/)
+references:
+- A. N. Perri, L. K. McKemmish, Full spectroscopic model and trihybrid experimental-perturbative-variational
+  line list for NH, Mon. Not. R. Astron. Soc. 531, 3023-3033 (2024), doi:10.1093/mnras/stae1340
+- 'J. Tennyson et al., The ExoMol database: molecular line lists for exoplanet and other hot
+  atmospheres, J. Mol. Spectrosc. 327, 73-94 (2016), doi:10.1016/j.jms.2016.05.002'
+- 'S. N. Yurchenko, A. F. Al-Refaie, J. Tennyson, ExoCross: a general program for generating
+  spectra from molecular line lists, Astron. Astrophys. 614, A131 (2018), doi:10.1051/0004-6361/201732531'

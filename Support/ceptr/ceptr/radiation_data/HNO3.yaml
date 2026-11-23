@@ -1,0 +1,50 @@
+# Planck-mean absorption coefficient kp(T) of HNO3, per unit partial
+# pressure, 1/(cm bar): a fit of ln kp to ExoMol data, written by planck-mean
+# (Support/ceptr/ceptr/planck_mean.py). convert --radiation writes it into
+# mechanism.H.
+#
+# Licence: derived from the ExoMol database (www.exomol.com) and, like it,
+# released under CC BY-SA 4.0 (https://creativecommons.org/licenses/by-sa/4.0/).
+# Cite the references below when using it.
+species: HNO3
+aliases:
+- HONO2
+composition:
+  H: 1
+  N: 1
+  O: 3
+units: 1/(cm bar)
+fit:
+  variable: x = ln(T / 1000 K)
+  form: ln kp = polynomial in x on each range (increasing powers); kp held at its T_low value
+    below T_low; kp = kp(T_max) (T / T_max)^exponent above T_max
+  T_low: 250.0
+  T_max: 500.0
+  ranges:
+  - T_min: 250.0
+    T_max: 500.0
+    coefficients:
+    - -2.3271195961148643
+    - -3.7032434684521602
+    - -1.0603267226608297
+    - -0.28481391090274494
+    - -1.4752404543958177
+    - -1.1828187715162883
+    - -0.26978680903553853
+  exponent: -1.7848525969338092
+  max_relative_error: 6.48e-07
+source:
+  database: ExoMol
+  linelist: AIJS
+  isotopologue: 1H-14N-16O3
+  linelist_max_temperature: 500.0
+  files:
+  - https://www.exomol.com/db/HNO3/1H-14N-16O3/AIJS/1H-14N-16O3__AIJS.cf
+licence: CC BY-SA 4.0 (https://creativecommons.org/licenses/by-sa/4.0/)
+references:
+- A. I. Pavlyuchko, S. N. Yurchenko, J. Tennyson, ExoMol molecular line lists - XI. The spectrum
+  of nitric acid, Mon. Not. R. Astron. Soc. 452, 1702-1706 (2015), doi:10.1093/mnras/stv1376
+- 'J. Tennyson et al., The ExoMol database: molecular line lists for exoplanet and other hot
+  atmospheres, J. Mol. Spectrosc. 327, 73-94 (2016), doi:10.1016/j.jms.2016.05.002'
+- 'S. N. Yurchenko, A. F. Al-Refaie, J. Tennyson, ExoCross: a general program for generating
+  spectra from molecular line lists, Astron. Astrophys. 614, A131 (2018), doi:10.1051/0004-6361/201732531'

@@ -1,0 +1,67 @@
+# Planck-mean absorption coefficient kp(T) of NH3, per unit partial
+# pressure, 1/(cm bar): a fit of ln kp to ExoMol data, written by planck-mean
+# (Support/ceptr/ceptr/planck_mean.py). convert --radiation writes it into
+# mechanism.H.
+#
+# Licence: derived from the ExoMol database (www.exomol.com) and, like it,
+# released under CC BY-SA 4.0 (https://creativecommons.org/licenses/by-sa/4.0/).
+# Cite the references below when using it.
+species: NH3
+aliases: []
+composition:
+  N: 1
+  H: 3
+units: 1/(cm bar)
+fit:
+  variable: x = ln(T / 1000 K)
+  form: ln kp = polynomial in x on each range (increasing powers); kp held at its T_low value
+    below T_low; kp = kp(T_max) (T / T_max)^exponent above T_max
+  T_low: 300.0
+  T_max: 2000.0
+  ranges:
+  - T_min: 300.0
+    T_max: 2000.0
+    coefficients:
+    - -2.9963058344516194
+    - -2.6160860189314006
+    - -0.04055050696400697
+    - 0.22564956340636522
+    - -0.43656954134490855
+    - -0.26977752484726725
+    - -0.03625978620321182
+  exponent: -3.274793187287594
+  max_relative_error: 0.000657
+source:
+  database: ExoMol
+  linelist: CoYuTe
+  isotopologue: 14N-1H3
+  linelist_max_temperature: 2000.0
+  files:
+  - https://www.exomol.com/db/NH3/14N-1H3/CoYuTe/14N-1H3__CoYuTe__0-20000__200K.super.bz2
+  - https://www.exomol.com/db/NH3/14N-1H3/CoYuTe/14N-1H3__CoYuTe__0-20000__300K.super.bz2
+  - https://www.exomol.com/db/NH3/14N-1H3/CoYuTe/14N-1H3__CoYuTe__0-20000__400K.super.bz2
+  - https://www.exomol.com/db/NH3/14N-1H3/CoYuTe/14N-1H3__CoYuTe__0-20000__500K.super.bz2
+  - https://www.exomol.com/db/NH3/14N-1H3/CoYuTe/14N-1H3__CoYuTe__0-20000__600K.super.bz2
+  - https://www.exomol.com/db/NH3/14N-1H3/CoYuTe/14N-1H3__CoYuTe__0-20000__700K.super.bz2
+  - https://www.exomol.com/db/NH3/14N-1H3/CoYuTe/14N-1H3__CoYuTe__0-20000__800K.super.bz2
+  - https://www.exomol.com/db/NH3/14N-1H3/CoYuTe/14N-1H3__CoYuTe__0-20000__900K.super.bz2
+  - https://www.exomol.com/db/NH3/14N-1H3/CoYuTe/14N-1H3__CoYuTe__0-20000__1000K.super.bz2
+  - https://www.exomol.com/db/NH3/14N-1H3/CoYuTe/14N-1H3__CoYuTe__0-20000__1100K.super.bz2
+  - https://www.exomol.com/db/NH3/14N-1H3/CoYuTe/14N-1H3__CoYuTe__0-20000__1200K.super.bz2
+  - https://www.exomol.com/db/NH3/14N-1H3/CoYuTe/14N-1H3__CoYuTe__0-20000__1300K.super.bz2
+  - https://www.exomol.com/db/NH3/14N-1H3/CoYuTe/14N-1H3__CoYuTe__0-20000__1400K.super.bz2
+  - https://www.exomol.com/db/NH3/14N-1H3/CoYuTe/14N-1H3__CoYuTe__0-20000__1500K.super.bz2
+  - https://www.exomol.com/db/NH3/14N-1H3/CoYuTe/14N-1H3__CoYuTe__0-20000__1600K.super.bz2
+  - https://www.exomol.com/db/NH3/14N-1H3/CoYuTe/14N-1H3__CoYuTe__0-20000__1700K.super.bz2
+  - https://www.exomol.com/db/NH3/14N-1H3/CoYuTe/14N-1H3__CoYuTe__0-20000__1800K.super.bz2
+  - https://www.exomol.com/db/NH3/14N-1H3/CoYuTe/14N-1H3__CoYuTe__0-20000__1900K.super.bz2
+  - https://www.exomol.com/db/NH3/14N-1H3/CoYuTe/14N-1H3__CoYuTe__0-20000__2000K.super.bz2
+licence: CC BY-SA 4.0 (https://creativecommons.org/licenses/by-sa/4.0/)
+references:
+- P. A. Coles, S. N. Yurchenko, J. Tennyson, ExoMol molecular line lists - XXXV. A rotation-vibration
+  line list for hot ammonia, Mon. Not. R. Astron. Soc. 490, 4638-4647 (2019), doi:10.1093/mnras/stz2778
+- A. R. Al Derzi, T. Furtenbacher, J. Tennyson, S. N. Yurchenko, A. G. Csaszar, MARVEL analysis
+  of the measured high-resolution spectra of 14NH3, J. Quant. Spectrosc. Radiat. Transf. 161,
+  117-130 (2015), doi:10.1016/j.jqsrt.2015.03.034
+- 'J. Tennyson et al., The ExoMol database: molecular line lists for exoplanet and other hot
+  atmospheres, J. Mol. Spectrosc. 327, 73-94 (2016), doi:10.1016/j.jms.2016.05.002'

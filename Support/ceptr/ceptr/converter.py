@@ -14,6 +14,7 @@ import ceptr.gjs as cgjs
 import ceptr.jacobian as cj
 import ceptr.production as cp
 import ceptr.qssa_converter as cqc
+import ceptr.radiation as crad
 import ceptr.reaction_info as cri
 import ceptr.sparsity as csp
 import ceptr.species_info as csi
@@ -35,8 +36,11 @@ class Converter:
         qss_format_input=None,
         qss_symbolic_jacobian=False,
         plog_pressure=None,
+        radiation=False,
     ):
         self.mechIsAHetMech = chemistry == "heterogeneous"
+        # Write the Planck-mean absorption coefficients (ceptr/radiation.py)
+        self.radiation = radiation
 
         self.mechanism = mechanism
         self.interface = interface
@@ -357,6 +361,8 @@ class Converter:
             # cck.ckgms(hdr, self.mechanism, self.species_info)
             # cck.ckams(hdr, self.mechanism, self.species_info)
             cck.cksms(hdr, self.mechanism, self.species_info)
+            if self.radiation:
+                crad.planck_mean(hdr, self.mechanism, self.species_info)
 
             self.species_info.create_dicts()
             if self.species_info.n_qssa_species > 0:
