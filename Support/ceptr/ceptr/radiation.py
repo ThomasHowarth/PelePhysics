@@ -67,7 +67,8 @@ def _ln_kp_code(fit):
     last = ranges[-1]["coefficients"]
     y_max = sum(c * x_max**k for k, c in enumerate(last))
     lines = [
-        f"xs = amrex::max(x, {x_low:.17g});",
+        f"const amrex::Real xs = amrex::max(x, amrex::Real({x_low:.17g}));",
+        "amrex::Real ln_kp = 0.0;",
         f"if (xs > {x_max:.17g}) {{",
         f"ln_kp = {y_max:.17g} + {fit['exponent']:.17g} * (xs - {x_max:.17g});",
     ]
@@ -121,8 +122,9 @@ def planck_mean(fstream, mechanism, species_info, fits=None):
     cw.writer(fstream, "kp[k] = 0.0;")
     cw.writer(fstream, "}")
     if pairs:
-        cw.writer(fstream, "const amrex::Real x = log(T * 1.0e-3);")
-        cw.writer(fstream, "amrex::Real xs, ln_kp;")
+        cw.writer(fstream, "const amrex::Real x = log(T * amrex::Real(1.0e-3));")
+    else:
+        cw.writer(fstream, "amrex::ignore_unused(T);")
     for idx, name, data in pairs:
         fit = data["fit"]
         src = data["source"]
@@ -138,7 +140,9 @@ def planck_mean(fstream, mechanism, species_info, fits=None):
         )
         for ref in data["references"]:
             cw.writer(fstream, cw.comment(f"  {ref}"))
+        cw.writer(fstream, "{")
         for line in _ln_kp_code(fit):
             cw.writer(fstream, line)
         cw.writer(fstream, f"kp[{idx}] = exp(ln_kp);")
+        cw.writer(fstream, "}")
     cw.writer(fstream, "}")

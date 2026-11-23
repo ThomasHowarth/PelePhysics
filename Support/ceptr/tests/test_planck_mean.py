@@ -180,8 +180,12 @@ HARNESS = """
 using std::exp;
 using std::log;
 namespace amrex {
-using Real = double;
-inline Real max(Real a, Real b) { return a > b ? a : b; }
+using Real = %s;
+// As in AMReX: one template parameter, so mixed float/double does not compile
+template <class T>
+const T& max(const T& a, const T& b) { return a < b ? b : a; }
+template <class... Ts>
+void ignore_unused(const Ts&...) {}
 }
 #define AMREX_GPU_HOST_DEVICE
 #define AMREX_FORCE_INLINE inline
@@ -190,14 +194,30 @@ inline Real max(Real a, Real b) { return a > b ? a : b; }
 int main()
 {
   double T;
-  double kp[NUM_GAS_SPECIES];
+  amrex::Real kp[NUM_GAS_SPECIES];
   while (std::scanf("%%lf", &T) == 1) {
-    get_planck_mean_kp(T, kp);
-    for (int k = 0; k < NUM_GAS_SPECIES; ++k) std::printf("%%.17e ", kp[k]);
+    get_planck_mean_kp(amrex::Real(T), kp);
+    for (int k = 0; k < NUM_GAS_SPECIES; ++k) std::printf("%%.17e ", double(kp[k]));
     std::printf("\\n");
   }
 }
 """
+
+
+WARNINGS = ["-Wall", "-Wextra", "-Wshadow", "-Werror"]
+
+
+@pytest.mark.skipif(shutil.which("c++") is None, reason="no C++ compiler")
+@pytest.mark.parametrize("real", ["float", "double"])
+@pytest.mark.parametrize("with_fits", [True, False])
+def test_generated_code_compiles(tmp_path, real, with_fits):
+    """The function compiles without warnings in single and double precision."""
+    gas, info = gri30()
+    code = io.StringIO()
+    crad.planck_mean(code, gas, info, crad.load_fits() if with_fits else {})
+    src = tmp_path / "kp.cpp"
+    src.write_text(HARNESS % (real, gas.n_species, code.getvalue()))
+    subprocess.run(["c++", "-std=c++17", *WARNINGS, "-fsyntax-only", src], check=True)
 
 
 @pytest.mark.skipif(shutil.which("c++") is None, reason="no C++ compiler")
@@ -208,9 +228,9 @@ def test_generated_code(tmp_path):
     code = io.StringIO()
     crad.planck_mean(code, gas, info, fits)
     src = tmp_path / "kp.cpp"
-    src.write_text(HARNESS % (gas.n_species, code.getvalue()))
+    src.write_text(HARNESS % ("double", gas.n_species, code.getvalue()))
     exe = tmp_path / "kp"
-    subprocess.run(["c++", "-std=c++17", "-o", exe, src], check=True)
+    subprocess.run(["c++", "-std=c++17", *WARNINGS, "-o", exe, src], check=True)
 
     temps = [150.0, 300.0, 650.0, 1000.0, 1500.0, 2000.0, 2500.0, 3000.0, 6000.0]
     out = subprocess.run(
