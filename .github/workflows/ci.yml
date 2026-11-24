@@ -234,6 +234,7 @@ jobs:
             if [ ${RUN_TESTS} = true ]; then
               ${EXE} inputs.2d_${TYPE}
               case ${TYPE} in
+                Constant) ${EXE} inputs.2d_Constant_MKS ;;
                 Manifold) ${EXE} inputs.2d_Network ;;
                 Simple)   run_simple ;;
               esac
@@ -284,15 +285,46 @@ jobs:
             printf "\n-------- ${CHEMISTRY} --------\n"
             make -j $(nproc) Eos_Model=Fuego Chemistry_Model=${CHEMISTRY} ${MAKE_ARGS}
             if [ ${RUN_TESTS} = true ]; then
-              for TYPE in Cvode Arkode RK64; do
+              # Each run checks its final state against a CVODE reference
+              # (react_eval.check)
+              for TYPE in Cvode Arkode RK64 BDF; do
                 printf "\n-------- ${TYPE} --------\n"
                 for INPUT in inputs.3d_Array4 inputs.3d_1dArray; do
-                  ${EXE} ${INPUT} ${EXTRA} ode.dt=1.e-05 ode.ndt=100 chem_integrator="Reactor${TYPE}"
+                  ${EXE} ${INPUT} ${EXTRA} ode.dt=1.e-05 ode.ndt=100 chem_integrator="Reactor${TYPE}" react_eval.check=1
                 done
+              done
+              # CVODE variants, Array4 only: the h reactor and the CPU dense
+              # linear solvers (one cell per system)
+              for OPTS in "ode.reactor_type=2" "cvode.solve_type=denseAJ_direct" "cvode.solve_type=precGMRES cvode.precond_type=dense_simplified_AJacobian"; do
+                printf "\n-------- Cvode ${OPTS} --------\n"
+                ${EXE} inputs.3d_Array4 ${EXTRA} ode.dt=1.e-05 ode.ndt=100 chem_integrator=ReactorCvode react_eval.check=1 ${OPTS}
               done
             fi
             make realclean
           done
+      - name: Test PMF reader
+        if: env.HOST_BUILD == 'true'
+        working-directory: Testing/Exec/PMFReader
+        run: |
+          # 2D, to link the AMReX library above
+          make -j $(nproc) DIM=2 ${MAKE_ARGS}
+          if [ ${RUN_TESTS} = true ]; then ${EXE} inputs.3d; fi
+          make realclean
+      # Compile only, and only the PelePhysics and ReactEval objects: the
+      # AMReX library and SUNDIALS above are double precision, so this builds
+      # single-precision SUNDIALS (for its headers) but neither compiles
+      # AMReX nor links.
+      - name: Single precision
+        if: matrix.comp == 'gnu'
+        working-directory: Testing/Exec/ReactEval
+        run: |
+          ARGS="PRECISION=FLOAT TINY_PROFILE=TRUE USE_CCACHE=TRUE ${{matrix.amrex_build_args}}"
+          make TPL ${ARGS}
+          OBJS=$(make -s ${ARGS} print-objForExecs | sed -n 's/^objForExecs is //p' | tr ' ' '\n' | grep -v -E '/(AMReX|amrex)(_[^/]*)?\.o$')
+          # An empty list would build and link everything
+          test -n "${OBJS}"
+          make -j $(nproc) ${ARGS} ${OBJS}
+          make realclean
       - name: Test Ignition delay
         if: env.HOST_BUILD == 'true'
         working-directory: Testing/Exec/IgnitionDelay
