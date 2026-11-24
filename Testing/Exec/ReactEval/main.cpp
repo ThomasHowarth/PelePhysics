@@ -88,7 +88,6 @@ advance(
         amrex::Real time = 0.0;
         amrex::Real dt_lev = (subcycledt) ? dt / std::pow(2, lev) : dt;
         amrex::Real dt_incr = dt_lev / ndt;
-        int tmp_fc;
         if (omp_thread == 0) {
           amrex::Print() << "  [" << lev << "]"
                          << " integrating " << nc << " cells \n";
@@ -96,13 +95,14 @@ advance(
         /* Solve */
         BL_PROFILE_VAR_START(ReactInLoop);
         for (int ii = 0; ii < ndt; ++ii) {
-          tmp_fc = reactor.react(
+          reactor.react(
             box, rhoY, frcExt, T, rhoE, frcEExt, fc, mask, dt_incr, time
 #ifdef AMREX_USE_GPU
             ,
             amrex::Gpu::gpuStream()
 #endif
           );
+          // react() returns the time actually integrated in dt_incr
           dt_incr = dt_lev / ndt;
           amrex::Gpu::Device::streamSynchronize();
         }
@@ -117,7 +117,8 @@ advance(
 #ifdef AMREX_USE_GPU
         ode_ncells = nc;
 #endif
-        extra_cells = nc - (nc / ode_ncells) * ode_ncells;
+        // Padding up to a multiple of ode_ncells
+        extra_cells = (ode_ncells - nc % ode_ncells) % ode_ncells;
         if (omp_thread == 0) {
           amrex::Print() << " Integrating " << nc << " cells with a "
                          << ode_ncells << " ode cell buffer ";
@@ -138,9 +139,7 @@ advance(
           (amrex::Real*)amrex::The_Device_Arena()->alloc(
             nCells * sizeof(amrex::Real));
         auto tmp_fc_d = (long int*)amrex::The_Device_Arena()->alloc(
-          nCells * sizeof(amrex::Real));
-        auto tmp_mask_d = (amrex::Real*)amrex::The_Device_Arena()->alloc(
-          nCells * sizeof(amrex::Real));
+          nCells * sizeof(long int));
 #endif
 
         auto tmp_vect = new amrex::Real[nCells * (NUM_SPECIES + 1)];
@@ -148,7 +147,6 @@ advance(
         auto tmp_vect_energy = new amrex::Real[nCells];
         auto tmp_src_vect_energy = new amrex::Real[nCells];
         auto tmp_fc = new long int[nCells];
-        auto tmp_mask = new int[nCells];
 
         BL_PROFILE_VAR_STOP(Allocs);
 
@@ -158,15 +156,19 @@ advance(
           box, nCells, rhoY, frcExt, T, rhoE, frcEExt, tmp_vect, tmp_src_vect,
           tmp_vect_energy, tmp_src_vect_energy);
 
+        // The padding cells repeat the box's first cell
+        const auto lo = amrex::lbound(box);
         for (int icell = nc; icell < nc + extra_cells; icell++) {
           for (int sp = 0; sp < NUM_SPECIES; sp++) {
-            tmp_vect[icell * (NUM_SPECIES + 1) + sp] = rhoY(0, 0, 0, sp);
-            tmp_src_vect[icell * NUM_SPECIES + sp] = frcExt(0, 0, 0, sp);
+            tmp_vect[icell * (NUM_SPECIES + 1) + sp] =
+              rhoY(lo.x, lo.y, lo.z, sp);
+            tmp_src_vect[icell * NUM_SPECIES + sp] =
+              frcExt(lo.x, lo.y, lo.z, sp);
           }
-          tmp_vect[icell * (NUM_SPECIES + 1) + NUM_SPECIES] = T(0, 0, 0);
-          tmp_vect_energy[icell] = rhoE(0, 0, 0);
-          tmp_src_vect_energy[icell] = frcEExt(0, 0, 0);
-          tmp_mask[icell] = mask(0, 0, 0);
+          tmp_vect[icell * (NUM_SPECIES + 1) + NUM_SPECIES] =
+            T(lo.x, lo.y, lo.z);
+          tmp_vect_energy[icell] = rhoE(lo.x, lo.y, lo.z);
+          tmp_src_vect_energy[icell] = frcEExt(lo.x, lo.y, lo.z);
         }
 #else
         reactor.flatten(
@@ -206,6 +208,7 @@ advance(
 #endif
             );
 
+            // react() returns the time actually integrated in dt_incr
             dt_incr = dt_lev / ndt;
             for (int ic = i + 1; ic < i + ode_ncells; ++ic) {
               tmp_fc[ic] = tmp_fc[i];
@@ -248,14 +251,12 @@ advance(
         delete[] tmp_vect_energy;
         delete[] tmp_src_vect_energy;
         delete[] tmp_fc;
-        delete[] tmp_mask;
 #ifdef AMREX_USE_GPU
         amrex::The_Device_Arena()->free(tmp_vect_d);
         amrex::The_Device_Arena()->free(tmp_src_vect_d);
         amrex::The_Device_Arena()->free(tmp_vect_energy_d);
         amrex::The_Device_Arena()->free(tmp_src_vect_energy_d);
         amrex::The_Device_Arena()->free(tmp_fc_d);
-        amrex::The_Device_Arena()->free(tmp_mask_d);
 #endif
       }
     }
