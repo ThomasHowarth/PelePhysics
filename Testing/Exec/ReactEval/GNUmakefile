@@ -29,6 +29,6 @@ Chemistry_Model = drm19
 Transport_Model = Simple
 
 Bpack   := ./Make.package
-Blocs   := .
+Blocs   := . $(PELE_PHYSICS_HOME)/Testing/Exec
 
 include $(PELE_PHYSICS_HOME)/Testing/Exec/Make.PelePhysics

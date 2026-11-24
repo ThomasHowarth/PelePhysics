@@ -11,6 +11,9 @@ ode.ode_ncells = 128
 ode.reactor_type  = 1 # 1=full e, 2=full h
 ode.verbose = 1
 ode.use_typ_vals = 0
+
+# Check the final state against a CVODE reference (react_eval.* in main.cpp)
+#react_eval.check = 1
 ode.rtol = 1e-10
 ode.atol = 1e-10
 
