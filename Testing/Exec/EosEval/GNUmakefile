@@ -53,6 +53,6 @@ endif
 Manifold_Dim    = 2
 
 Bpack   := ./Make.package
-Blocs   := .
+Blocs   := . $(PELE_PHYSICS_HOME)/Testing/Exec
 
 include $(PELE_PHYSICS_HOME)/Testing/Exec/Make.PelePhysics

@@ -10,11 +10,80 @@
 #include <GPU_misc.H>
 
 #include <PelePhysics.H>
+#include <TestCheck.H>
+
+namespace {
+// The checks that apply to the EOS, with a tolerance on the largest relative
+// error over the (T, Y, p) grid: 10x or more the measured maximum (gnu,
+// double precision, in the comments). A check tagged with the fix it needs
+// is an expected failure.
+const char* const eos_check_names[eoscheck::NUM] = {
+  "T -> e -> T (RTY2E, REY2T)",
+  "T -> h -> T (RTY2H, RHY2T)",
+  "p,T -> rho -> p (PYT2R, RTY2P)",
+  "rho,p -> T (RYP2T)",
+  "rho,e -> T (RYET2P)",
+  "rho,e -> p (RYET2P)",
+  "h - e = p/rho",
+  "cv = de/dT at constant rho",
+  "cp = dh/dT at constant p",
+  "cp - cv = R/W"};
+
+struct EosCheckSpec
+{
+  int comp;
+  amrex::Real tol;
+  const char* tag = "";
+};
+
+// Iterative inversions converge to an absolute T tolerance (Fuego: Newton
+// step < 1e-6 K); the finite differences use dT = 1e-4 T.
+const EosCheckSpec eos_check_specs[] = {
+#if defined(USE_MANIFOLD_EOS)
+  // p(rho(Y)) = nominal p (T is not used)
+  {eoscheck::PRP, 1.e-13}, // 1.2e-16 (table and network)
+#elif defined(USE_SRK_EOS)
+  // No h inversion (RHY2T aborts), and cp - cv != R/W for a real gas
+  {eoscheck::TET, 1.e-12},  // 1.2e-14
+  {eoscheck::PRP, 1.e-13},  // 5.9e-16
+  {eoscheck::RPT, 2.e-10},  // 1.3e-11
+  {eoscheck::REPT, 1.e-12}, // 1.2e-14
+  {eoscheck::REPP, 1.e-12}, // 1.2e-14
+  {eoscheck::HE, 1.e-13},   // 2.8e-15
+  {eoscheck::CVFD, 2.e-8},  // 1.6e-9
+  {eoscheck::CPFD, 2.e-8},  // 1.2e-9
+#elif defined(USE_GAMMALAW_EOS)
+  {eoscheck::TET, 1.e-13}, // 2.7e-16
+  {eoscheck::THT, 1.e-13}, // 1.9e-16
+  {eoscheck::PRP, 1.e-13}, // 2.9e-16
+  {eoscheck::RPT, 1.e-13}, // 2.6e-16
+  {eoscheck::REPT, 1.e-13,
+   "bug: GammaLaw::RYET2P takes T by value and does not return it"},
+  {eoscheck::REPP, 1.e-13}, // 2.9e-16
+  {eoscheck::HE, 1.e-13},   // 4.9e-16
+  {eoscheck::CVFD, 3.e-11}, // 1.5e-12
+  {eoscheck::CPFD, 3.e-11}, // 2.1e-12
+  {eoscheck::CPCV, 1.e-13}, // 1.6e-16
+#else
+  {eoscheck::TET, 2.e-8},   // 1.6e-9
+  {eoscheck::THT, 2.e-8},   // 1.4e-9
+  {eoscheck::PRP, 1.e-13},  // 3.7e-16
+  {eoscheck::RPT, 1.e-13},  // 5.0e-16
+  {eoscheck::REPT, 2.e-8},  // 1.6e-9
+  {eoscheck::REPP, 2.e-8},  // 1.6e-9
+  {eoscheck::HE, 1.e-12},   // 1.5e-14
+  {eoscheck::CVFD, 2.e-8},  // 1.6e-9
+  {eoscheck::CPFD, 2.e-8},  // 1.2e-9
+  {eoscheck::CPCV, 1.e-13}, // 3.7e-15
+#endif
+};
+} // namespace
 
 int
 main(int argc, char* argv[])
 {
   amrex::Initialize(argc, argv);
+  int status = 0;
 
   {
     pele::physics::PeleParams<
@@ -191,10 +260,39 @@ main(int argc, char* argv[])
         outfile, VarPlt, plt_VarsName, geom, 0.0, 0);
     }
 
+    {
+      BL_PROFILE("Pele::eos_checks()");
+      amrex::Print() << "\n-- EOS consistency checks ("
+                     << pele::physics::PhysicsType::eos_type::identifier()
+                     << ") --\n";
+      amrex::Real T_lo = 300.0;
+      amrex::Real T_hi = 3000.0;
+      amrex::ParmParse ppe("eos_eval");
+      ppe.query("T_lo", T_lo);
+      ppe.query("T_hi", T_hi);
+      amrex::MultiFab err(ba, dm, eoscheck::NUM, num_grow);
+      for (amrex::MFIter mfi(mass_frac, amrex::TilingIfNotGPU()); mfi.isValid();
+           ++mfi) {
+        const amrex::Box& box = mfi.tilebox();
+        auto const& Y_a = mass_frac.const_array(mfi);
+        auto const& err_a = err.array(mfi);
+        amrex::ParallelFor(
+          box, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept {
+            eos_checks(i, j, k, Y_a, err_a, geomdata, T_lo, T_hi, leosparm);
+          });
+      }
+      pele::testing::Checker check;
+      for (const auto& spec : eos_check_specs) {
+        check.within(
+          eos_check_names[spec.comp], err.max(spec.comp), spec.tol, spec.tag);
+      }
+      status = check.summary("EosEval");
+    }
+
     eos_parms.deallocate();
   }
 
   amrex::Finalize();
 
-  return 0;
+  return status;
 }

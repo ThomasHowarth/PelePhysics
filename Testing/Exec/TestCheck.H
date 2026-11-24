@@ -9,6 +9,9 @@
 #include <AMReX_Print.H>
 #include <AMReX_REAL.H>
 
+#include <iomanip>
+#include <limits>
+#include <sstream>
 #include <string>
 
 namespace pele::testing {
@@ -34,6 +37,19 @@ public:
       amrex::Print() << "  XFAIL (" << tag << "): " << what << "\n";
       ++m_nxfail;
     }
+  }
+
+  // Checks v <= tol, printing "what: v (tol tol)"; a NaN fails
+  void within(
+    const std::string& what,
+    const amrex::Real v,
+    const amrex::Real tol,
+    const std::string& tag = "")
+  {
+    std::ostringstream os;
+    os << std::scientific << std::setprecision(2) << what << ": " << v
+       << " (tol " << tol << ")";
+    (*this)(v <= tol, os.str(), tag);
   }
 
   // Number of errors: FAIL and XPASS
@@ -62,6 +78,15 @@ relErr(const amrex::Real a, const amrex::Real b)
 {
   return (b == 0.) ? amrex::Math::abs(a)
                    : amrex::Math::abs(a - b) / amrex::Math::abs(b);
+}
+
+// e, or +inf if e is not finite: a NaN would otherwise be dropped by a max
+AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE amrex::Real
+finiteOrInf(const amrex::Real e)
+{
+  return (e <= std::numeric_limits<amrex::Real>::max())
+           ? e
+           : std::numeric_limits<amrex::Real>::infinity();
 }
 
 } // namespace pele::testing
