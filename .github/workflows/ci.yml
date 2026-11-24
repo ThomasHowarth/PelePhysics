@@ -138,12 +138,14 @@ jobs:
       - name: Regenerate the mechanisms
         run: |
           uv run convert -l ${{github.workspace}}/Mechanisms/list_mech
+          uv run qssa -lq ${{github.workspace}}/Mechanisms/list_qss_mech
           uv run convert -lq ${{github.workspace}}/Mechanisms/list_qss_mech
       - name: Compare with the committed mechanisms
         run: |
-          # Also show the files CEPTR generated that are not committed
-          git add --intent-to-add -- ${{github.workspace}}/Mechanisms
-          if ! git diff --stat --exit-code -- ${{github.workspace}}/Mechanisms; then
+          # Floating-point literals may differ in their last digits (CPU-dependent
+          # numpy/LAPACK rounding); everything else must match, new files included
+          if ! uv run --locked check-mechanisms; then
+            git add --intent-to-add -- ${{github.workspace}}/Mechanisms
             git diff --binary -- ${{github.workspace}}/Mechanisms > ${{runner.temp}}/mechanisms.patch
             echo "::error::The committed mechanisms differ from what CEPTR generates. Download the patch with 'gh run download ${{github.run_id}} -n regenerated-mechanisms' and apply it with 'git apply mechanisms.patch'."
             exit 1

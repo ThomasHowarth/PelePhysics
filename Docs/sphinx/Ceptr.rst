@@ -32,12 +32,23 @@ To install them too::
 ``uv sync`` removes what it is not asked for, so a later ``uv sync --locked`` uninstalls them again: give
 ``--extra plot`` to every sync (or to ``uv run``) when you need them.
 
-The committed mechanisms are exactly what CEPTR generates with these versions: the CI regenerates every mechanism in
-``Mechanisms/list_mech`` and ``Mechanisms/list_qss_mech`` on Linux and fails if any differs. When the check fails, the
-``regenerated-mechanisms`` artifact of the CI run holds the differences as a patch::
+The committed mechanisms are what CEPTR generates with these versions: the CI regenerates every mechanism in
+``Mechanisms/list_mech`` and ``Mechanisms/list_qss_mech`` (for the QSS mechanisms including ``qssa.yaml``, whose
+Cantera version and date header lines are ignored) on Linux and fails if any differs. The comparison
+(``uv run check-mechanisms``, which can also be run locally after regenerating) allows the last printed digits of
+floating-point literals to differ, because fitted coefficients such as the transport fits are computed with
+numpy/LAPACK and their rounding can depend on the CPU; everything else, including the order of operations, must match.
+When the check fails, the ``regenerated-mechanisms`` artifact of the CI run holds the differences as a patch::
 
   $ gh run download <run-id> -n regenerated-mechanisms
   $ git apply mechanisms.patch
+
+.. note:: The symbolic QSS Jacobians (``aJacobian`` of the QSS mechanisms) also depend on the platform, not only on
+   the package versions: symengine stores the terms of sums and products in ``std::unordered_map``, whose iteration
+   order differs between C++ standard libraries (libstdc++ on Linux, libc++ on macOS), and that order decides how its
+   common subexpression elimination names and groups the subexpressions. The result is equivalent (it differs only by
+   round-off), but can differ textually, so QSS mechanisms regenerated on macOS may not pass the check. In that case
+   use the ``regenerated-mechanisms`` patch from the CI run instead.
 
 .. note:: CEPTR is a standard Python package, so it can also be installed with ``pip install -e .`` from ``Support/ceptr``. pip then picks any versions allowed by ``pyproject.toml``, which may generate mechanisms that differ from the committed ones.
 

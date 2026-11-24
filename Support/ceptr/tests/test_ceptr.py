@@ -1,8 +1,11 @@
 """Tests for cepter."""
 
 import math
+import os
 import pathlib
 import random
+import subprocess
+import sys
 import types
 
 import cantera as ct
@@ -251,3 +254,69 @@ def test_qssa_visualize(tmp_path):
     assert (tmp_path / "qssa_directed_graph.png").stat().st_size > 0
     assert (tmp_path / "qssa_quadratic_graph.png").stat().st_size > 0
     assert (tmp_path / "qssa.yaml").exists()
+
+
+def convert_with_hash_seed(fname, out_dir, seed):
+    """Convert a copy of a mechanism in a fresh interpreter with a hash seed."""
+    out_dir.mkdir()
+    (out_dir / "mechanism.yaml").write_bytes(fname.read_bytes())
+    script = (
+        "import sys, cantera as ct, ceptr.converter as converter;"
+        "conv = converter.Converter(ct.Solution(sys.argv[1]), None, 'homogeneous');"
+        "conv.writer();"
+        "conv.formatter()"
+    )
+    subprocess.run(
+        [sys.executable, "-c", script, str(out_dir / "mechanism.yaml")],
+        env=dict(os.environ, PYTHONHASHSEED=str(seed)),
+        check=True,
+        capture_output=True,
+    )
+    return [(out_dir / f).read_text() for f in ("mechanism.H", "mechanism.cpp")]
+
+
+def test_hash_seed_independence(tmp_path):
+    """The generated code does not depend on PYTHONHASHSEED.
+
+    posf10325 has reactions with a species on both sides with different
+    coefficients (e.g. CH3 + POSF10325 => ... + 0.7 CH3 + ...), which used to
+    give the production-rate writer tied sort keys, so the order of the wdot
+    updates followed the hash-randomised set order.
+    """
+    fname = mechanism_path("posf10325") / "mechanism.yaml"
+    reference = convert_with_hash_seed(fname, tmp_path / "seed0", 0)
+    for seed in (1, 2, 3):
+        assert (
+            convert_with_hash_seed(fname, tmp_path / f"seed{seed}", seed) == reference
+        ), f"output with PYTHONHASHSEED={seed} differs from PYTHONHASHSEED=0"
+
+
+def test_ch4_lean_qss(tmp_path):
+    """QSS reduction and conversion with the symbolic Jacobian of CH4_lean_qss.
+
+    Runs the same two stages as ``qssa -lq`` and ``convert -lq`` on a copy of
+    the mechanism inputs, so the committed files are left untouched.
+    """
+    import ceptr.qssa as cq
+
+    mech_path = mechanism_path("CH4_lean_qss")
+    for name in ("skeletal.yaml", "non_qssa_list.yaml", "qssa_input.toml"):
+        (tmp_path / name).write_bytes((mech_path / name).read_bytes())
+    cq.process_qss(
+        str(tmp_path / "skeletal.yaml"),
+        str(tmp_path / "non_qssa_list.yaml"),
+        visualize=False,
+        method=2,
+    )
+    conv = converter.Converter(
+        ct.Solution(tmp_path / "qssa.yaml"),
+        None,
+        "homogeneous",
+        jacobian=True,
+        qss_format_input=tmp_path / "qssa_input.toml",
+        qss_symbolic_jacobian=True,
+    )
+    conv.writer()
+    conv.formatter()
+    assert "aJacobian" in (tmp_path / "mechanism.H").read_text()
+    assert (tmp_path / "mechanism.cpp").exists()
