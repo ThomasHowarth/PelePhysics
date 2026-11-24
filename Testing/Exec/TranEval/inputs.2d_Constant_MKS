@@ -1,0 +1,8 @@
+# Constant transport with inputs in MKS units (converted to CGS) and a
+# thermal diffusion ratio (Soret)
+transport.units                         = MKS
+transport.const_conductivity            = 1.0
+transport.const_viscosity               = 2.0
+transport.const_bulk_viscosity          = 3.0
+transport.const_diffusivity             = 4.0
+transport.const_thermal_diffusion_ratio = 0.3

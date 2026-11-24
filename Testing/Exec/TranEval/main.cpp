@@ -846,6 +846,123 @@ check_matrix_diffusion(
   amrex::Print() << "Multicomponent diffusion matrix checks passed\n\n";
 }
 
+#if defined(USE_CONSTANT_TRANSPORT) || defined(USE_SUTHERLAND_TRANSPORT)
+// Constant: every coefficient equals its input (converted to CGS when
+// transport.units = MKS). Sutherland: mu = mu_ref (T/T_ref)^1.5 (T_ref + S)
+// / (T + S), lambda = mu cp / Pr, constant xi and D, no Soret effect, with
+// the parameters as parsed (the formula is checked, not the parsing).
+// Aborts if any check exceeds its tolerance.
+void
+check_closed_form(
+  const amrex::MultiFab& Y_d,
+  const amrex::MultiFab& T_d,
+  const amrex::MultiFab& D_d,
+  const amrex::MultiFab& chi_d,
+  const amrex::MultiFab& mu_d,
+  const amrex::MultiFab& xi_d,
+  const amrex::MultiFab& lam_d,
+  const TransParmType& tp)
+{
+  const amrex::MultiFab Y_h = to_host(Y_d);
+  const amrex::MultiFab T_h = to_host(T_d);
+  const amrex::MultiFab D_h = to_host(D_d);
+  const amrex::MultiFab chi_h = to_host(chi_d);
+  const amrex::MultiFab mu_h = to_host(mu_d);
+  const amrex::MultiFab xi_h = to_host(xi_d);
+  const amrex::MultiFab lam_h = to_host(lam_d);
+
+#ifdef USE_CONSTANT_TRANSPORT
+  amrex::ignore_unused(tp);
+  amrex::ParmParse ppt("transport");
+  amrex::Real mu_in = 0.0, xi_in = 0.0, lam_in = 0.0, D_in = 0.0, chi_in = 0.0;
+  ppt.query("const_viscosity", mu_in);
+  ppt.query("const_bulk_viscosity", xi_in);
+  ppt.query("const_conductivity", lam_in);
+  ppt.query("const_diffusivity", D_in);
+  ppt.query("const_thermal_diffusion_ratio", chi_in);
+  // Soret is only enabled for |ratio| > 1e-24; chi is left at zero otherwise
+  if (std::abs(chi_in) <= 1.e-24) {
+    chi_in = 0.0;
+  }
+  std::string units = "CGS";
+  ppt.query("units", units);
+  if (units == "MKS") {
+    mu_in *= 10.0;
+    xi_in *= 10.0;
+    D_in *= 10.0;
+    lam_in *= 1.0e5;
+  }
+  const std::string model = "Constant";
+#else
+  const amrex::Real Pr = tp.Prandtl_number;
+  const amrex::Real mu_ref = tp.viscosity_mu_ref;
+  const amrex::Real T_ref = tp.viscosity_T_ref;
+  const amrex::Real S = tp.viscosity_S;
+  const amrex::Real xi_in = tp.const_bulk_viscosity;
+  const amrex::Real D_in = tp.const_diffusivity;
+  const amrex::Real chi_in = 0.0;
+  const std::string model = "Sutherland";
+#endif
+
+  amrex::ParmParse pp("tran_eval");
+  amrex::Real tol = 1.e-14 * precision_scale;
+  pp.query("closed_form_tol", tol);
+
+  CheckMax mu_err, xi_err, lam_err, D_err, chi_err;
+  auto eos = pele::physics::PhysicsType::eos();
+  for (amrex::MFIter mfi(T_h); mfi.isValid(); ++mfi) {
+    const auto Y = Y_h.const_array(mfi);
+    const auto T = T_h.const_array(mfi);
+    const auto D = D_h.const_array(mfi);
+    const auto chi = chi_h.const_array(mfi);
+    const auto mu = mu_h.const_array(mfi);
+    const auto xi = xi_h.const_array(mfi);
+    const auto lam = lam_h.const_array(mfi);
+    amrex::LoopOnCpu(mfi.validbox(), [&](int i, int j, int k) {
+      const amrex::IntVect iv(AMREX_D_DECL(i, j, k));
+#ifdef USE_CONSTANT_TRANSPORT
+      amrex::ignore_unused(Y, eos);
+      const amrex::Real mu_ex = mu_in;
+      const amrex::Real lam_ex = lam_in;
+#else
+      const amrex::Real Tc = T(i, j, k);
+      const amrex::Real mu_ex =
+        mu_ref * std::pow(Tc / T_ref, 1.5) * (T_ref + S) / (Tc + S);
+      amrex::Real Yc[NUM_SPECIES];
+      for (int n = 0; n < NUM_SPECIES; ++n) {
+        Yc[n] = Y(i, j, k, n);
+      }
+      amrex::Real cp = 0.0;
+      eos.TY2Cp(Tc, Yc, cp);
+      const amrex::Real lam_ex = mu_ex * cp / Pr;
+#endif
+      const auto rel = [](const amrex::Real x, const amrex::Real ex) {
+        return relative(std::abs(x - ex), std::abs(ex));
+      };
+      mu_err.update(rel(mu(i, j, k), mu_ex), iv);
+      lam_err.update(rel(lam(i, j, k), lam_ex), iv);
+      xi_err.update(rel(xi(i, j, k), xi_in), iv);
+      for (int n = 0; n < NUM_SPECIES; ++n) {
+        D_err.update(rel(D(i, j, k, n), D_in), iv);
+        // chi is zero-initialised and only written with Soret
+        chi_err.update(rel(chi(i, j, k, n), chi_in), iv);
+      }
+    });
+  }
+
+  bool failed = false;
+  amrex::Print() << "\n" << model << " transport checks:\n";
+  report("relative error of mu", mu_err, tol, failed);
+  report("relative error of xi", xi_err, tol, failed);
+  report("relative error of lambda", lam_err, tol, failed);
+  report("relative error of D", D_err, tol, failed);
+  report("relative error of chi", chi_err, tol, failed);
+  if (failed) {
+    amrex::Abort(model + " transport checks FAILED");
+  }
+  amrex::Print() << model << " transport checks passed\n\n";
+}
+#endif
 } // namespace
 
 int
@@ -1018,6 +1135,10 @@ main(int argc, char* argv[])
       check_matrix_diffusion(
         mass_frac, temperature, density, D, Dmat, trans_parms.host_parm());
     }
+#if defined(USE_CONSTANT_TRANSPORT) || defined(USE_SUTHERLAND_TRANSPORT)
+    check_closed_form(
+      mass_frac, temperature, D, chi, mu, xi, lam, trans_parms.host_parm());
+#endif
 #if defined(USE_SIMPLE_TRANSPORT) && defined(PELE_TRANSPORT_LCT)
     if (do_chit) {
       check_conductivity(
