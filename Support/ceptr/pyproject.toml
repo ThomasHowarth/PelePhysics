@@ -83,3 +83,8 @@ convention = "numpy"
 filterwarnings = [
     "error",
 ]
+# The comparison with Cantera builds C++: run it with -m cantera
+addopts = "-m 'not cantera'"
+markers = [
+    "cantera: pointwise comparison of generated mechanisms with Cantera (needs a C++ compiler and the AMReX submodule)",
+]
