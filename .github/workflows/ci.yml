@@ -121,6 +121,35 @@ jobs:
           path: ~/.cache/uv
           key: ${{steps.uv.outputs.cache-key}}
 
+  CEPTR-Cantera:
+    # The generated C++ against Cantera, point by point
+    # (Support/ceptr/tests/test_cantera.py). One Python: it checks the
+    # generated code, which does not depend on it.
+    needs: Detect-Changes
+    if: needs['Detect-Changes'].outputs['run-checks'] == 'true'
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ${{github.workspace}}/Support/ceptr
+    steps:
+      - uses: actions/checkout@v6
+      # The evaluator needs only the AMReX headers: no SUNDIALS, no build
+      - name: Clone AMReX
+        working-directory: ${{github.workspace}}
+        run: git submodule update --init --depth 1 Submodules/amrex
+      - uses: ./.github/actions/setup-uv
+        id: uv
+      - name: Install dependencies
+        run: uv sync --locked
+      - name: Compare the generated mechanisms with Cantera
+        run: uv run pytest -m cantera -s -rx
+      - name: Save the uv cache
+        if: github.ref == 'refs/heads/development' && steps.uv.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v5
+        with:
+          path: ~/.cache/uv
+          key: ${{steps.uv.outputs.cache-key}}
+
   Mechanisms:
     # The committed mechanisms must be what CEPTR generates from uv.lock
     needs: Detect-Changes
@@ -423,7 +452,7 @@ jobs:
   # waits forever; skipped jobs pass here. It also fails when Detect-Changes
   # fails, which would otherwise skip every build.
   CI-Status:
-    needs: [Detect-Changes, Formatting, Codespell, CEPTR-Lint, CEPTR, Mechanisms, Transport-EOS-Reactions]
+    needs: [Detect-Changes, Formatting, Codespell, CEPTR-Lint, CEPTR, CEPTR-Cantera, Mechanisms, Transport-EOS-Reactions]
     if: always()
     runs-on: ubuntu-latest
     steps:
