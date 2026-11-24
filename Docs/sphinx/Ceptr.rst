@@ -43,6 +43,13 @@ When the check fails, the ``regenerated-mechanisms`` artifact of the CI run hold
   $ gh run download <run-id> -n regenerated-mechanisms
   $ git apply mechanisms.patch
 
+.. note:: The symbolic QSS Jacobians (``aJacobian`` of the QSS mechanisms) also depend on the platform, not only on
+   the package versions: symengine stores the terms of sums and products in ``std::unordered_map``, whose iteration
+   order differs between C++ standard libraries (libstdc++ on Linux, libc++ on macOS), and that order decides how its
+   common subexpression elimination names and groups the subexpressions. The result is equivalent (it differs only by
+   round-off), but can differ textually, so QSS mechanisms regenerated on macOS may not pass the check. In that case
+   use the ``regenerated-mechanisms`` patch from the CI run instead.
+
 .. note:: CEPTR is a standard Python package, so it can also be installed with ``pip install -e .`` from ``Support/ceptr``. pip then picks any versions allowed by ``pyproject.toml``, which may generate mechanisms that differ from the committed ones.
 
 Usage
