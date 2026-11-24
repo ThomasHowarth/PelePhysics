@@ -138,6 +138,7 @@ jobs:
       - name: Regenerate the mechanisms
         run: |
           uv run convert -l ${{github.workspace}}/Mechanisms/list_mech
+          uv run qssa -lq ${{github.workspace}}/Mechanisms/list_qss_mech
           uv run convert -lq ${{github.workspace}}/Mechanisms/list_qss_mech
       - name: Compare with the committed mechanisms
         run: |
