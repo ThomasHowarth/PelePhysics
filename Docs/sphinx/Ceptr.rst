@@ -32,9 +32,12 @@ To install them too::
 ``uv sync`` removes what it is not asked for, so a later ``uv sync --locked`` uninstalls them again: give
 ``--extra plot`` to every sync (or to ``uv run``) when you need them.
 
-The committed mechanisms are exactly what CEPTR generates with these versions: the CI regenerates every mechanism in
-``Mechanisms/list_mech`` and ``Mechanisms/list_qss_mech`` on Linux and fails if any differs. When the check fails, the
-``regenerated-mechanisms`` artifact of the CI run holds the differences as a patch::
+The committed mechanisms are what CEPTR generates with these versions: the CI regenerates every mechanism in
+``Mechanisms/list_mech`` and ``Mechanisms/list_qss_mech`` on Linux and fails if any differs. The comparison
+(``uv run check-mechanisms``, which can also be run locally after regenerating) allows the last printed digits of
+floating-point literals to differ, because fitted coefficients such as the transport fits are computed with
+numpy/LAPACK and their rounding can depend on the CPU; everything else, including the order of operations, must match.
+When the check fails, the ``regenerated-mechanisms`` artifact of the CI run holds the differences as a patch::
 
   $ gh run download <run-id> -n regenerated-mechanisms
   $ git apply mechanisms.patch
