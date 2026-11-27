@@ -10,6 +10,7 @@ Chemistry
    :maxdepth: 3
    :caption: Chemistry contents:
 
+   Reactions.rst
    IntroductionToCvode.rst
    CvodeInPP.rst
    QSS.rst
