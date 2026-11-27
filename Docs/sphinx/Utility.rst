@@ -10,9 +10,12 @@ In addition to routines for evaluating chemical reactions, transport properties,
 
 * Premixed Flame (``PMF``) initialization from precomputed 1D flame profiles
 * Turbulent inflows (``TurbInflow``) on domain boundaries from saved turbulence data
-* Forced Turbulence (``TurbForce``) for maintained HIT
+* Forced Turbulence (``TurbForcing``) for maintained HIT
+* Mesh mapping (``MeshMap``) evaluation for solvers and utilities that use non-uniform, mapped grids
 * Plt file management (``PltFileManager``)
 * Output of runtime ``Diagnostics``
+* Filtering of data (``Filter``), typically for LES
+* Generic tabulated and neural network functions (``BlackBoxFunction``), used by the manifold models
 * Basic ``Utilities``, including unit conversions
 
 This section provides relevant notes on using these utilities across the Pele family of codes. There may be additional subtleties based on the code-specific implementation of these capabilities, in which case it will be necessary to refer to the documentation of the code of interest.
@@ -276,10 +279,152 @@ Forced Turbulence Implementation Details
 The strategy is to inject energy into the large scales using a source term in the momentum equation; the turbulence then develops naturally through the Richardson-Kolmogorov cascade.  The original description is in `Aspden et al. <https://doi.org/10.2140/camcos.2008.3.103>`_; a few modifications (e.g. tweaking the amplitudes of the modes through the random seed, which reduced the temporal variation in u_rms) and explicitly using a divergence-free form (see `Almgren et al. <https://doi.org/10.1137/110829386>`_). We typically run in a cube, or 4:1 box; larger boxes can achieved using the hack_lz option, which uses a periodic reproduction of the forcing in the z direction.  As the source term is a superposition of a substantial number of fourier modes, the direct evaluation is computationally expensive.  The resulting field is smooth (as we're forcing the large scales), so for computational efficiency, the source term is evaluated on a coarser box (by ff_factor, usually 4), and interpolated onto the required resolution; this is substantially faster, and indistinguishable from the direct approach.
 
 
+.. _sec_meshmap:
+
+Mesh Mapping
+============
+
+AMReX grids are uniform, but a solver may lay a coordinate mapping :math:`X = \Phi(\xi)` over the uniform grid so that the
+physical grid is stretched; in this case the AMReX geometry describes the *computational* (:math:`\xi`) coordinate rather than
+the physical one. The ``MeshMap`` utility provides ``pele::physics::MeshMapEvaluator``, a single definition of the supported
+mappings that is shared by the solver and by every utility that must agree with the solver on where a cell physically is. This
+is the same descriptor that PeleLMeX uses for its ``geometry.mesh_mapping`` capability (PeleLMeX aliases this type), and within
+PelePhysics it is used by ``TurbInflow`` (see :ref:`the turbulent inflow section <sec_turbinflow>`), by ``DiagFramePlane``
+(see :ref:`sec_diagnostics`), and by the tools in ``Support/TurbInflowGenerator``. The utility is header-only and consists of
+two files: ``MeshMapEvaluator.H``, which defines the evaluator, and ``MeshMapEvaluatorInputs.H``, which builds an evaluator
+from the input file.
+
+The mappings are single-block, diagonal, and axis-aligned: the physical coordinate along a given direction depends only on the
+computational coordinate along that same direction. Defining :math:`s = (\xi - \xi_{lo})/L` as the fraction of the axis in
+computational space, where :math:`\xi_{lo}` and :math:`L` are the lower bound and length of the computational domain along that
+direction, the available kinds of mapping are:
+
+* ``Identity`` (0): no mapping, :math:`X = \xi`. This is the default when no mapping is specified.
+* ``Constant`` (1): a constant stretch factor :math:`f` per direction, :math:`X = \xi_{lo} + f (\xi - \xi_{lo})`.
+* ``ExpStretch`` (2): one-sided exponential stretching along a single direction that clusters cells at a wall on either the low or the high
+  end of the domain. For a wall on the low end, :math:`(X - \xi_{lo})/L = (e^{\beta s} - 1)/(e^{\beta} - 1)`; the high end case is the mirror image.
+* ``TanhStretch`` (3): two-sided stretching that clusters cells at both ends of the domain,
+  :math:`(X - \xi_{lo})/L = \frac{1}{2} \left( 1 + \tanh(\beta (2 s - 1)) / \tanh \beta \right)`, with one :math:`\beta` per direction.
+* ``InteriorStretch`` (4): clusters cells around a point in the interior of the domain, with separate coarsening rates
+  :math:`\beta_{lo}` and :math:`\beta_{hi}` towards the low and high ends of the domain. The local stretch factor is proportional to
+  :math:`\cosh^2(\beta \eta)`, where :math:`\eta` is the normalized distance from the clustering point on the relevant side.
+
+All of the stretched mappings other than ``Constant`` preserve the length of the domain, and all reduce to the identity as
+:math:`\beta \rightarrow 0` (stretching parameters with a magnitude below :math:`10^{-8}` are treated as zero).
+
+Input file options
+~~~~~~~~~~~~~~~~~~
+
+The function ``make_evaluator_from_inputs()`` builds a ``MeshMapEvaluator`` from the same input file block that PeleLMeX reads, so
+the lines from a PeleLMeX input file can be copied verbatim into the input file of a utility. The mapping is selected with
+``geometry.mesh_mapping``, and the parameters for each mapping are then read using the name of the mapping as a prefix. Only the
+options for the selected mapping are relevant. If ``geometry.mesh_mapping`` is not present, an ``Identity`` evaluator is returned. ::
+
+  geometry.mesh_mapping          = TanhStretchMap         # One of ConstantMap, ExpStretchMap, TanhStretchMap, or InteriorStretchMap
+
+  ConstantMap.scaling_factor     = 1.0 1.0 1.0            # Stretch factor in each direction (must be positive)
+
+  ExpStretchMap.direction        = 1                      # Direction to be stretched (0, 1, or 2)
+  ExpStretchMap.wall_end         = lo                     # End of the domain where cells are clustered (lo or hi)
+  ExpStretchMap.beta             = 0.0                    # Stretching parameter (must be non-negative)
+
+  TanhStretchMap.beta            = 0.0 0.0 0.0            # Stretching parameter in each direction (must be non-negative)
+
+  InteriorStretchMap.beta_lo     = 0.0 0.0 0.0            # Coarsening rate towards the low end in each direction (must be non-negative)
+  InteriorStretchMap.beta_hi     = 0.0 0.0 0.0            # Coarsening rate towards the high end in each direction (must be non-negative)
+  InteriorStretchMap.center_frac = 0.5 0.5 0.5            # Location of the clustering point as a fraction of the domain length
+  InteriorStretchMap.center      = 0.0 0.0 0.0            # [OPT] Physical location of the clustering point, overrides center_frac
+
+The values shown above are the defaults. For the ``InteriorStretchMap``, the clustering point must lie strictly within the domain in
+any direction that is stretched; the ``ExpStretchMap`` should be used to cluster cells at a boundary.
+
+MeshMap Implementation Details
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The ``MeshMapEvaluator`` is a trivially-copyable struct that holds the kind of mapping (``m_kind``) and a small set of
+per-direction parameters (``m_p``, ``m_p2``, ``m_p3``, and ``m_q``, the meaning of which depends on the kind of mapping). It is
+therefore passed by value into GPU kernels, and all of its member functions can be called on the device. The main member
+functions are:
+
+* ``x_phys_from_xi``: the physical coordinate that corresponds to a computational coordinate along a given direction
+* ``xi_from_x_phys``: the inverse, which is used to convert a physical position (for example, the location of a sampling plane)
+  into the coordinate that indexes the AMReX grid. The ``Constant``, ``ExpStretch``, and ``TanhStretch`` mappings are inverted in closed
+  form, while the ``InteriorStretch`` mapping is inverted with a safeguarded Newton iteration. The physical position is clamped to the
+  extent of the domain, so a caller that needs a periodic image must wrap the position into the domain before the call.
+* ``x_phys_cc`` and ``x_phys_face``: the physical coordinate of a cell center or a cell face from its integer index
+* ``dx_phys_cc``: the physical width of a cell, computed as the difference between the positions of its two faces
+* ``domain_size_phys``: the physical size of the domain along a given direction
+
+Each of these is available in a form that takes an ``amrex::GeometryData`` (the geometry of the computational grid), and most are also
+available in a form that takes the bounds of the computational domain directly, for callers that hold no AMReX geometry, such as
+a turbulence file reader describing the domain of the precursor simulation. The static functions in the struct (``exp_fac``,
+``exp_offset_norm``, ``tanh_fac``, ``tanh_offset_norm``, ``interior_fac``, ``interior_offset_norm``, and their inverses) are the
+underlying stretch factors and normalized offsets for each family of mapping, from which the functions above are constructed.
+
+.. _sec_pltfilemanager:
+
 Plt File Management
 ===================
 
-This code contains data structures used to handle data read from plt files that is utilized by the routines that allow the code to be restarted based on data from plt files.
+The ``PltFileManager`` class, defined in the ``pele::physics::pltfilemanager`` namespace, reads the data from an AMReX plotfile and
+interpolates it onto the grids of a running simulation. It is used by the routines that allow the Pele codes to be initialized
+based on data from plt files, including cases where the resolution or the number of levels of the simulation differs from that of
+the plt file, and by the tools in ``Support/TurbInflowGenerator``. This utility has no input file options of its own: the
+options that trigger initialization from a plt file and select the variables to be used are defined in PeleC and PeleLMeX, and the
+documentation for the relevant code should be consulted for these.
+
+The plt file is specified by passing its path to the constructor. Only the metadata is loaded at this point, which consists of
+the ``Header`` file of the plt file and the ``Cell_H`` file of each level. The following information is then available through the
+member functions of the class:
+
+* ``getVariableList()``: the names of the variables in the plt file
+* ``getNlev()``: the number of levels
+* ``getTime()`` and ``getNsteps()``: the time and the number of time steps at which the plt file was written
+* ``getGrid(lev)`` and ``getGeom(lev)``: the ``BoxArray`` and ``Geometry`` on each level
+* ``getRefRatio(lev)``: the refinement ratio between each level and the next finer one
+
+The function ``fillPatchFromPlt()`` fills a ``MultiFab`` defined on one level of the simulation with data from the plt file: ::
+
+   pele::physics::pltfilemanager::PltFileManager pltData(pltfile);
+   ...
+   // Fill ncomp components of a_mf, starting from dataComp, using the
+   // components of the plt file starting from pltComp
+   pltData.fillPatchFromPlt(lev, geom[lev], pltComp, dataComp, ncomp, a_mf);
+
+The data itself is only read the first time this function is called, and it is kept in memory until the ``PltFileManager`` is destroyed.
+The mapping between the variables in the plt file and the components of the solution must be established by the calling code
+using the list of variable names. An optional final argument, ``interp_type``, selects the spatial interpolation: cell
+conservative linear interpolation (``1``, the default) or piecewise constant interpolation (any other value).
+
+PltFileManager Implementation Details
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The way in which a level is filled depends on its resolution relative to that of the levels in the plt file, determined from the
+ratio of the number of cells across the domain:
+
+* If level 0 of the simulation has the same resolution as level 0 of the plt file, the data from level 0 of the plt file is
+  copied directly.
+* If the level being filled is finer than level 0 of the plt file (which is always expected for the levels above level 0 of the
+  simulation), the entire level is first filled by interpolating from level 0 of the plt file to ensure that there is data
+  everywhere. The finer levels of the plt file are then visited from coarsest to finest, and the regions that each one covers
+  are overwritten: a plt file level that is coarser than the level being filled is interpolated to the required resolution,
+  and when a plt file level with the same resolution is reached its data is copied directly and the process stops.
+* If level 0 of the simulation is coarser than level 0 of the plt file, the code aborts, because averaging down of the
+  plt file data is not supported.
+
+The following points should also be noted:
+
+* The number of spatial dimensions of the plt file must match that of the executable, and the problem domain of the simulation must be
+  contained within that of the plt file.
+* Only the standard AMReX plotfile layout is supported, with the cell-centered data for each level stored in ``Level_N/Cell``.
+* All variables in the plt file are loaded on all levels, even if only a subset is requested, which should be kept in mind
+  when considering memory requirements for large plt files.
+* Only the valid cells of the ``MultiFab`` are filled. Ghost cells must be filled afterwards by the calling code.
+* The plt file does not carry information about boundary conditions. Where the interpolation stencil extends outside the
+  domain, first order extrapolation is used in non-periodic directions; the dummy boundary function ``FillExtDirDummy`` defined in
+  ``PltFileManagerBCFill.H`` is provided to the AMReX fill patch routines to satisfy their interface and does not
+  modify the data.
+* Embedded boundaries are not accounted for in the interpolation.
 
 .. _sec_diagnostics:
 
@@ -395,6 +540,166 @@ discussed in PeleC milestone reports. An example call to the filtering operation
    les_filter.apply_filter(bxtmp, flux[i], filtered_flux[i], Density, NUM_STATE);
 
 The user must ensure that the correct number of grow cells is present in the Fab or MultiFab.
+
+.. _sec_blackboxfunction:
+
+BlackBoxFunction
+================
+
+The ``BlackBoxFunction`` utility provides a generic interface for evaluating a function that maps a set of inputs to a set
+of named outputs based on data loaded from a file at runtime. Two implementations are available: multilinear interpolation
+in a structured table (``TabulatedFunction``) and inference with a neural network (``NeuralNetFunction``). Within PelePhysics,
+this capability is used by the ``Manifold`` equation of state and transport models, where the inputs are the manifold
+parameters and the outputs are the thermochemical and transport quantities that are needed by the flow solvers. Tools for
+generating tables and neural networks in the appropriate formats are available in the `CMLM <https://github.com/NREL/cmlm>`_
+repository, and a few sample files that are used for testing are provided in ``Support/CMLM``.
+
+All implementations derive from the abstract ``BlackBoxFunction`` class and provide the same GPU-callable functions,
+where ``indata`` is the array of input values:
+
+* ``get_value(ivar, indata, out)``: evaluate a single output variable with index ``ivar``
+* ``get_values(nvar, ivar, indata, out)``: evaluate a list of ``nvar`` output variables with indices ``ivar``; zero is returned
+  for any negative index
+* ``get_all_values(indata, out)``: evaluate all output variables
+* ``get_derivs(ivar, indata, derivs)``: evaluate the derivatives of an output variable with respect to each of the inputs
+* ``model()``: return the type of the function (``BlackBoxModel::TABLE`` or ``BlackBoxModel::NEURAL_NET``)
+
+The index of an output variable is obtained from its name on the host with the ``get_var_index()`` function. By default
+this function aborts if the variable is not found, but it can optionally return a negative index instead.
+
+Input file options
+~~~~~~~~~~~~~~~~~~
+
+The data for a function is loaded and stored by a parameter class, either ``TabulatedFunctionParams`` or
+``NeuralNetFunctionParams``. The input file options are read with a prefix that is specified by the code making use of the
+function, to which ``table`` or ``network`` is appended. If no prefix is specified, the options are simply read as ``table.*``
+or ``network.*``. For example, the ``Manifold`` equation of state uses the prefix ``manifold``, for which the options are: ::
+
+  manifold.table.filename        = peletable_2dim_10grid  # Path to the table file [Must be User Defined]
+  manifold.table.v               = 2                      # Verbosity level
+
+  manifold.network.filename      = fgm_net.pnn            # Path to the network file, must have the .pnn extension [Must be User Defined]
+  manifold.network.info_filename = fgm_net_info.txt       # Path to the network metadata file [Must be User Defined]
+  manifold.network.v             = 2                      # Verbosity level
+  manifold.network.cmlm_net      = 0                      # Network has the layer structure generated by CMLM (see below)
+
+Only the options that correspond to the type of function in use are read. With a verbosity level greater than 0, the name of each
+file is printed when it is loaded, and with a verbosity level greater than 1 (the default), a summary of the contents is also printed,
+including the names of the inputs and outputs. The option that selects between the table and the network (``manifold.model`` in the
+case of the ``Manifold`` equation of state) belongs to the code making use of the function, as described below.
+
+Tabulated functions
+~~~~~~~~~~~~~~~~~~~
+
+The table file is a binary file that contains, in order:
+
+#. The number of dimensions (inputs) of the table (1 integer)
+#. The name of each dimension (64 characters each)
+#. The number of grid points in each dimension (1 integer each); at least two grid points are required in every dimension
+#. The number of output variables (1 integer)
+#. The grid point locations for each dimension in turn (reals)
+#. The name of the model (64 characters)
+#. The name of each output variable (64 characters each)
+#. The data for each output variable in turn (reals), with the index of the first dimension varying fastest
+
+The integers and reals are read in the native binary representation of the executable, so the reals must match the precision
+with which the code is compiled.
+
+The grid for each dimension is defined independently and need not be uniformly spaced. Values are obtained by multilinear
+interpolation, and inputs outside the bounds of the table are clipped to the bounds in each dimension. Derivatives are computed by
+finite differences across the cell of the table that contains the input location, and are therefore piecewise constant in the direction of
+differentiation. The number of dimensions of the table may be provided at compile time as a template argument, ``TabulatedFunction<N>``,
+which allows the interpolation to be fully inlined. With the default template argument, the number of dimensions is determined
+at runtime and tables of up to 5 dimensions are supported.
+
+Neural network functions
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+The neural network implementation is self-contained and does not rely on any external machine learning library. A network
+is described by two files. The first is a binary file with the ``.pnn`` extension that contains the network itself. It
+starts with four integers: the length of the strings in the file, the size in bytes of the floating point data, the size in bytes
+of the integer data, and the number of inputs to the network. This is followed by a record for each layer consisting of the
+name of the layer type, a format string that specifies the type and dimensions of each array of parameters for the layer,
+and the parameters themselves. Three types of layer are supported, named following the PyTorch conventions:
+
+* ``Linear``: a fully connected layer defined by a weight matrix and a bias vector
+* ``LeakyReLU``: a leaky rectified linear unit activation function defined by its negative slope
+* ``BatchNorm1d``: a batch normalization layer in inference mode, defined by a scaling vector and a bias vector that are applied
+  element by element
+
+The second file is a text file containing metadata in a ``key = value`` format. The ``=`` must be surrounded by spaces, multiple
+values are separated by spaces, a line ending in a ``\`` (separated by a space from the last value) is continued on the next line,
+and lines beginning with ``#`` followed by a space are comments.
+The following keys are required: ::
+
+  # Name of the neural network model
+  model_name = premixed
+  # Number of input dimensions
+  ndim = 2
+  # Number of output dimensions
+  nvar = 16
+  # Number of manifold parameters
+  nmanpar = 2
+  # Names of input variables
+  dimnames = xi0 xi1
+  # Names of output variables
+  varnames = Y-CO2 Y-CO Y-OH SRC_H2O SRC_H2 SRC_CO2 SRC_CO SRC_CH4 SRC_O2 T RHO lnRHO DIFF VISC \
+             SRC_xi0 SRC_xi1
+
+Any other keys in the file are ignored by this utility, although they may be used elsewhere, as in the complete example
+``Support/CMLM/fgm_net_info.txt``.
+
+.. note:: At present, the only network architecture that can be evaluated is the one generated by CMLM, which consists of
+          seven layers: ``Linear``, ``LeakyReLU``, ``BatchNorm1d``, ``Linear``, ``LeakyReLU``, ``BatchNorm1d``, ``Linear``.
+          The ``cmlm_net`` option must be set to 1 to use such a network, as it is in all the examples provided
+          with PelePhysics. The code aborts for any other network.
+
+Derivatives of the network outputs are computed using first order finite differences with a relative perturbation
+of :math:`10^{-5}` applied to each input in turn (an absolute perturbation of :math:`10^{-5}` is used for an input that is exactly zero), so the cost of ``get_derivs()`` is
+one evaluation of the network per input in addition to the base evaluation. The number of inputs must be less than 100.
+
+BlackBoxFunction Implementation Details
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The parameter classes are registered with a factory under the names ``Table`` and ``NeuralNet``, which allows the type of function to be
+selected with a string from the input file. Their ``initialize()`` function reads the data files on the host into memory
+allocated from the AMReX pinned arena, and copies the data structure that holds the sizes and the pointers to this data
+(``TabulatedFunctionData`` or ``NeuralNetFunctionData``, both of which derive from ``BlackBoxFunctionData``) to the device.
+The function objects themselves are lightweight and do not own any data, so they are constructed from a pointer to this data structure
+wherever they are needed, including within GPU kernels. The ``deallocate()`` function must be called to free the memory once the function is
+no longer needed. The following is an example based on the unit test in ``Testing/Exec/UtilityUnitTest``, which reads the table
+specified with ``test.table.filename``: ::
+
+   // Load the table based on the input file options test.table.*
+   auto tabfunc_par = pele::physics::PeleParamsGeneric<
+     pele::physics::BlackBoxFunctionData>::create("Table");
+   tabfunc_par->host_only_parm().parm_parse_prefix = "test";
+   tabfunc_par->initialize();
+
+   // Look up the index of an output variable on the host
+   const int idxT = pele::physics::get_var_index("T", &tabfunc_par->host_parm());
+
+   // Evaluate (host_parm() on the host, device_parm() in a GPU kernel)
+   pele::physics::TabulatedFunction<> tabfunc(
+     static_cast<const pele::physics::TabulatedFunctionData*>(
+       &tabfunc_par->host_parm()));
+   amrex::Real outval;
+   const amrex::GpuArray<amrex::Real, 2> invals{1.0, 1.0};
+   tabfunc.get_value(idxT, invals.data(), outval);
+
+   tabfunc_par->deallocate();
+
+The ``BlackBoxFunctionFactory`` struct, defined in ``BlackBoxFunctionFactory.H``, constructs a function object from a pointer to a ``BlackBoxFunctionData`` and
+provides access to it through ``get_func()``. Its template argument determines whether the type of function is fixed at compile time
+or selected at runtime:
+
+* ``BlackBoxFunctionFactory<TabulatedFunction<N>>``: a table with ``N`` dimensions
+* ``BlackBoxFunctionFactory<NeuralNetFunction>``: a neural network
+* ``BlackBoxFunctionFactory<BlackBoxFunction>``: either a table or a neural network, depending on the data loaded at runtime.
+  This relies on virtual function calls and a table with a number of dimensions determined at runtime, and is therefore
+  slower than the other two options.
+
+For the first two options, the code aborts if the type of the data that was loaded at runtime does not match the type selected at compile time.
 
 Utilities
 =============================
