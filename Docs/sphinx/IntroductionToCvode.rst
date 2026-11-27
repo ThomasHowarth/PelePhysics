@@ -3,7 +3,45 @@
 A brief introduction to CVODE
 =============================
 
-CVODE is part of a software family called sundials for SUite of Nonlinear and DIfferential / ALgebraic equation Solver [LLNL2005]_. 
+The chemistry integration in `PelePhysics` used to rely upon DVODE [VODE1989]_, no matter the problem at hand.
+DVODE is a very robust, but slightly outdated, variable-coefficient Ordinary Differential Equation (ODE) solver written in Fortran 77.
+At its core, it uses a direct dense linear solver. DVODE is very efficient in the resolution of small stiff systems
+of equations but can become prohibitively expensive when dealing with bigger systems of equations, such as those frequently encountered in combustion systems.
+
+The Sundials team at LLNL [LLNL2005]_ is involved in the active development of a modern version of DVODE, written in C, called CVODE.
+CVODE implements the same functionalities as those available in DVODE, but offers much more flexibility through
+its user-friendly set of interface routines. Additionally, other linear solvers are available,
+such as iterative or sparse solvers which can prove to be very efficient in handling "larger" systems of equations.
+DVODE is no longer available in `PelePhysics`, and CVODE is one of the chemistry integrators that can be selected at run time.
+
+The objective of this section and of the following one is to document the CVODE-based chemistry integration implemented in `PelePhysics`. They cover:
+
+- ODE equations (`reactor type`)
+- Linear solvers available --along with examples of performance
+- Setting-up a `PelePhysics` test case
+
+`The following provides a short overview of the CVODE-related features of PelePhysics. For an in-depth discussion, relevant references to specific sections are given.`
+
+- In `PelePhysics`, the user can select between **two different reactor types**.
+  The first type is a `constant volume` reactor, were the choice of fixed variables are the internal energy and the density,
+  to comply with `PeleC` transported variables.
+  A second reactor type formulated in terms of enthalpy and density has been put in place, to comply with `PeleLMeX`.
+  See sections :ref:`sec:subsDiffReacts` for additional details,
+  and :ref:`sec:subsPPOptions` to see how to activate one or the other via the input files.
+
+- With both reactors, it is possible to use an **Analytical Jacobian** (depending upon the choice of linear solver, see section :ref:`sec:subslinalg`.)
+
+- Different types of **linear solvers** are implemented, see section :ref:`sec:subslinalg` for additional details, and :ref:`sec:subsPPOptions` to see how to make a selection:
+
+    - a dense direct solver -- with or without Analytical Jacobian
+    - a sparse direct solver (requires the KLU library) -- always requires an Analytical Jacobian
+    - a couple of sparse iterative solvers from the GMRES family -- preconditioned or not
+
+- **Regression testings** have been put in place in `PelePhysics` to test the CVODE integration. See section :ref:`sec:subsubValidCVreact` for validations, and section :ref:`sec:subsReactEvalCvode` for a step-by-step example.
+
+- CVODE can also be used on **GPU**, with additional linear solver options. This is documented along with the CPU version in the following section.
+
+CVODE is part of a software family called sundials for SUite of Nonlinear and DIfferential / ALgebraic equation Solver [LLNL2005]_.
 
 **The version used with PelePhysics for the tests presented in this document is v4.0.2. This does not mean this is the recommended version to link with PelePhysics. Always refer to** :ref:`sec:GetCVODE` **to know which versions of CVODE/SuiteSparse to use !!** 
 
