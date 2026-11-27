@@ -5,7 +5,7 @@
 ************************
 
 Greetings users. As a word of caution, this documentation is in progress. Some parts of the code remain undocumented,
-and some parts of the documentation are out of data. If you are confused by something you read here, or otherwise
+and some parts of the documentation are out of date. If you are confused by something you read here, or otherwise
 need help with `PelePhysics`, the best course of action is to open a Discussion on the `GitHub page <https://github.com/Pele-Suite/PelePhysics/discussions>`_,
 so the development team and other users can help.
 
@@ -61,7 +61,8 @@ lead to better performance on certain computing architectures.
    In such a case, CVODE can make use of the KLU library, which is part of `SuiteSparse`, to perform sparse linear algebra.
    Documentation and further information can be found on `SuiteSparse website <http://faculty.cse.tamu.edu/davis/suitesparse.html>`_.
 
-2. `MAGMA` is a collection of linear algebra libraries for heterogeneous computing.
+2. `MAGMA` is a collection of linear algebra libraries for heterogeneous computing. The PelePhysics build system
+   configures it for the CUDA and HIP GPU backends.
 
 
 .. _sec:BuildingRunning:
@@ -79,7 +80,8 @@ The ``GNUmakefile`` in this directory specifies several key build options, like 
 First, build the necessary dependencies. `SUNDIALS` is always built.
 `SuiteSparse` is downloaded and built if ``PELE_USE_KLU = TRUE`` is specified in the ``GNUmakefile``.
 `MAGMA` is downloaded and built if ``PELE_USE_MAGMA = TRUE`` is specified in the ``GNUmakefile``.
-All dependencies are installed in the ${PELE_PHYSICS_HOME}/ThirdParty directory. For a given set of
+All dependencies are installed in the ``${PELE_PHYSICS_HOME}/ThirdParty/INSTALL`` directory, in a subdirectory
+named after the compile-time options. For a given set of
 compile-time options, this step only needs to be done once, but it needs to be redone whenever compile-time
 options are changed ::
 
@@ -91,7 +93,16 @@ Now, build the `ReactEval` executable (the ``-j 4`` option specified to compile 
 
 To run the program, execute: ::
 
-  ./Pele3d.gnu.ex inputs.3d-regt_GPU
+  ./Pele2d.gnu.ex inputs.3d_Array4
+
+The name of the executable reflects the compile-time options: here ``DIM = 2`` and ``COMP = gnu``, as set in the ``GNUmakefile``.
+Several other input files are provided in the same directory.
+
+To build for GPUs, set one of ``USE_CUDA``, ``USE_HIP`` or ``USE_SYCL`` to ``TRUE`` in the ``GNUmakefile``, or on the command line
+for both steps, for example: ::
+
+  make TPL USE_CUDA=TRUE
+  make -j 4 USE_CUDA=TRUE
 
 If you need to clean your build, you can run ::
 

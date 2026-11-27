@@ -9,8 +9,9 @@ PelePhysics
 
 `PelePhysics` is a repository of physics databases and implementation code for use within the other `Pele` codes. In particular, the choice of chemistry and transport models as well as associated functions and capabilities are managed in `PelePhysics`.  `PelePhysics` has an official project `homepage <https://Pele-Suite.github.io/>`_, and can be obtained via
 `GitHub <https://github.com/Pele-Suite/PelePhysics>`_.  The documentation pages appearing here are distributed with the code in the ``Docs/sphinx`` folder as "restructured text" files.
-The html is built automatically with certain pushes to the `PelePhysics` GibHub repository.  A local version can also be built as follows ::
+The html is built automatically with certain pushes to the `PelePhysics` GitHub repository.  A local version can also be built as follows ::
 
+    mkdir -p ${PELE_PHYSICS_DIR}/build
     cd ${PELE_PHYSICS_DIR}/build
     sphinx-build -M html ../Docs/sphinx .
 
