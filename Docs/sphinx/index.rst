@@ -42,6 +42,7 @@ point your web browser at the file ``${PELE_PHYSICS_DIR}/build/html/index.html``
    Utility.rst
    Support.rst
    Tutorials.rst
+   Testing.rst
    DeveloperGuide.rst
 
 Indices and tables
