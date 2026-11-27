@@ -6,18 +6,36 @@
 Transport
 *********
 
-PelePhysics supports computation of several transport coefficients: dynamic viscosity (:math:`\mu`), bulk viscosity (:math:`\xi`), thermal conductivity (:math:`\lambda`), mixture-averaged species diffusion coefficients (:math:`D_i`), optionally the full multicomponent diffusion matrix (:math:`\tilde{D}_{ij}`, see :ref:`sec:transport:multicomponent`), and Soret coefficients/thermal diffusion ratio (:math:`\chi_i`). There are three choices of model for computing these transport coefficients:
+PelePhysics supports computation of several transport coefficients: dynamic viscosity (:math:`\mu`), bulk viscosity (:math:`\xi`), thermal conductivity (:math:`\lambda`), mixture-averaged species diffusion coefficients (:math:`D_i`), optionally the full multicomponent diffusion matrix (:math:`\tilde{D}_{ij}`, see :ref:`sec:transport:multicomponent`), and Soret coefficients/thermal diffusion ratio (:math:`\chi_i`). There are four choices of model for computing these transport coefficients:
 
 * ``Constant`` with user-specified values
 * ``Sutherland``, adding a simple temperature dependence to user-specified values
 * ``Simple`` where transport coefficients are computed based on thermochemistry data for the multi-component mixture
+* ``Manifold`` where transport coefficients are obtained from a pretabulated or neural network manifold, for use with the Manifold equation of state
   
 The choice between these transport models is made at compile time. When using GNUmake, this is done by setting the ``Transport_Model`` parameter in the ``GNUmakefile``.
 
-The appropriate choice of transport model depends on the EOS being used. For perfect gasses (GammaLaw), constant transport must be used. For reacting flow calculations using either the ideal gas (Fuego) or Soave-Redlich-Kwong equations of state, Simple transport is appropriate in most cases. Note that based on code implementation and physics considerations, the EOS/transport combinations of GammaLaw/Sutherland, GammaLaw/Simple, Soave-Redlich-Kwong/Constant and Soave-Redlich-Kwong/Sutherland are not supported and attempting to compile with any of those combinations will lead to an error message similar to this: ::
+The appropriate choice of transport model depends on the EOS being used. For perfect gasses (GammaLaw), constant transport must be used. For reacting flow calculations using either the ideal gas (Fuego) or Soave-Redlich-Kwong equations of state, Simple transport is appropriate in most cases. With the Manifold equation of state, either Manifold or Constant transport must be used, and Manifold transport cannot be used with any other EOS. Note that based on code implementation and physics considerations, the EOS/transport combinations of GammaLaw/Sutherland, GammaLaw/Simple, Soave-Redlich-Kwong/Constant, Soave-Redlich-Kwong/Sutherland, Manifold/Sutherland and Manifold/Simple, as well as Manifold transport with any EOS other than Manifold, are not supported and attempting to compile with any of those combinations will lead to an error message similar to this: ::
 
     error: static_assert failed due to requirement 'is_valid_physics_combination<pele::physics::eos::SRK,
           pele::physics::transport::ConstTransport>::value' "Invalid physics combination attempted"
+
+The valid combinations, as encoded in ``PelePhysics/Source/PelePhysicsConstraints.H``, are summarized below.
+
+.. table:: Valid combinations of EOS and transport models
+   :align: center
+
+   +--------------+----------+------------+--------+----------+
+   | EOS          | Constant | Sutherland | Simple | Manifold |
+   +==============+==========+============+========+==========+
+   | ``GammaLaw`` | Yes      | No         | No     | No       |
+   +--------------+----------+------------+--------+----------+
+   | ``Fuego``    | Yes      | Yes        | Yes    | No       |
+   +--------------+----------+------------+--------+----------+
+   | ``SRK``      | No       | No         | Yes    | No       |
+   +--------------+----------+------------+--------+----------+
+   | ``Manifold`` | Yes      | No         | No     | Yes      |
+   +--------------+----------+------------+--------+----------+
 
 .. note:: For the flow solvers in the Pele suite, Soret effects are only supported in PeleLMeX at present. The bulk viscosity is utilized in PeleC but not in the low-Mach algorithm used in PeleLM and PeleLMeX.
 	  
@@ -161,3 +179,29 @@ The historical entry points ``transport(wtr_get_xi, ..., mu, xi, lam, tparm)`` a
                              mu_out, xi_out, lam_out, tparm);
 
 Only the requested quantities are evaluated and only the requested, non-null outputs are written (unrequested outputs, scalars included, are left untouched); ``Array4`` outputs that are not requested may be any array. ``chi`` is accumulated into and must be zeroed by the caller. Downstream codes can test for this API with the preprocessor symbol ``PELE_PHYSICS_TRANSPORT_EXTENDED_API`` (defined in ``TransportTypes.H``) and for the LCT models with ``PELE_TRANSPORT_LCT``. ``Dmat_out`` needs ``NUM_SPECIES*NUM_SPECIES`` components (component ``i*NUM_SPECIES + j`` holds :math:`\rho \tilde{D}_{ij}`) and ``chit_out`` ``NUM_SPECIES`` components.
+
+.. _sec:transport:manifold:
+
+Manifold
+========
+
+This model is used with the Manifold equation of state (see :ref:`sec:eos:manifold`), where manifold parameters are transported in place of species. The transport coefficients are looked up in a table or evaluated from a neural network as functions of the manifold parameters, which are passed to the transport routines in place of the mass fractions; the temperature and density arguments are not used. The following variables must be present in the manifold data:
+
+* ``VISC``: the dynamic viscosity :math:`\mu`
+* ``DIFF``: the diffusivity :math:`\rho D`, which is returned in ``Ddiag`` for all the manifold parameters. The last entry of ``Ddiag``, which corresponds to the density, is set to zero.
+
+The thermal conductivity is computed under the assumption of unity Lewis number as :math:`\lambda = c_p \rho D`, where :math:`c_p` is the ``CP`` variable of the manifold data. At present ``CP`` is only looked up when the code is compiled with sprays; otherwise the thermal conductivity is returned as zero. The bulk viscosity and Soret coefficients are not supported, and requesting them leads to an error, as does requesting the multicomponent diffusion matrix or the rescaled thermal diffusion ratios through the extended API.
+
+By default, the transport model uses the same manifold data as the EOS. In this case, the calling code must pass the manifold data of the EOS parameters to the transport parameters before initializing the latter: ::
+
+  trans_parms.host_only_parm().manfunc_par = eos_parms.host_only_parm().manfunc_par;
+  trans_parms.initialize();
+
+Alternatively, a separate table or network can be loaded for the transport coefficients, using the ``manifold_transport`` prefix: ::
+
+  manifold_transport.use_eos_manifold = false       # default: true
+  manifold_transport.model            = Table       # Table or NeuralNet
+  manifold_transport.table.filename   = ../../../Support/CMLM/peletable_trans_2dim_10grid
+  manifold_transport.table.v          = 2
+
+This example is taken from the ``TranEval`` test case (``PelePhysics/Testing/Exec/TranEval``), which can be compiled with the Manifold models by setting ``USE_MANIFOLD = TRUE`` in its ``GNUmakefile``. The implementation of the tables and neural networks can be found in ``PelePhysics/Source/Utility/BlackBoxFunction``.
