@@ -39,6 +39,7 @@ point your web browser at the file ``${PELE_PHYSICS_DIR}/build/html/index.html``
    EOS.rst
    Spray.rst
    Soot.rst
+   Radiation.rst
    Utility.rst
    Support.rst
    Tutorials.rst
