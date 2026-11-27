@@ -79,6 +79,7 @@ The ``GNUmakefile`` in this directory specifies several key build options, like 
 First, build the necessary dependencies. `SUNDIALS` is always built.
 `SuiteSparse` is downloaded and built if ``PELE_USE_KLU = TRUE`` is specified in the ``GNUmakefile``.
 `MAGMA` is downloaded and built if ``PELE_USE_MAGMA = TRUE`` is specified in the ``GNUmakefile``.
+`cuDSS` (CUDA only) is not downloaded: install it separately and set ``PELE_USE_CUDSS = TRUE`` (see "CVODE implementation in PelePhysics on GPU").
 All dependencies are installed in the ${PELE_PHYSICS_HOME}/ThirdParty directory. For a given set of
 compile-time options, this step only needs to be done once, but it needs to be redone whenever compile-time
 options are changed ::

@@ -554,6 +554,15 @@ Requirements and input files
 
 Note that the SuiteSparse package does not support GPU architecture and is thus no longer required. Sparse linear algebra operations, when needed, are performed with the help of CUDA's `cuSolver <https://docs.nvidia.com/cuda/cusolver/index.html>`_.
 
+cuSolver's sparse component (cuSolverSp) is deprecated by NVIDIA in favour of `cuDSS <https://docs.nvidia.com/cuda/cudss/index.html>`_.
+Building with ``PELE_USE_CUDSS = TRUE`` (cuDSS 1.0.0 or newer) replaces the cuSolverSp batched QR factorizations used by ``cvode.solve_type = sparse_direct``
+and by ``cvode.precond_type = cuSparse_simplified_AJacobian`` with batched cuDSS LU factorizations. All cells in a CVODE instance share one sparsity
+pattern, so they are factorized as one cuDSS uniform batch; the factorization is done when CVODE updates the matrix and reused for every
+subsequent linear solve. cuDSS is not part of the CUDA Toolkit, so its location is given with ``CUDSS_HOME`` (install prefix) or with
+``CUDSS_INCLUDE_DIR`` and ``CUDSS_LIB_DIR``. For example, with NVIDIA's Ubuntu packages (``libcudss1-dev-cuda-13``): ::
+
+    make PELE_USE_CUDSS=TRUE CUDSS_INCLUDE_DIR=/usr/include/libcudss/13 CUDSS_LIB_DIR=/usr/lib/x86_64-linux-gnu/libcudss/13
+
 The GNUmakefile
 ^^^^^^^^^^^^^^^
 

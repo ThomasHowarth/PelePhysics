@@ -14,6 +14,10 @@
 #include <cusolverSp.h>
 #endif
 
+#ifdef PELE_USE_CUDSS
+#include "ReactorCvodeCuDSS.H"
+#endif
+
 #ifdef PELE_USE_KLU
 #include "klu.h"
 #include <sunlinsol/sunlinsol_klu.h>
@@ -68,6 +72,10 @@ struct CVODEUserData
   cusparseMatDescr_t descrA; // Sparse mat. descriptor
   cusolverSpHandle_t cusolverHandle;
   cusparseHandle_t cuSPHandle;
+#endif
+#ifdef PELE_USE_CUDSS
+  // Batched LU preconditioner data
+  cvode::CuDSSBatchSolver* cudss_precond = nullptr;
 #endif
   amrex::gpuStream_t stream;
 

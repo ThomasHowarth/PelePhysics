@@ -57,3 +57,27 @@ ifeq ($(PELE_USE_MAGMA), TRUE)
     LIBRARIES += -Wl,-rpath=${MAGMA_DIR}/lib
   endif
 endif
+ifeq ($(PELE_USE_CUDSS), TRUE)
+  ifneq ($(USE_CUDA),TRUE)
+    $(error PELE_USE_CUDSS only available when using CUDA)
+  endif
+  # cuDSS (>= 1.0.0) is not part of the CUDA Toolkit. Point CUDSS_HOME at its
+  # install prefix, or set CUDSS_INCLUDE_DIR and CUDSS_LIB_DIR directly, e.g.
+  # for the Ubuntu packages: /usr/include/libcudss/13 and
+  # /usr/lib/x86_64-linux-gnu/libcudss/13. Empty means the default search paths.
+  ifneq ($(CUDSS_HOME),)
+    CUDSS_INCLUDE_DIR ?= $(CUDSS_HOME)/include
+    CUDSS_LIB_DIR ?= $(CUDSS_HOME)/lib
+  endif
+  DEFINES += -DPELE_USE_CUDSS
+  ifneq ($(CUDSS_INCLUDE_DIR),)
+    INCLUDE_LOCATIONS += $(CUDSS_INCLUDE_DIR)
+  endif
+  ifneq ($(CUDSS_LIB_DIR),)
+    LIBRARIES += -L$(CUDSS_LIB_DIR)
+    ifneq ($(shell uname),Darwin)
+      LIBRARIES += -Wl,-rpath=$(CUDSS_LIB_DIR)
+    endif
+  endif
+  LIBRARIES += -lcudss
+endif

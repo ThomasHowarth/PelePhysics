@@ -92,6 +92,14 @@ ReactorCvode::initCvode(
 #endif
   } else if (a_udata->solve_type == cvode::sparseDirect) {
 #if defined(AMREX_USE_CUDA) && defined(PELE_CVODE_FORCE_YCORDER)
+#ifdef PELE_USE_CUDSS
+    a_LS = cvode::SUNLinSol_cuDSS_batch(
+      a_y, a_A, stream, *amrex::sundials::The_Sundials_Context());
+    if (utils::check_flag(
+          static_cast<void*>(a_LS), "SUNLinSol_cuDSS_batch", 0)) {
+      return (1);
+    }
+#else
     a_LS = SUNLinSol_cuSolverSp_batchQR(
       a_y, a_A, a_udata->cusolverHandle,
       *amrex::sundials::The_Sundials_Context());
@@ -99,6 +107,7 @@ ReactorCvode::initCvode(
           static_cast<void*>(a_LS), "SUNLinSol_cuSolverSp_batchQR", 0)) {
       return (1);
     }
+#endif
     flag = CVodeSetLinearSolver(a_cvode_mem, a_LS, a_A);
     if (utils::check_flag(&flag, "CVodeSetLinearSolver", 1)) {
       return (1);
@@ -549,7 +558,11 @@ ReactorCvode::checkCvodeOptions(
       a_precond_type = cvode::sparseSimpleAJac;
 #ifdef AMREX_USE_CUDA
       if (verbose > 0) {
+#ifdef PELE_USE_CUDSS
+        amrex::Print() << " with a cuDSS simplified AJ-based preconditioner";
+#else
         amrex::Print() << " with a cuSparse simplified AJ-based preconditioner";
+#endif
       }
 #else
       amrex::Abort(
@@ -612,8 +625,13 @@ ReactorCvode::checkCvodeOptions(
 #ifdef AMREX_USE_GPU
 #ifdef AMREX_USE_CUDA
     if (verbose > 0) {
+#ifdef PELE_USE_CUDSS
+      amrex::Print()
+        << " Using a cuDSS direct linear solve with analytical Jacobian\n";
+#else
       amrex::Print()
         << " Using a cuSparse direct linear solve with analytical Jacobian\n";
+#endif
     }
 #else
     amrex::Abort("solve_type=sparse_direct only available with CUDA");
@@ -992,11 +1010,13 @@ ReactorCvode::allocUserData(
     udata->csr_col_index_h = static_cast<int*>(
       amrex::The_Pinned_Arena()->alloc(udata->NNZ * sizeof(int)));
 
+#ifndef PELE_USE_CUDSS
     cusolverStatus_t cusolver_status =
       cusolverSpCreate(&(udata->cusolverHandle));
     AMREX_ASSERT(cusolver_status == CUSOLVER_STATUS_SUCCESS);
     cusolver_status = cusolverSpSetStream(udata->cusolverHandle, stream);
     AMREX_ASSERT(cusolver_status == CUSOLVER_STATUS_SUCCESS);
+#endif
 
     cusparseStatus_t cusparse_status = cusparseCreate(&(udata->cuSPHandle));
     AMREX_ASSERT(cusparse_status == CUSPARSE_STATUS_SUCCESS);
@@ -1133,6 +1153,12 @@ ReactorCvode::allocUserData(
       udata->csr_row_count_d, udata->csr_row_count_h,
       (NUM_SPECIES + 2) * sizeof(int));
 
+#ifdef PELE_USE_CUDSS
+    // The simplified preconditioner pattern is one-based
+    udata->cudss_precond = new cvode::CuDSSBatchSolver(
+      NUM_SPECIES + 1, udata->NNZ, a_ncells, udata->csr_row_count_d,
+      udata->csr_col_index_d, udata->csr_val_d, CUDSS_BASE_ONE, stream);
+#else
     size_t workspaceInBytes = 0;
     size_t internalDataInBytes = 0;
 
@@ -1178,6 +1204,7 @@ ReactorCvode::allocUserData(
     cudaError_t cudaStat1 =
       cudaMalloc((void**)&(udata->buffer_qr), workspaceInBytes);
     AMREX_ASSERT(cudaStat1 == cudaSuccess);
+#endif
 #else
     amrex::Abort("cuSparse_simplified_AJacobian is only available with CUDA");
 #endif
@@ -1735,9 +1762,11 @@ ReactorCvode::freeUserData(CVODEUserData* data_wk)
 #ifdef AMREX_USE_CUDA
     amrex::The_Pinned_Arena()->free(data_wk->csr_row_count_h);
     amrex::The_Pinned_Arena()->free(data_wk->csr_col_index_h);
+#ifndef PELE_USE_CUDSS
     cusolverStatus_t cusolver_status =
       cusolverSpDestroy(data_wk->cusolverHandle);
     AMREX_ASSERT(cusolver_status == CUSOLVER_STATUS_SUCCESS);
+#endif
     cusparseStatus_t cusparse_status = cusparseDestroy(data_wk->cuSPHandle);
     AMREX_ASSERT(cusparse_status == CUSPARSE_STATUS_SUCCESS);
 #endif
@@ -1758,12 +1787,17 @@ ReactorCvode::freeUserData(CVODEUserData* data_wk)
     amrex::The_Arena()->free(data_wk->csr_col_index_d);
     amrex::The_Arena()->free(data_wk->csr_val_d);
     amrex::The_Arena()->free(data_wk->csr_jac_d);
+#ifdef PELE_USE_CUDSS
+    delete data_wk->cudss_precond;
+    data_wk->cudss_precond = nullptr;
+#else
     cusolverStatus_t cusolver_status =
       cusolverSpDestroy(data_wk->cusolverHandle);
     AMREX_ASSERT(cusolver_status == CUSOLVER_STATUS_SUCCESS);
     cusolver_status = cusolverSpDestroyCsrqrInfo(data_wk->info);
     AMREX_ASSERT(cusolver_status == CUSOLVER_STATUS_SUCCESS);
     cudaFree(data_wk->buffer_qr);
+#endif
 #endif
   }
   delete data_wk;

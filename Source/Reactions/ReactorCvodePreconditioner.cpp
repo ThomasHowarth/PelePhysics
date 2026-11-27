@@ -59,6 +59,15 @@ Precond(
         });
     *jcurPtr = SUNTRUE;
   }
+#ifdef PELE_USE_CUDSS
+  BL_PROFILE_VAR_STOP(fKernelComputeAJ);
+  // Factorize P = I - gamma J once here; PSolve reuses the factors
+  const cudssStatus_t cudss_status = udata->cudss_precond->factorize(csr_val_d);
+  if (cudss_status != CUDSS_STATUS_SUCCESS) {
+    return (-1);
+  }
+  return (0);
+#else
   cudaError_t cuda_status = cudaStreamSynchronize(stream);
   AMREX_ASSERT(cuda_status == cudaSuccess);
   BL_PROFILE_VAR_STOP(fKernelComputeAJ);
@@ -84,6 +93,7 @@ Precond(
   cuda_status = cudaDeviceSynchronize();
   AMREX_ASSERT(cuda_status == cudaSuccess);
   return (0);
+#endif
 }
 
 int
@@ -100,16 +110,24 @@ PSolve(
 {
   BL_PROFILE("Pele::ReactorCvode::PSolve()");
 
-  // Get data out of udata to minimize global memory access
   CVODEUserData* udata = static_cast<CVODEUserData*>(user_data);
+  amrex::Real* z_d = N_VGetDeviceArrayPointer_Cuda(z);
+  amrex::Real* r_d = N_VGetDeviceArrayPointer_Cuda(r);
+
+#ifdef PELE_USE_CUDSS
+  // z = P^{-1} r with the factors computed in Precond
+  const cudssStatus_t cudss_status = udata->cudss_precond->solve(z_d, r_d);
+  if (cudss_status != CUDSS_STATUS_SUCCESS) {
+    return (-1);
+  }
+  return (0);
+#else
+  // Get data out of udata to minimize global memory access
   auto ncells = udata->ncells;
   auto csr_val_d = udata->csr_val_d;
   auto csr_row_count_d = udata->csr_row_count_d;
   auto csr_col_index_d = udata->csr_col_index_d;
   auto NNZ = udata->NNZ;
-
-  amrex::Real* z_d = N_VGetDeviceArrayPointer_Cuda(z);
-  amrex::Real* r_d = N_VGetDeviceArrayPointer_Cuda(r);
 
   cusolverStatus_t cuS_st = cusolverSpDcsrqrsvBatched(
     udata->cusolverHandle, NUM_SPECIES + 1, NUM_SPECIES + 1, NNZ, udata->descrA,
@@ -124,6 +142,7 @@ PSolve(
   N_VCopyFromDevice_Cuda(r);
 
   return (0);
+#endif
 }
 
 #else

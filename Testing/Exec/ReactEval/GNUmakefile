@@ -20,6 +20,7 @@ USE_SYCL   = FALSE
 # PelePhysics TPLs
 PELE_USE_KLU = FALSE
 PELE_USE_MAGMA = FALSE
+PELE_USE_CUDSS = FALSE
 
 # this flag activates the subcycling mode in the D/Cvode routines
 DEFINES  += -DMOD_REACTOR
