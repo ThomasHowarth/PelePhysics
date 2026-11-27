@@ -15,6 +15,7 @@ These tools include:
 * ``TurbFileHIT``: Isotropic turbulence initial conditions and inflows
 * ``MechanismPAH``: Append PAH module to chemical mechanism data
 * ``liquidProp``: Fits to NIST data for condensed phase species
+* ``CMLM``: Sample table and neural network files for manifold models
 
 ceptr
 =====
@@ -153,3 +154,19 @@ named ``rho.dat``, ``mu.dat``, and ``lambda.dat``. The usage for this script is:
     --units UNITS         Units, either MKS or CGS
     --vars VARS [VARS ...]
                           Which variables to fit, ex. mu lambda rho
+
+.. _sec_cmlm:
+
+CMLM
+====
+
+The ``Support/CMLM`` directory contains sample data files for the manifold models (see the :ref:`Manifold EOS <sec:eos:manifold>` and the :ref:`Manifold transport model <sec:transport:manifold>`), which are used for testing purposes. The tools for generating tables and neural networks for manifold models are not part of PelePhysics; they are currently available in the `CMLM repository <https://github.com/NREL/cmlm>`_.
+
+The files are:
+
+* ``peletable_2dim_10grid``: a table with two dimensions (``dim0`` and ``dim1``) containing the variables ``RHO``, ``T``, ``SRC_dim0`` and ``SRC_dim1``, used by the ``EosEval`` and ``UtilityUnitTest`` test cases
+* ``peletable_trans_2dim_10grid``: a table with the same two dimensions containing the transport variables ``DIFF`` and ``VISC``, used by the ``TranEval`` test case
+* ``fgm_net.pnn`` and ``fgm_net_info.txt``: a neural network with two manifold parameters and its metadata file, which lists the names of the inputs and outputs of the network and the definitions of the manifold parameters as linear combinations of species mass fractions. These are used by the ``EosEval`` and ``TranEval`` test cases
+* ``autoignition.ctb``: a table used by the manifold input file of the ``IgnitionDelay`` test case
+
+The code that reads and evaluates these files can be found in ``PelePhysics/Source/Utility/BlackBoxFunction``.
