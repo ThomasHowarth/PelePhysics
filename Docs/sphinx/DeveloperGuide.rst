@@ -1,10 +1,13 @@
 .. highlight:: rst
 
+.. _sec:devguide:
 
 Developer Guidelines
 ====================
 
-The following developer guidelines apply to all code that is to be committed to the `Pele` suite. 
+The following developer guidelines apply to all code that is to be committed to the `Pele` suite.
+The contribution workflow itself (forking the repository, creating a branch, and opening a pull request
+against the ``development`` branch) is described in the ``CONTRIBUTING.md`` file at the top level of the repository.
 
 Before adding files for a commit to be pushed to a branch of `PelePhysics`, first run the following formatting tools depending on the type of code:
 
@@ -19,31 +22,116 @@ Run ``clang-format``::
     clang-format -i FILE.H
 
 Will apply all of the correct formatting and make the changes directly to the cpp source files.
+The formatting rules are read from the ``.clang-format`` file at the top level of the repository.
+
+The automated checks use version 20 of ``clang-format`` and cover all ``.H``, ``.h`` and ``.cpp`` files in the ``Source``, ``Testing`` and ``Mechanisms`` directories.
+Other versions of ``clang-format`` may format some lines differently. A matching version (20.1.5) is listed in the development
+dependencies of CEPTR and is therefore installed in the Poetry environment described below.
 
 
 Python
 ------
 
 The tools necessary to format Python code (currently only used within CEPTR) are maintained through Poetry.
+The following commands are run from the ``${PELE_PHYSICS_HOME}/Support/ceptr`` directory, after installing the dependencies with ``poetry install``.
 
 1) Run ``isort``::
 
-    poetry run isort . 
+    poetry run isort .
 
 This will perform proper sorting of the installed Python libraries.
 
 2) Run ``black``::
 
-    poetry run black . 
+    poetry run black .
 
 This will perform proper formatting of all Python files to be consistent with all current files.
 
 3) Run ``flake8``::
 
-    poetry run flake8 . 
+    poetry run flake8 .
 
 This will run diagnostics on all the Python files and will list a series of issues that need to be addressed to adhere to current Python best practices.
 
 
 Once all ``flake8`` messages have been addressed, the code will match the `Pele` suite standard.
 
+4) Run the CEPTR tests::
+
+    poetry run pytest
+
+Warnings are treated as errors when running these tests.
+
+
+Automated checks
+----------------
+
+Every pull request to the ``development`` branch is tested using GitHub Actions. The workflows are defined in the ``.github/workflows`` directory.
+A pull request that only modifies the documentation skips the jobs that build code.
+
+The ``PelePhysics-CI`` workflow contains the following jobs:
+
+* ``Formatting``: checks the C++ formatting with ``clang-format``, as described above.
+* ``Codespell``: checks the spelling across the repository with ``codespell``, using the settings in the ``.codespellrc`` file. Words that are flagged incorrectly can be added to the ``.codespell-ignore-words`` file.
+* ``CEPTR``: runs ``black``, ``isort``, ``flake8`` and ``pytest`` in ``Support/ceptr``, then converts the ``air`` and ``LiDryer`` mechanisms.
+* ``Transport-EOS-Reactions``: builds the test programs in ``Testing/Exec`` (``UtilityUnitTest``, ``TranEval``, ``EosEval``, ``ReactEval``, ``IgnitionDelay`` and ``Jacobian``) for several combinations of
+  ``Eos_Model``, ``Transport_Model`` and ``Chemistry_Model``. This is done with the GNU and LLVM compilers and with the CUDA, HIP and SYCL GPU backends. The tests are only run for the GNU and LLVM builds;
+  the GPU builds are only compiled.
+* ``CI-Status``: summarizes the results of the other jobs.
+
+The ``Downstream-CI`` workflow checks that the changes do not break the codes that use `PelePhysics`. It builds and briefly runs a `PeleLMeX` case and a `PeleC` case
+against the modified version of `PelePhysics`, treating compiler warnings as errors, and then runs ``clang-tidy`` on both codes.
+
+The ``PelePhysics-Docs`` workflow builds this documentation whenever files in the ``Docs`` directory or the ``README.md`` file are modified.
+
+
+Documentation
+-------------
+
+The documentation is written in reStructuredText in the ``Docs/sphinx`` directory and is built using `Sphinx <https://www.sphinx-doc.org>`_ with the ``sphinx_rtd_theme`` theme. Both can be installed with::
+
+    pip install sphinx sphinx_rtd_theme
+
+The automated checks treat all Sphinx warnings, including broken cross-references, as errors. To build the documentation in the same way locally, use the CMake project in the ``Docs`` directory::
+
+    cd ${PELE_PHYSICS_HOME}
+    cmake -B build-docs Docs
+    cmake --build build-docs
+
+which is equivalent to::
+
+    sphinx-build -M html Docs/sphinx build-docs/sphinx -c Docs/sphinx -W --keep-going -n
+
+The resulting pages can be viewed by pointing a web browser at the file ``build-docs/sphinx/html/index.html``.
+
+
+Mechanisms
+----------
+
+The ``mechanism.H`` and ``mechanism.cpp`` files in the ``Mechanisms`` directory are generated by CEPTR and should not be edited by hand.
+When a change to CEPTR modifies the generated code, all the mechanisms should be regenerated and committed together with the change.
+This is done in batches using the lists of mechanisms in the ``Mechanisms/list_mech`` and ``Mechanisms/list_qss_mech`` files::
+
+    cd ${PELE_PHYSICS_HOME}/Support/ceptr
+    poetry run convert -l ${PELE_PHYSICS_HOME}/Mechanisms/list_mech
+    poetry run qssa -lq ${PELE_PHYSICS_HOME}/Mechanisms/list_qss_mech
+    poetry run convert -lq ${PELE_PHYSICS_HOME}/Mechanisms/list_qss_mech
+
+See the :ref:`CEPTR section <sec:ceptr>` for more details on these commands.
+
+To add a new mechanism:
+
+1. Create a new directory in ``Mechanisms``. The name of this directory is the value to be given to ``Chemistry_Model`` when building.
+
+2. Add the Cantera YAML file for the mechanism to this directory, named ``mechanism.yaml``. If only CHEMKIN files are available, see :ref:`Converting CHEMKIN files <sec_convertCK>`. The existing mechanism directories also retain the CHEMKIN files when they are available.
+
+3. Add a ``Make.package`` file and, optionally, a ``convert.sh`` helper script. Both can be copied without modification from an existing mechanism, such as ``Mechanisms/drm19``.
+
+4. Generate ``mechanism.H`` and ``mechanism.cpp`` with CEPTR, as described in the :ref:`CEPTR section <sec:ceptr>`.
+
+5. Add the path to ``mechanism.yaml`` to ``Mechanisms/list_mech`` so that the mechanism is included in the batched generation.
+
+6. If possible, add a ``README.md`` file that provides the reference for the mechanism.
+
+For a mechanism that uses the QSS assumption, the directory instead contains the ``skeletal.yaml``, ``non_qssa_list.yaml`` and ``qssa_input.toml`` files, and is listed in ``Mechanisms/list_qss_mech``.
+See the :ref:`Tutorials <sec:tutorials>` for the corresponding CEPTR commands.
