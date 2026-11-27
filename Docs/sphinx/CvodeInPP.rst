@@ -47,7 +47,7 @@ temperature :math:`T` are integrated according to
 
     \rho C_p \frac{\partial T}{\partial t} = \rho\dot{H}_{ext}  - \sum_k h_k  {\dot{\omega}_k}^M
 
-where the :math:`h_k` are the species internal energy. 
+where the :math:`h_k` are the species enthalpy. 
 
 .. _sec:subsubValidCVreact:
 
@@ -140,37 +140,27 @@ Activating the different CVODE solver options via the input files
 -----------------------------------------------------------------
 **Note that at this point, it is believed that the user has properly installed CVODE as well as the SuiteSparse package. If not, refer to** :ref:`sec:GetCVODE`.
 
-Choosing between DVODE/CVODE (as well as other ODE integrators that will not be discussed in this section) is done at compile time, 
-via the ``GNUmakefile``. On the other hand, the type of reactor and specifics of the numerical algorithm 
-are selected via keywords in the input file. There is a subtlety though: 
+Choosing between CVODE and the other ODE integrators available in `PelePhysics` is done at run time, via a keyword in the input file (see :ref:`sec:reactions`).
+The type of reactor and specifics of the numerical algorithm are also selected via keywords in the input file. There is a subtlety though: 
 when any sparsity feature is required, the choice should also be made at compile time since external libraries will be required; 
-and if the compilation is not performed properly, subsequent options via keywords in the input file can either lead to an error or fall back to a dense formulation 
-of the problem. This is discussed in more depth in what follows.
+and if the compilation is not performed properly, subsequent options via keywords in the input file will lead to an error. 
+This is discussed in more depth in what follows.
 
 .. _subsubs:GNUtype:
 
 The GNUmakefile
 ^^^^^^^^^^^^^^^
 
-The default setting is to use DVODE in `PelePhysics`; i.e, if no modifications are done to the original ``GNUmakefile`` (see the test case ReactEval_FORTRAN of `PelePhysics`), 
-then this option should automatically be selected. To activate CVODE, the user must first activates the use of Sundials via the following line: ::
-
-    USE_SUNDIALS_PP = TRUE
-
-Note that this is a `PelePhysics` flag, so it will automatically be recognized in the `Pele` codes. However, if CVODE has not been installed as prescribed in :ref:`sec:GetCVODE` then a line specifying the location of the Sundials libraries should be added: ::
-
-    CVODE_LIB_DIR=PathToSundials/instdir/lib/
-
-By default, if Sundials is used then the implicit ODE solver CVODE is selected. The user then has to choose between a number of
-different methods to integrate the linear system arising during the implicit solve. Add the following line if sparsity features are required: ::
+`SUNDIALS`, and thus CVODE, is a required dependency of `PelePhysics`: it is always built, and no ``GNUmakefile`` flag is needed to activate it. 
+The user only has to choose between a number of different methods to integrate the linear system arising during the implicit solve. 
+Add the following line if sparsity features are required: ::
 
     PELE_USE_KLU = TRUE
 
-Likewise, if `SuiteSparse` has not been installed as prescribed in :ref:`sec:GetCVODE`, then a line specifying its location should be added: ::
-
-    SUITESPARSE_DIR=PathToSuiteSparse/
+Note that this is a `PelePhysics` flag, so it will automatically be recognized in the `Pele` codes. `SUNDIALS` and, if requested, `SuiteSparse` are then built by executing ``make TPL``, 
+as described in :ref:`sec:BuildingRunning`.
     
-All of the flags discussed in this subection are used in ``$PELE_PHYSICS_HOME/ThirdPartyThirdParty/Make.ThirdParty``.
+All of the flags discussed in this subsection are used in ``$PELE_PHYSICS_HOME/ThirdParty/Make.ThirdParty``.
 
 
 The input file
@@ -178,31 +168,33 @@ The input file
 
 The input file is made up of specific blocks containing keywords that apply to specific areas of the integrationof the problem at hand. 
 The suffix associated with each block of keywords should help the user in determining which keywords 
-are needed in his case, depending on the options selected via the ``GNUmakefile``.
-If CVODE is enabled via the ``GNUmakefile``, for example, keywords starting with ``cvode.*`` are relevant. 
+are needed in his case, depending on the integrator selected.
+If CVODE is selected, for example, keywords starting with ``cvode.*`` are relevant. 
 The general ``ode.*`` keywords are shared by all ODE integrators and thus are also relevant for CVODE:
 
 - ``ode.reactor_type`` enable to switch from a CV reactor (``=1``) to a CVH reactor (``=2``).
-- ``cvode.solve_type`` controls the CVODE linear integration method: choose ``1`` to enable the dense direct linear solver, 
-  ``5`` for the sparse direct linear solver (if the KLU library has been linked) and ``99`` for the Krylov iterative solver
-- ``ode.analytical_jacobian`` is a bit less obvious: 
+- ``cvode.solve_type`` controls the CVODE linear integration method: choose ``dense_direct`` to enable the dense direct linear solver, 
+  ``denseAJ_direct`` for the dense direct linear solver with an Analytical Jacobian, 
+  ``sparse_direct`` for the sparse direct linear solver (if the KLU library has been linked), ``GMRES`` for the non-preconditioned Krylov iterative solver 
+  and ``precGMRES`` for the preconditioned Krylov iterative solver. 
+- ``cvode.precond_type`` selects the preconditioner when ``cvode.solve_type = precGMRES``: 
 
-  - If ``cvode.solve_type = 1``, then ``ode.analytical_jacobian = 1`` will activate the use of an Analytical Jacobian. 
+  - With ``dense_simplified_AJacobian``, the preconditioner is based on a simplified Analytical Jacobian in a dense format. 
   
-  - If ``cvode.solve_type = 99``, then ``ode.analytical_jacobian = 1`` will activate the preconditioned GMRES solver while ``ode.analytical_jacobian = 0`` will activate the non-preconditioned GMRES solver. 
-  
-  - If ``cvode.solve_type = 99``, ``ode.analytical_jacobian = 1`` **and** the KLU library is linked, then the preconditioned solve is done in a sparse format. 
-  
-  - With ``cvode.solve_type = 5``, the only allowed option is ``ode.analytical_jacobian = 1``.
+  - With ``sparse_simplified_AJacobian``, **and** if the KLU library is linked, the preconditioned solve is done in a sparse format. 
+
+The complete list of options is given in :ref:`sec:reactions`.
+
+.. note:: Earlier versions of `PelePhysics` relied on integer values of ``cvode.solve_type`` (``1``, ``5`` and ``99``) combined with an ``ode.analytical_jacobian`` keyword. These are no longer recognized by the code.
 
 
 .. _sec:subsReactEvalCvode:
 
-The ReactEval_C test case with CVODE in details
------------------------------------------------
+The ReactEval test case with CVODE in details
+---------------------------------------------
 
-This tutorial has been adapted from the `ReactEval_FORTRAN` tutorial employed in the series of regression tests to monitor the DVODE chemistry integration. 
-The domain considered is a :math:`2x1024x2` box, where the initial temperature is different in each :math:`(i,j,k)-` cell, according to a :math:`y-` evolving sinusoidal profile, see Fig. :numref:`fig:ErrH2`:
+This test case is located in ``$PELE_PHYSICS_HOME/Testing/Exec/ReactEval``. 
+The domain considered here is a :math:`2x1024x2` box (the number of cells is set via the input file), where the initial temperature is different in each :math:`(i,j,k)-` cell, according to a :math:`y-` evolving sinusoidal profile, see Fig. :numref:`fig:ErrH2`:
 
 .. math::
 
@@ -217,7 +209,7 @@ The following focuses on the :math:`CH_4`/:math:`O_2` example, but performances 
 
 .. _tab::ParamReactEvalCvode:
 
-.. table:: Parameters used to initialize T in the ReactEval_C test case
+.. table:: Parameters used to initialize T in the ReactEval test case
     :align: center
 
     +------------+-----------------+-------------+----------------+-------------+
@@ -234,69 +226,47 @@ The following focuses on the :math:`CH_4`/:math:`O_2` example, but performances 
      :align: center
      :name: fig-ReactEvalCVODE
      :target: ./Visualization/Case_ReactEvalCvode.001.png
-     :alt: The ReactEval_C test case
+     :alt: The ReactEval test case
 
-     The ReactEval_C test case
+     The ReactEval test case
 
 The GNUmakefile
 ^^^^^^^^^^^^^^^
 
-For this example, the ``USE_SUNDIALS_PP`` flag should be set to true, as the ODE integration 
-is called from the C++ routine directly using CVODE.
-Additionally, the ``FUEGO_GAS`` flag should be set to true and the chemistry model should be set to ``drm19``. The full file reads as follows:
+For this example, the chemistry model should be set to ``drm19``. Starting from the ``GNUmakefile`` distributed with the test case, 
+the ``DIM``, ``USE_MPI`` and ``TINY_PROFILE`` flags are modified, and the full file reads as follows:
 
 .. code-block::
 
-    PRECISION  = DOUBLE                                                                                                                   
-    PROFILE    = FALSE
+    # define the location of the PELE_PHYSICS top directory
+    PELE_PHYSICS_HOME    ?= ../../..
     
-    DEBUG      = FALSE
-    
-    DIM        = 3
-    
-    COMP       = gcc
-    FCOMP      = gfortran
-    
-    USE_MPI    = TRUE
-    USE_OMP    = FALSE
-    
-    FUEGO_GAS  = TRUE
-    
+    # AMReX
+    DIM          = 3
+    PRECISION    = DOUBLE
+    PROFILE      = FALSE
+    VERBOSE      = FALSE
+    DEBUG        = FALSE
     TINY_PROFILE = TRUE
     
-    # define the location of the PELE_PHYSICS top directory
-    PELE_PHYSICS_HOME    := ../../../..
+    # Compiler
+    COMP       = gnu
+    USE_MPI    = TRUE
+    USE_OMP    = FALSE
+    USE_CUDA   = FALSE
+    USE_HIP    = FALSE
+    USE_SYCL   = FALSE
     
-    #######################
+    # PelePhysics TPLs
+    PELE_USE_KLU = FALSE
+    PELE_USE_MAGMA = FALSE
+    
+    # this flag activates the subcycling mode in the D/Cvode routines
     DEFINES  += -DMOD_REACTOR
     
-    #######################
-    # ODE solver OPTIONS: DVODE (default) / SUNDIALS / RK explicit
-    #######################
-    # Activates use of SUNDIALS: CVODE (default) / ARKODE
-    USE_SUNDIALS_PP = TRUE
-    ifeq ($(USE_SUNDIALS_PP), TRUE)
-      # provide location of sundials lib if needed
-      SUNDIALS_LIB_DIR=$(PELE_PHYSICS_HOME)/ThirdParty/sundials/instdir/lib/
-      # use KLU sparse features -- only useful if CVODE is used
-      PELE_USE_KLU = FALSE
-      ifeq ($(PELE_USE_KLU), TRUE)
-        # provide location of KLU lib if needed
-        SUITESPARSE_DIR=$(PELE_PHYSICS_HOME)/ThirdParty/SuiteSparse/
-      endif
-    endif
-    
-    #######################
-    ifeq ($(FUEGO_GAS), TRUE)
-      Eos_Model       = Fuego
-      Chemistry_Model = drm19
-      Reactions_dir   = Fuego
-      Transport_Model = Simple
-    else
-      Eos_Model       = GammaLaw
-      Reactions_dir   = Null
-      Transport_Model = Constant
-    endif
+    Eos_Model       = Fuego
+    Chemistry_Model = drm19
+    Transport_Model = Simple
     
     Bpack   := ./Make.package
     Blocs   := .
@@ -308,7 +278,18 @@ Note that the ``TINY_PROFILE`` flag has been activated to obtain statistics on t
 The input file
 ^^^^^^^^^^^^^^
 
-The run parameters that can be controlled via ``inputs.3d`` input file for this example are as follows: ::
+The run parameters that can be controlled via the input file for this example are as follows: ::
+
+    # Number of cells
+    ncells = 2 1024 2
+    # Max size of problem
+    max_grid_size = 2
+    # Choose name of output pltfile
+    plotfile = plt
+    # Fuel species
+    fuel_name = CH4
+    # ODE integrator
+    chem_integrator = "ReactorCvode"
 
     #ODE solver options
     # REACTOR mode
@@ -319,19 +300,9 @@ The run parameters that can be controlled via ``inputs.3d`` input file for this 
     # Tolerances for ODE solve
     ode.rtol = 1e-9
     ode.atol = 1e-9
-    # Select ARK/CV-ODE Jacobian eval: 0=FD 1=AJ
-    ode.analytical_jacobian = 0
     #CVODE SPECIFICS
-    # Choose between sparse (5) dense (1/101) iterative (99) solver
-    cvode.solve_type = 1
-    
-    #OTHER
-    # Max size of problem
-    max_grid_size = 2
-    # Choose name of output pltfile
-    amr.plot_file       = plt
-    # Fuel species
-    fuel_name = CH4
+    # Choose the linear solver
+    cvode.solve_type = dense_direct
 
 so in this example, a **CV reactor model is chosen** to integrate each cell, and the **dense direct solve without analytical Jacobian** is activated. 
 Each cell is then integrated for a total of :math:`1.e-05` seconds, with 10 external time steps. 
@@ -358,32 +329,19 @@ The resulting temperature evolution for all cells in the y-direction is displaye
      Evolution of temperature in the 2x1024x2 example box, using a CV reactor and a dense direct solve, and computed with the DRM mechanism. Black: t=0s, red: t=1e-05s
 
 
-To go further: ReactEval_C with CVODE and the KLU library
----------------------------------------------------------
+To go further: ReactEval with CVODE and the KLU library
+-------------------------------------------------------
 
 The GNUmakefile
 ^^^^^^^^^^^^^^^
 
-Only the middle part of the ``GNUmakefile`` needs to be modified compared to the previous example.
+Only one line of the ``GNUmakefile`` needs to be modified compared to the previous example, and the dependencies need to be built again with ``make TPL``.
 
 .. code-block::
 
     ...
-    #######################
-    # ODE solver OPTIONS: DVODE (default) / SUNDIALS / RK explicit
-    #######################
-    # Activates use of SUNDIALS: CVODE (default) / ARKODE
-    USE_SUNDIALS_PP = TRUE
-    ifeq ($(USE_SUNDIALS_PP), TRUE)
-      ...
-      # use KLU sparse features -- only useful if CVODE is used
-      PELE_USE_KLU = TRUE
-      ...
-    else
-      ...
-    endif
-    
-    #######################
+    # PelePhysics TPLs
+    PELE_USE_KLU = TRUE
     ...
 
 
@@ -396,17 +354,13 @@ be selected. We modify the input file as follows:
 .. code-block::
 
     ...
-    #######################
     #ODE solver options 
     ...
-    # Select ARK/CV-ODE Jacobian eval: 0=FD 1=AJ
-    ode.analytical_jacobian = 1
     #CVODE SPECIFICS
-    # Choose between sparse (5) dense (1/101) iterative (99) solver
-    cvode.solve_type = 99
-    ...
-    #OTHER
-    ...
+    # Choose the linear solver
+    cvode.solve_type = precGMRES
+    # Choose the preconditioner
+    cvode.precond_type = sparse_simplified_AJacobian
     
 So that now, a preconditioned iterative Krylov solver is selected, where the preconditioner is specified in a sparse format.
 
@@ -422,50 +376,52 @@ closer the system matrix is from the identity matrix and the GMRES iterations be
 
 This example illustrates that choosing the "best" and "most efficient" algorithm is far from being a trivial task, 
 and will depend upon many factors. Table :numref:`tab:RunsReactEvalCvode` provides a summary of the CPU run time in solving the 
-ReactEval_C example with a subset of the various available CVODE linear solvers. As can be seen from the numbers, using an AJ is much more efficient than relying upon CVODE's built-in difference quotients. Using a sparse solver does not appear to provide additional time savings.
+ReactEval example with a subset of the various available CVODE linear solvers. As can be seen from the numbers, using an AJ is much more efficient than relying upon CVODE's built-in difference quotients. Using a sparse solver does not appear to provide additional time savings.
+
+.. note:: The run times reported in this chapter were obtained with an earlier version of `PelePhysics`. The keywords listed in the tables have been updated to their current equivalent.
 
 .. _tab:RunsReactEvalCvode:
 
-.. table:: Summary of ReactEval_C runs with various algorithms (methane/air)
+.. table:: Summary of ReactEval runs with various algorithms (methane/air)
     :align: center
 
-    +-------------------------------+-----------------+----------------+-------------+----------------+-----------------+
-    |  Solver                       |     Direct      |  Direct        |  Direct     |   Iter.        |   Iter.         |
-    |                               |     Dense       |  Dense AJ      |  Sparse AJ  |   not Precond. |   Precond. (S)  |
-    +-------------------------------+-----------------+----------------+-------------+----------------+-----------------+
-    |  KLU                          |       OFF       |       OFF      |     ON      |       OFF      |        ON       |
-    +===============================+=================+================+=============+================+=================+
-    |  ode.reactor_type             |       1         |       1        |      1      |        1       |        1        |
-    +-------------------------------+-----------------+----------------+-------------+----------------+-----------------+
-    |  cvode.solve_type             |       1         |       1        |      5      |       99       |       99        |
-    +-------------------------------+-----------------+----------------+-------------+----------------+-----------------+
-    |  ode.analytical_jacobian      |       0         |       1        |      1      |        1       |        1        |
-    +-------------------------------+-----------------+----------------+-------------+----------------+-----------------+
-    |  Run time                     |      52.61s     |     44.87s     |    48.64s   |      1m42s     |        1m34s    |
-    +-------------------------------+-----------------+----------------+-------------+----------------+-----------------+
+    +----------------------+----------------+------------------+-----------------+----------------+-------------------------------+
+    |  Solver              |  Direct        |  Direct          |  Direct         |  Iter.         |  Iter.                        |
+    |                      |  Dense         |  Dense AJ        |  Sparse AJ      |  not Precond.  |  Precond. (S)                 |
+    +----------------------+----------------+------------------+-----------------+----------------+-------------------------------+
+    |  KLU                 |  OFF           |  OFF             |  ON             |  OFF           |  ON                           |
+    +======================+================+==================+=================+================+===============================+
+    |  ode.reactor_type    |  1             |  1               |  1              |  1             |  1                            |
+    +----------------------+----------------+------------------+-----------------+----------------+-------------------------------+
+    |  cvode.solve_type    |  dense_direct  |  denseAJ_direct  |  sparse_direct  |  GMRES         |  precGMRES                    |
+    +----------------------+----------------+------------------+-----------------+----------------+-------------------------------+
+    |  cvode.precond_type  |  N/A           |  N/A             |  N/A            |  N/A           |  sparse_simplified_AJacobian  |
+    +----------------------+----------------+------------------+-----------------+----------------+-------------------------------+
+    |  Run time            |  52.61s        |  44.87s          |  48.64s         |  1m42s         |  1m34s                        |
+    +----------------------+----------------+------------------+-----------------+----------------+-------------------------------+
 
 
 The same series of tests are performed for a mixture of n-dodecane and air (see :ref:`sec:subsReactEvalCvode`), the configuration being otherwise the same as in the methane/air case. Results are summarized in Table :numref:`tab:RunsReactEvalCvodeDOD`. The overall tendencies remain similar. Note that the non-preconditioned GMRES solver becomes very inefficient for this larger system. Here also, the direct sparse solve --which relies upon the KLU library, does not seem to provide additional time savings. The fill-in pattern is :math:`70 \%`.
 
 .. _tab:RunsReactEvalCvodeDOD:
 
-.. table:: Summary of ReactEvalCvode runs with various algorithms (n-dodecane/air)
+.. table:: Summary of ReactEval runs with various algorithms (n-dodecane/air)
     :align: center
 
-    +-------------------------------+-----------------+----------------+-------------+----------------+-----------------+
-    |  Solver                       |     Direct      |  Direct        |  Direct     |   Iter.        |   Iter.         |
-    |                               |     Dense       |  Dense AJ      |  Sparse AJ  |   not Precond. |   Precond. (S)  |
-    +-------------------------------+-----------------+----------------+-------------+----------------+-----------------+
-    |  KLU                          |       OFF       |       OFF      |     ON      |       OFF      |        ON       |
-    +===============================+=================+================+=============+================+=================+
-    |  ode.reactor_type             |       1         |       1        |      1      |        1       |        1        |
-    +-------------------------------+-----------------+----------------+-------------+----------------+-----------------+
-    |  cvode.solve_type             |       1         |       1        |      5      |       99       |       99        |
-    +-------------------------------+-----------------+----------------+-------------+----------------+-----------------+
-    |  ode.analytical_jacobian      |       0         |       1        |      1      |        1       |        1        |
-    +-------------------------------+-----------------+----------------+-------------+----------------+-----------------+
-    |  Run time                     |      6m25s      |     5m33s      |    6m32s    |      21m44s    |        10m14s   |
-    +-------------------------------+-----------------+----------------+-------------+----------------+-----------------+
+    +----------------------+----------------+------------------+-----------------+----------------+-------------------------------+
+    |  Solver              |  Direct        |  Direct          |  Direct         |  Iter.         |  Iter.                        |
+    |                      |  Dense         |  Dense AJ        |  Sparse AJ      |  not Precond.  |  Precond. (S)                 |
+    +----------------------+----------------+------------------+-----------------+----------------+-------------------------------+
+    |  KLU                 |  OFF           |  OFF             |  ON             |  OFF           |  ON                           |
+    +======================+================+==================+=================+================+===============================+
+    |  ode.reactor_type    |  1             |  1               |  1              |  1             |  1                            |
+    +----------------------+----------------+------------------+-----------------+----------------+-------------------------------+
+    |  cvode.solve_type    |  dense_direct  |  denseAJ_direct  |  sparse_direct  |  GMRES         |  precGMRES                    |
+    +----------------------+----------------+------------------+-----------------+----------------+-------------------------------+
+    |  cvode.precond_type  |  N/A           |  N/A             |  N/A            |  N/A           |  sparse_simplified_AJacobian  |
+    +----------------------+----------------+------------------+-----------------+----------------+-------------------------------+
+    |  Run time            |  6m25s         |  5m33s           |  6m32s          |  21m44s        |  10m14s                       |
+    +----------------------+----------------+------------------+-----------------+----------------+-------------------------------+
 
 
 
@@ -479,27 +435,22 @@ Note that currently, all sparse operations rely on an Analytical Jacobian. This 
 Tricks and hacks, stuff to know
 -------------------------------
 
-When using DVODE, there is a `hack` enabling the user to reuse the Jacobian instead of reevaluating it from scratch. 
-This option is triggered when setting the ``extern_probin_module`` flag ``new_Jacobian_each_cell`` to ``0``. 
-This can be done in `PelePhysics`  by adding the following line in the ``probin`` file: 
-
-.. code-block:: c++
-
-    &extern
-     new_Jacobian_each_cell = 0                                                                                                           
-    /
+DVODE, the Fortran integrator used in earlier versions of `PelePhysics`, included a `hack` enabling the user to reuse the Jacobian instead of reevaluating it from scratch. 
+This option was triggered by setting the ``extern_probin_module`` flag ``new_Jacobian_each_cell`` to ``0`` in the ``probin`` file.
 
 A similar feature is currently not available in CVODE, although it would be possible to modify the ``CVodeReInit`` function 
-to reinitialize only a subset of counters. This is currently under investigation. 
-The user still has some control via the CVODE flag ``CVodeSetMaxStepsBetweenJac``.
+to reinitialize only a subset of counters. 
+The maximum number of steps between two Jacobian evaluations is set to 100 in `PelePhysics` via the CVODE function ``CVodeSetJacEvalFrequency``.
 
 How does CVODE compare with DVODE ?
 -----------------------------------
 
+.. note:: DVODE and the Fortran routines interfacing it are no longer distributed with `PelePhysics`: the ``USE_SUNDIALS_PP`` flag and the ``probin`` file mentioned in this section no longer exist. The comparison is kept as a reference.
+
 Depending on whether the famous Jacobian `hack` is activated or not in DVODE, 
 the completion time of the run can be decreased significantly. The same test case as that described in the previous section can also be integrated with DVODE. 
-For that purpose, the FORTRAN routines implementing the DVODE integration have been interfaced with C++ via a FORTRAN header. The run is thus identical to ReactEval_C with CVODE.
-Only the ``GNUmakefile`` needs to be modified:
+For that purpose, the FORTRAN routines implementing the DVODE integration were interfaced with C++ via a FORTRAN header. The run is thus identical to ReactEval with CVODE.
+Only the ``GNUmakefile`` needed to be modified:
 
 .. code-block:: c++
 
@@ -514,7 +465,7 @@ Only the ``GNUmakefile`` needs to be modified:
     #######################
     ...
 
-and, as explained in section :ref:`sec:subssubsTricks`, the famous AJ `hack` can be activated via the ``probin`` file.
+and, as explained in section :ref:`sec:subssubsTricks`, the famous AJ `hack` could be activated via the ``probin`` file.
 
 Two runs are performed, activating the hack or not. Times are reported in Table :numref:`tab:CVODEvsDVODE`.
 
@@ -523,22 +474,20 @@ Two runs are performed, activating the hack or not. Times are reported in Table 
 .. table:: Summary of a CVODE vs a DVODE chemistry integration on the same test case
     :align: center
 
-    +-------------------------------+-----------------+----------------+-----------------+
-    |  Solver                       |     Direct      |     Direct     |  Direct         |
-    |                               |     Dense       |     Dense      |  Dense + `hack` |
-    +-------------------------------+-----------------+----------------+-----------------+
-    |  KLU                          |       OFF       |       OFF      |       OFF       |
-    +-------------------------------+-----------------+----------------+-----------------+
-    | USE_SUNDIALS_PP               |  ON (CVODE)     |  OFF (DVODE)   |  OFF (DVODE)    |
-    +===============================+=================+================+=================+
-    |  ode.reactor_type             |       1         |       1        |        1        |
-    +-------------------------------+-----------------+----------------+-----------------+
-    |  cvode.solve_type             |       1         |      N/A       |       N/A       |
-    +-------------------------------+-----------------+----------------+-----------------+
-    |  ode.analytical_jacobian      |       0         |      N/A       |       N/A       |
-    +-------------------------------+-----------------+----------------+-----------------+
-    |  Run time                     |      52.61s     |     53.21s     |      52.83s     |
-    +-------------------------------+-----------------+----------------+-----------------+
+    +--------------------+----------------+----------+------------------+
+    |  Solver            |  Direct        |  Direct  |  Direct          |
+    |                    |  Dense         |  Dense   |  Dense + `hack`  |
+    +--------------------+----------------+----------+------------------+
+    |  KLU               |  OFF           |  OFF     |  OFF             |
+    +--------------------+----------------+----------+------------------+
+    |  Integrator        |  CVODE         |  DVODE   |  DVODE           |
+    +====================+================+==========+==================+
+    |  ode.reactor_type  |  1             |  1       |  1               |
+    +--------------------+----------------+----------+------------------+
+    |  cvode.solve_type  |  dense_direct  |  N/A     |  N/A             |
+    +--------------------+----------------+----------+------------------+
+    |  Run time          |  52.61s        |  53.21s  |  52.83s          |
+    +--------------------+----------------+----------+------------------+
 
 
 In this case, the hack does not seem to provide significant time savings. Note also that CVODE is usually slightly more efficient than DVODE, consistently with findings of other studies available in the literature -- although in this case all options give comparable results.
@@ -550,7 +499,7 @@ CVODE implementation in `PelePhysics` on GPU
 Requirements and input files
 ----------------------------
 
-**To use CVODE on a GPU, Sundials should be build with the flag** ``CUDA_ENABLE`` **. A CUDA compiler also needs to be specified. Relevant information is provided in the Sundials install guide, and an automatic script is distributed with PelePhysics to ease the process. Refer to** :ref:`sec:GetCVODE`.
+**To use CVODE on a GPU, Sundials should be built with GPU support. This is done automatically when executing** ``make TPL`` **with the GPU options activated in the** ``GNUmakefile`` **. Refer to** :ref:`sec:BuildingRunning`.
 
 Note that the SuiteSparse package does not support GPU architecture and is thus no longer required. Sparse linear algebra operations, when needed, are performed with the help of CUDA's `cuSolver <https://docs.nvidia.com/cuda/cusolver/index.html>`_.
 
@@ -567,14 +516,16 @@ This should activate the CUDA features of CVODE in `PelePhysics` too.
 The input file
 ^^^^^^^^^^^^^^
 
-In the ``inputs.3d``, the same three main keywords control the algorithm (``ode.reactor_type``, ``cvode.solve_type``, ``ode.analytical_jacobian``). However, note that there are less linear solver options available. 
+In the input file, the same main keywords control the algorithm (``ode.reactor_type``, ``cvode.solve_type``, ``cvode.precond_type``). However, note that there are less linear solver options available. 
 
-- Both preconditioned or non-preconditioned GMRES options are available (``cvode.solve_type = 99``). The preconditioned version is triggered via the same flag as on the CPU (``ode.analytical_jacobian = 1``).
-- The user has the choice between two different sparse solvers. 
+- Both preconditioned or non-preconditioned GMRES options are available (``cvode.solve_type = precGMRES`` or ``cvode.solve_type = GMRES``). The preconditioned version requires ``cvode.precond_type = cuSparse_simplified_AJacobian``.
+- The user has the choice between different direct solvers. 
 
-  - Sundials offers one option (the SUNLinSol_cuSolverSp_batchQR) relying upon the cuSolver to perform batched sparse QR factorizations. This version is enabled via ``cvode.solve_type = 5`` and ``ode.analytical_jacobian = 1``. 
-  - Another version is available via ``cvode.solve_type = 1`` and ``ode.analytical_jacobian = 1``. This version relies upon a pre-computed Gauss-Jordan `Solver <https://github.com/accelerated-odes/gauss-jordan-solver>`_, and is fairly efficient for problems of moderate size.
-  
+  - Sundials offers one option (the SUNLinSol_cuSolverSp_batchQR) relying upon the cuSolver to perform batched sparse QR factorizations. This version is enabled via ``cvode.solve_type = sparse_direct``. 
+  - Another version is selected via ``cvode.solve_type = custom_direct``. This version relies upon a pre-computed Gauss-Jordan `Solver <https://github.com/accelerated-odes/gauss-jordan-solver>`_. Note that the corresponding solve is currently disabled in the source code.
+  - A batched dense solver from the `MAGMA` library is enabled via ``cvode.solve_type = magma_direct``, if ``PELE_USE_MAGMA = TRUE`` is added to the ``GNUmakefile``.
+
+All of these options but the non-preconditioned GMRES require a specific ordering of the unknowns, see :ref:`sec:reactions`.
 
 Grouping cells together
 -----------------------
@@ -594,8 +545,8 @@ To take full advantage of the GPU power, many intensive operations of similar na
 
 In the current implementation, the number of cells that are grouped together is equal to the number of cells contained in the box under investigation within a MultiFab iteration.
 
-The ReactEval_C_GPU test case in details
-----------------------------------------
+The ReactEval test case on GPU in details
+-----------------------------------------
 
 A series of tests are performed on the GPU for a mixture of methane and air, with the intent of evaluationg the performance of the chemistry solvers. 
 The test case, configuration and initial conditions are similar to that described in :ref:`sec:subsReactEvalCvode`. The mechanism employed is the **drm**. 
@@ -603,58 +554,10 @@ The test case, configuration and initial conditions are similar to that describe
 The GNUmakefile
 ^^^^^^^^^^^^^^^
 
-The full file reads as follows:
-
-.. code-block::
-
-    PRECISION  = DOUBLE               
-    PROFILE    = FALSE
-    
-    DEBUG      = FALSE
-
-    DIM        = 3
-
-    COMP       = gcc
-    FCOMP      = gfortran
+The ``GNUmakefile`` is the same as that described in :ref:`sec:subsReactEvalCvode`, with the following modifications: ::
 
     USE_MPI    = FALSE
-    USE_OMP    = FALSE
-
-    FUEGO_GAS  = TRUE
-    
     USE_CUDA   = TRUE
-
-    TINY_PROFILE = TRUE
-
-    # define the location of the PELE_PHYSICS top directory
-    PELE_PHYSICS_HOME    := ../../..
-
-    #######################
-    # this flag activates the subcycling mode in the D/Cvode routines
-    DEFINES  += -DMOD_REACTOR
-    
-    #######################
-    # ODE solver OPTIONS on GPU: SUNDIALS
-    #######################
-    # Activates use of SUNDIALS: CVODE (default)
-    USE_SUNDIALS_PP = TRUE
-    
-    ##############################################
-    ifeq ($(FUEGO_GAS), TRUE)
-      Eos_Model       = Fuego
-      Chemistry_Model = drm19
-      Reactions_dir   = Fuego
-      Transport_Model   = Simple
-    else
-      Eos_Model       = GammaLaw
-      Reactions_dir = Null
-      Transport_Model = Constant
-    endif
-
-    Bpack   := ./Make.package
-    Blocs   := .
-
-    include $(PELE_PHYSICS_HOME)/Testing/Exec/Make.PelePhysics                                                                           
 
 
 The input file
@@ -668,21 +571,21 @@ Results are summarized in Table :numref:`tab:RunsReactEvalCvodeDRMGPU`.
 
 .. _tab:RunsReactEvalCvodeDRMGPU:
 
-.. table:: Summary of ReactEvalCvode_GPU runs with various algorithms (methane/air)
+.. table:: Summary of ReactEval runs on GPU with various algorithms (methane/air)
     :align: center
 
-    +-------------------------------+-----------------+----------------+----------------+-----------------+
-    |  Solver                       |     Direct      |  Direct        |   Iter.        |   Iter.         |
-    |                               |     Sparse I    |  Sparse II     |   not Precond. |   Precond. (S)  |
-    +===============================+=================+================+================+=================+
-    |  reactor_type                 |       1         |       1        |        1       |        1        |
-    +-------------------------------+-----------------+----------------+----------------+-----------------+
-    |  cvode.solve_type             |       1         |       5        |       99       |       99        |
-    +-------------------------------+-----------------+----------------+----------------+-----------------+
-    |  ode.analytical_jacobian      |       1         |       1        |        0       |        1        |
-    +-------------------------------+-----------------+----------------+----------------+-----------------+
-    |  Run time                     |      13s        |     20s        |      19s       |       36s       |
-    +-------------------------------+-----------------+----------------+----------------+-----------------+
+    +----------------------+-----------------+-----------------+----------------+---------------------------------+
+    |  Solver              |  Direct         |  Direct         |  Iter.         |  Iter.                          |
+    |                      |  Sparse I       |  Sparse II      |  not Precond.  |  Precond. (S)                   |
+    +======================+=================+=================+================+=================================+
+    |  reactor_type        |  1              |  1              |  1             |  1                              |
+    +----------------------+-----------------+-----------------+----------------+---------------------------------+
+    |  cvode.solve_type    |  custom_direct  |  sparse_direct  |  GMRES         |  precGMRES                      |
+    +----------------------+-----------------+-----------------+----------------+---------------------------------+
+    |  cvode.precond_type  |  N/A            |  N/A            |  N/A           |  cuSparse_simplified_AJacobian  |
+    +----------------------+-----------------+-----------------+----------------+---------------------------------+
+    |  Run time            |  13s            |  20s            |  19s           |  36s                            |
+    +----------------------+-----------------+-----------------+----------------+---------------------------------+
 
 
 
